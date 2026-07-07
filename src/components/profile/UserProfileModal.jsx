@@ -1,13 +1,25 @@
 import { LogOut, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { isSupabaseConfigured } from '../../lib/supabase';
+import { updateProfilePhoto } from '../../services/profilesService';
 import { loadMembers, saveMembers, updateMemberPhoto } from '../../utils/membersUtils';
 import AvatarUploader from './AvatarUploader';
 
 function UserProfileModal({ onClose }) {
   const { currentUser, setCurrentUser, isAdmin, logout } = useAuth();
 
-  const handlePhotoChange = (photoUrl) => {
+  const handlePhotoChange = async (photoUrl) => {
+    if (isSupabaseConfigured && currentUser.authUserId) {
+      try {
+        const updated = await updateProfilePhoto(currentUser.id, photoUrl);
+        setCurrentUser(updated);
+        return;
+      } catch {
+        // Fallback to local profile photo.
+      }
+    }
+
     const members = loadMembers();
     const nextMembers = updateMemberPhoto(members, currentUser.id, photoUrl);
     saveMembers(nextMembers);

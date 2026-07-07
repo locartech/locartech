@@ -6,14 +6,16 @@ function Login({ onNavigate }) {
   const { login } = useAuth();
   const [form, setForm] = useState({ email: 'admin@locartech.com.br', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const result = login(form);
-    if (!result.ok) {
-      setError(result.message);
-    }
+    setError('');
+    setLoading(true);
+    const result = await login(form);
+    setLoading(false);
+    if (!result.ok) setError(result.message);
   };
 
   return (
@@ -43,7 +45,7 @@ function Login({ onNavigate }) {
             type={showPassword ? 'text' : 'password'}
             value={form.password}
             onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-            placeholder="Digite qualquer senha no protótipo"
+            placeholder="Digite sua senha"
           />
           <button type="button" onClick={() => setShowPassword((current) => !current)} title="Mostrar ou ocultar senha">
             {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
@@ -51,8 +53,8 @@ function Login({ onNavigate }) {
         </div>
       </label>
 
-      <button type="submit" className="primary-button auth-submit">
-        Entrar
+      <button type="submit" className="primary-button auth-submit" disabled={loading}>
+        {loading ? 'Entrando...' : 'Entrar'}
       </button>
 
       <div className="auth-links">

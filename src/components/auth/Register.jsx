@@ -16,22 +16,25 @@ function Register({ onNavigate }) {
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const updateForm = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
     setMessage('');
 
     if (!form.name.trim() || !form.email.trim() || !form.password || !form.confirmPassword || !form.role.trim()) {
-      setError('Preencha todos os campos obrigatórios.');
+      setError('Preencha todos os campos obrigatorios.');
       return;
     }
 
-    const result = register(form);
+    setLoading(true);
+    const result = await register(form);
+    setLoading(false);
     if (!result.ok) {
       setError(result.message);
       return;
@@ -46,7 +49,7 @@ function Register({ onNavigate }) {
       <div>
         <p className="eyebrow">Nova conta</p>
         <h1>Criar conta</h1>
-        <span>O acesso ficará pendente até aprovação do administrador principal.</span>
+        <span>O acesso ficara pendente ate aprovacao do administrador principal.</span>
       </div>
 
       {error ? <div className="auth-alert error">{error}</div> : null}
@@ -85,7 +88,9 @@ function Register({ onNavigate }) {
         </label>
       </div>
 
-      <button type="submit" className="primary-button auth-submit">Criar conta</button>
+      <button type="submit" className="primary-button auth-submit" disabled={loading}>
+        {loading ? 'Criando...' : 'Criar conta'}
+      </button>
       <div className="auth-links">
         <button type="button" onClick={() => onNavigate('login')}>Voltar para login</button>
       </div>

@@ -1,6 +1,13 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { AUTH_STORAGE_KEY } from '../config/authConfig';
 import { initialMembers } from '../data/membersData';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import {
+  createPendingProfile,
+  fetchProfileByAuthUser,
+  fetchProfileByEmail,
+  touchLastAccess,
+} from '../services/profilesService';
 import { canAccessSystem, getCompanyAdminEmail, isCompanyAdmin, setCompanyAdminEmail } from '../utils/authUtils';
 import { createMember, loadMembers, saveMembers } from '../utils/membersUtils';
 
@@ -9,9 +16,7 @@ const AuthContext = createContext(null);
 function loadCurrentUser() {
   try {
     const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (savedUser) {
-      return JSON.parse(savedUser);
-    }
+    if (savedUser) return JSON.parse(savedUser);
   } catch {
     localStorage.removeItem(AUTH_STORAGE_KEY);
   }
@@ -41,38 +46,116 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const login = ({ email, password }) => {
+  useEffect(() => {
+    if (!isSupabaseConfigured) return undefined;
+
+    let mounted = true;
+
+    const restoreSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      const authUser = data.session?.user;
+      if (!authUser || !mounted) return;
+
+      try {
+        const profile = await fetchProfileByAuthUser(authUser.id);
+        if (profile && canAccessSystem(profile)) {
+          setCurrentUser(profile);
+          touchLastAccess(profile.id);
+        }
+      } catch {
+        // The local fallback stays active until the Supabase schema is applied.
+      }
+    };
+
+    restoreSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session?.user) return;
+      try {
+        const profile = await fetchProfileByAuthUser(session.user.id);
+        if (profile && canAccessSystem(profile)) setCurrentUser(profile);
+      } catch {
+        // Ignore setup-time database errors.
+      }
+    });
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const login = async ({ email, password }) => {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !password.trim()) {
       return { ok: false, message: 'Preencha e-mail e senha para entrar.' };
     }
 
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        });
+
+        if (error) return { ok: false, message: error.message };
+
+        const profile = await fetchProfileByAuthUser(data.user.id);
+        if (!profile) return { ok: false, message: 'Conta sem perfil cadastrado no sistema.' };
+        if (!canAccessSystem(profile)) {
+          await supabase.auth.signOut();
+          return { ok: false, message: `Conta com status ${profile.status}. Aguarde aprovacao ou contate o administrador.` };
+        }
+
+        setCurrentUser(profile);
+        touchLastAccess(profile.id);
+        return { ok: true };
+      } catch {
+        // Fallback keeps the app usable until the database is created.
+      }
+    }
+
     const members = syncInitialMembers();
     const member = members.find((item) => item.email.toLowerCase() === normalizedEmail);
 
-    if (!member) {
-      return { ok: false, message: 'E-mail não encontrado no protótipo.' };
-    }
-
+    if (!member) return { ok: false, message: 'E-mail nao encontrado.' };
     if (!canAccessSystem(member)) {
-      return { ok: false, message: `Conta com status ${member.status}. Aguarde aprovação ou contate o administrador.` };
+      return { ok: false, message: `Conta com status ${member.status}. Aguarde aprovacao ou contate o administrador.` };
     }
 
-    // Protótipo: a senha é validada apenas como campo obrigatório. Não há senha real no localStorage.
-    setCurrentUser({ ...member, lastAccess: '2026-07-06' });
+    setCurrentUser({ ...member, lastAccess: new Date().toISOString().slice(0, 10) });
     return { ok: true };
   };
 
-  const register = (values) => {
-    const members = syncInitialMembers();
+  const register = async (values) => {
     const normalizedEmail = values.email.trim().toLowerCase();
 
-    if (members.some((member) => member.email.toLowerCase() === normalizedEmail)) {
-      return { ok: false, message: 'Já existe uma conta com este e-mail.' };
+    if (values.password !== values.confirmPassword) {
+      return { ok: false, message: 'As senhas nao coincidem.' };
     }
 
-    if (values.password !== values.confirmPassword) {
-      return { ok: false, message: 'As senhas não coincidem.' };
+    if (isSupabaseConfigured) {
+      try {
+        const existingProfile = await fetchProfileByEmail(normalizedEmail);
+        if (existingProfile) return { ok: false, message: 'Ja existe uma conta com este e-mail.' };
+
+        const { data, error } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password: values.password,
+        });
+
+        if (error) return { ok: false, message: error.message };
+
+        await createPendingProfile({ ...values, email: normalizedEmail }, data.user?.id);
+        return { ok: true, message: 'Conta criada. Aguarde aprovacao do administrador principal para acessar o sistema.' };
+      } catch {
+        // Fallback below works while the Supabase schema is not applied.
+      }
+    }
+
+    const members = syncInitialMembers();
+    if (members.some((member) => member.email.toLowerCase() === normalizedEmail)) {
+      return { ok: false, message: 'Ja existe uma conta com este e-mail.' };
     }
 
     const newMember = createMember({
@@ -85,22 +168,30 @@ export function AuthProvider({ children }) {
     });
 
     saveMembers([...members, newMember]);
-    return { ok: true, message: 'Conta criada. Aguarde aprovação do administrador principal para acessar o sistema.' };
+    return { ok: true, message: 'Conta criada. Aguarde aprovacao do administrador principal para acessar o sistema.' };
   };
 
-  const requestPasswordReset = (email) => {
+  const requestPasswordReset = async (email) => {
     const normalizedEmail = email.trim().toLowerCase();
-    const members = syncInitialMembers();
-    const exists = members.some((member) => member.email.toLowerCase() === normalizedEmail);
 
-    if (!exists) {
-      return { ok: false, message: 'Não encontramos uma conta com este e-mail.' };
+    if (isSupabaseConfigured) {
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail);
+        if (error) return { ok: false, message: error.message };
+        return { ok: true, message: 'Se o e-mail existir, as instrucoes de recuperacao serao enviadas.' };
+      } catch {
+        // Continue to local fallback.
+      }
     }
 
-    return { ok: true, message: 'Instruções simuladas enviadas. Integração real será feita com backend futuramente.' };
+    const members = syncInitialMembers();
+    const exists = members.some((member) => member.email.toLowerCase() === normalizedEmail);
+    if (!exists) return { ok: false, message: 'Nao encontramos uma conta com este e-mail.' };
+    return { ok: true, message: 'Instrucoes simuladas enviadas. Integracao real sera feita com backend futuramente.' };
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (isSupabaseConfigured) await supabase.auth.signOut();
     setCurrentUser(null);
   };
 
@@ -119,7 +210,7 @@ export function AuthProvider({ children }) {
       logout,
       companyAdminEmail,
       transferAdmin,
-      isAdmin: isCompanyAdmin(currentUser, companyAdminEmail),
+      isAdmin: currentUser?.accountType === 'admin' || isCompanyAdmin(currentUser, companyAdminEmail),
       isAuthenticated: Boolean(currentUser),
     }),
     [companyAdminEmail, currentUser],
@@ -130,9 +221,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used inside AuthProvider');
-  }
-
+  if (!context) throw new Error('useAuth must be used inside AuthProvider');
   return context;
 }

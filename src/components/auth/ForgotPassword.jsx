@@ -6,13 +6,16 @@ function ForgotPassword({ onNavigate }) {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setMessage('');
     setError('');
+    setLoading(true);
 
-    const result = requestPasswordReset(email);
+    const result = await requestPasswordReset(email);
+    setLoading(false);
     if (!result.ok) {
       setError(result.message);
       return;
@@ -24,9 +27,9 @@ function ForgotPassword({ onNavigate }) {
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
       <div>
-        <p className="eyebrow">Recuperação de acesso</p>
+        <p className="eyebrow">Recuperacao de acesso</p>
         <h1>Esqueci minha senha</h1>
-        <span>Fluxo simulado para preparar integração futura com backend.</span>
+        <span>Receba instrucoes para recuperar sua senha.</span>
       </div>
 
       {error ? <div className="auth-alert error">{error}</div> : null}
@@ -37,7 +40,9 @@ function ForgotPassword({ onNavigate }) {
         <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
       </label>
 
-      <button type="submit" className="primary-button auth-submit">Enviar instruções</button>
+      <button type="submit" className="primary-button auth-submit" disabled={loading}>
+        {loading ? 'Enviando...' : 'Enviar instrucoes'}
+      </button>
       <div className="auth-links">
         <button type="button" onClick={() => onNavigate('login')}>Voltar para login</button>
       </div>

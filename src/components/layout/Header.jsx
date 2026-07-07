@@ -2,34 +2,34 @@ import { Bell } from 'lucide-react';
 
 const pageDetails = {
   dashboard: {
-    eyebrow: 'Visão executiva',
-    title: 'Central de gestão Locartech',
+    eyebrow: 'Visao executiva',
+    title: 'Central de gestao Locartech',
     subtitle: 'Acompanhe fluxos, alertas e indicadores operacionais.',
   },
   kanban: {
-    eyebrow: 'Gestão de etapas',
+    eyebrow: 'Gestao de etapas',
     title: 'Kanban operacional',
-    subtitle: 'Organize etapas por setor com status, prazos e responsáveis.',
+    subtitle: 'Organize etapas por setor com status, prazos e responsaveis.',
   },
   requests: {
     eyebrow: 'Demandas internas',
-    title: 'Solicitações',
-    subtitle: 'Gerencie pedidos entre áreas da empresa.',
+    title: 'Solicitacoes',
+    subtitle: 'Gerencie pedidos entre areas da empresa.',
   },
   chat: {
-    eyebrow: 'Comunicação interna',
+    eyebrow: 'Comunicacao interna',
     title: 'Chat corporativo',
     subtitle: 'Converse com pessoas e grupos por setor.',
   },
   notifications: {
     eyebrow: 'Central de avisos',
-    title: 'Notificações',
-    subtitle: 'Veja atualizações de fluxos, solicitações e atividades.',
+    title: 'Notificacoes',
+    subtitle: 'Veja atualizacoes de fluxos, solicitacoes e atividades.',
   },
   sectors: {
     eyebrow: 'Estrutura organizacional',
     title: 'Setores',
-    subtitle: 'Consulte áreas, responsáveis e atividades em aberto.',
+    subtitle: 'Consulte areas, responsaveis e atividades em aberto.',
   },
   sectorKnowledge: {
     eyebrow: 'Base de conhecimento',
@@ -37,13 +37,13 @@ const pageDetails = {
     subtitle: 'Consulte documentos, manuais, links e processos internos.',
   },
   members: {
-    eyebrow: 'Administração',
+    eyebrow: 'Administracao',
     title: 'Gerenciamento de membros',
-    subtitle: 'Controle contas, setores e permissões dos membros.',
+    subtitle: 'Controle contas, setores e permissoes dos membros.',
   },
 };
 
-function Header({ activePage, unreadCount }) {
+function Header({ activePage, unreadCount, onOpenNotifications }) {
   const details = pageDetails[activePage] ?? pageDetails.dashboard;
 
   return (
@@ -55,7 +55,12 @@ function Header({ activePage, unreadCount }) {
       </div>
 
       <div className="header-actions">
-        <button className="notification-button" type="button" title="Notificações pendentes">
+        <button
+          className="notification-button"
+          type="button"
+          title="Notificacoes pendentes"
+          onClick={onOpenNotifications}
+        >
           <Bell size={18} aria-hidden="true" />
           {unreadCount > 0 ? <span>{unreadCount}</span> : null}
         </button>
