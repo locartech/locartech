@@ -1,0 +1,66 @@
+import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+
+function Login({ onNavigate }) {
+  const { login } = useAuth();
+  const [form, setForm] = useState({ email: 'admin@locartech.com.br', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const result = login(form);
+    if (!result.ok) {
+      setError(result.message);
+    }
+  };
+
+  return (
+    <form className="auth-form" onSubmit={handleSubmit}>
+      <div>
+        <p className="eyebrow">Acesso ao sistema</p>
+        <h1>Entrar na Locartech</h1>
+        <span>Use sua conta corporativa para acessar o ambiente interno.</span>
+      </div>
+
+      {error ? <div className="auth-alert error">{error}</div> : null}
+
+      <label>
+        <span>E-mail</span>
+        <input
+          type="email"
+          value={form.email}
+          onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+          placeholder="nome@locartech.com.br"
+        />
+      </label>
+
+      <label>
+        <span>Senha</span>
+        <div className="password-field">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            value={form.password}
+            onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+            placeholder="Digite qualquer senha no protótipo"
+          />
+          <button type="button" onClick={() => setShowPassword((current) => !current)} title="Mostrar ou ocultar senha">
+            {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+          </button>
+        </div>
+      </label>
+
+      <button type="submit" className="primary-button auth-submit">
+        Entrar
+      </button>
+
+      <div className="auth-links">
+        <button type="button" onClick={() => onNavigate('forgot')}>Esqueci minha senha</button>
+        <button type="button" onClick={() => onNavigate('register')}>Criar conta</button>
+      </div>
+    </form>
+  );
+}
+
+export default Login;
