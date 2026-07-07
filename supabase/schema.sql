@@ -247,3 +247,39 @@ drop policy if exists "knowledge readable by authenticated users" on public.know
 create policy "knowledge readable by authenticated users" on public.knowledge_records for select using (auth.uid() is not null);
 drop policy if exists "knowledge writable by authenticated users" on public.knowledge_records;
 create policy "knowledge writable by authenticated users" on public.knowledge_records for all using (auth.uid() is not null) with check (auth.uid() is not null);
+
+alter table public.profiles replica identity full;
+alter table public.conversations replica identity full;
+alter table public.conversation_participants replica identity full;
+alter table public.messages replica identity full;
+alter table public.notifications replica identity full;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.profiles;
+exception when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.conversations;
+exception when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.conversation_participants;
+exception when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.messages;
+exception when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.notifications;
+exception when duplicate_object then null;
+end $$;
