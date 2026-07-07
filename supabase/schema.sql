@@ -103,6 +103,28 @@ create table if not exists public.knowledge_records (
   updated_at timestamptz not null default now()
 );
 
+create or replace function public.confirm_profile_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+  if new.auth_user_id is not null then
+    update auth.users
+    set email_confirmed_at = coalesce(email_confirmed_at, now())
+    where id = new.auth_user_id;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists confirm_profile_auth_user on public.profiles;
+create trigger confirm_profile_auth_user
+  after insert or update of auth_user_id, status on public.profiles
+  for each row
+  execute function public.confirm_profile_auth_user();
+
 alter table public.profiles enable row level security;
 alter table public.conversations enable row level security;
 alter table public.conversation_participants enable row level security;
