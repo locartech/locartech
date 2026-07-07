@@ -138,14 +138,7 @@ create policy "profiles editable by admins or self"
 drop policy if exists "conversations readable by participants" on public.conversations;
 create policy "conversations readable by participants"
   on public.conversations for select
-  using (
-    exists (
-      select 1 from public.conversation_participants cp
-      join public.profiles p on p.id = cp.profile_id
-      where cp.conversation_id = conversations.id
-        and p.auth_user_id = auth.uid()
-    )
-  );
+  using (auth.uid() is not null);
 
 drop policy if exists "conversations insertable by authenticated users" on public.conversations;
 create policy "conversations insertable by authenticated users"
@@ -155,14 +148,7 @@ create policy "conversations insertable by authenticated users"
 drop policy if exists "participants readable by participants" on public.conversation_participants;
 create policy "participants readable by participants"
   on public.conversation_participants for select
-  using (
-    exists (
-      select 1 from public.conversation_participants cp
-      join public.profiles p on p.id = cp.profile_id
-      where cp.conversation_id = conversation_participants.conversation_id
-        and p.auth_user_id = auth.uid()
-    )
-  );
+  using (auth.uid() is not null);
 
 drop policy if exists "participants insertable by authenticated users" on public.conversation_participants;
 create policy "participants insertable by authenticated users"
@@ -253,6 +239,9 @@ alter table public.conversations replica identity full;
 alter table public.conversation_participants replica identity full;
 alter table public.messages replica identity full;
 alter table public.notifications replica identity full;
+alter table public.kanban_tasks replica identity full;
+alter table public.requests replica identity full;
+alter table public.knowledge_records replica identity full;
 
 do $$
 begin
@@ -281,5 +270,23 @@ end $$;
 do $$
 begin
   alter publication supabase_realtime add table public.notifications;
+exception when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.kanban_tasks;
+exception when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.requests;
+exception when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.knowledge_records;
 exception when duplicate_object then null;
 end $$;

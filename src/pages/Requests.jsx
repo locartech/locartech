@@ -1,17 +1,25 @@
 import { Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import RequestFilters from '../components/requests/RequestFilters';
 import RequestForm from '../components/requests/RequestForm';
 import RequestModal from '../components/requests/RequestModal';
 import RequestStats from '../components/requests/RequestStats';
 import RequestTable from '../components/requests/RequestTable';
 import RequestTabs from '../components/requests/RequestTabs';
-import { currentUser, initialRequests, REQUESTS_STORAGE_KEY } from '../data/requestsData';
+import { useAuth } from '../contexts/AuthContext';
+import { initialRequests, REQUESTS_STORAGE_KEY } from '../data/requestsData';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import {
+  createRemoteRequest,
+  fetchRemoteRequests,
+  subscribeToRequests,
+  updateRemoteRequest,
+  updateRemoteRequestStatus,
+} from '../services/requestsService';
 import {
   buildRequestCompletedNotification,
   buildRequestCreatedNotification,
   cancelRequest,
-  completeRequest,
   createRequest,
   filterRequests,
   getPendingRequests,
@@ -25,9 +33,7 @@ import {
 function loadRequests() {
   try {
     const savedRequests = localStorage.getItem(REQUESTS_STORAGE_KEY);
-    if (savedRequests) {
-      return JSON.parse(savedRequests);
-    }
+    if (savedRequests) return JSON.parse(savedRequests);
   } catch {
     localStorage.removeItem(REQUESTS_STORAGE_KEY);
   }
@@ -36,15 +42,44 @@ function loadRequests() {
 }
 
 function Requests({ onAddNotification }) {
+  const { currentUser } = useAuth();
   const [requests, setRequests] = useState(loadRequests);
+  const [usingSupabase, setUsingSupabase] = useState(false);
   const [activeTab, setActiveTab] = useState('received');
   const [filters, setFilters] = useState({ status: 'all', sector: 'all', date: '' });
   const [formRequest, setFormRequest] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [detailRequest, setDetailRequest] = useState(null);
 
-  const receivedRequests = useMemo(() => getReceivedRequests(requests, currentUser), [requests]);
-  const sentRequests = useMemo(() => getSentRequests(requests, currentUser), [requests]);
+  const loadRemoteRequests = async () => {
+    if (!isSupabaseConfigured) return;
+    try {
+      const remoteRequests = await fetchRemoteRequests();
+      setRequests(remoteRequests);
+      setUsingSupabase(true);
+    } catch {
+      setUsingSupabase(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRemoteRequests();
+  }, []);
+
+  useEffect(() => {
+    if (!usingSupabase) {
+      localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(requests));
+      return undefined;
+    }
+
+    const channel = subscribeToRequests(loadRemoteRequests);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [requests, usingSupabase]);
+
+  const receivedRequests = useMemo(() => getReceivedRequests(requests, currentUser), [requests, currentUser]);
+  const sentRequests = useMemo(() => getSentRequests(requests, currentUser), [requests, currentUser]);
 
   const tabRequests = useMemo(() => {
     if (activeTab === 'received') return receivedRequests;
@@ -61,7 +96,7 @@ function Requests({ onAddNotification }) {
       completed: receivedRequests.filter((request) => request.status === 'completed').length,
       sent: sentRequests.length,
     }),
-    [receivedRequests, requests, sentRequests],
+    [receivedRequests, requests, sentRequests, currentUser],
   );
 
   const counts = {
@@ -75,31 +110,44 @@ function Requests({ onAddNotification }) {
     localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(nextRequests));
   };
 
-  const handleCreateRequest = (values) => {
-    const nextRequest = createRequest(values, currentUser);
-    persistRequests([nextRequest, ...requests]);
+  const handleCreateRequest = async (values) => {
+    const nextRequest = usingSupabase
+      ? await createRemoteRequest(values, currentUser)
+      : createRequest(values, currentUser);
+
+    setRequests((current) => [nextRequest, ...current]);
+    if (!usingSupabase) persistRequests([nextRequest, ...requests]);
     onAddNotification?.(buildRequestCreatedNotification(nextRequest));
     setIsFormOpen(false);
   };
 
-  const handleEditRequest = (values) => {
-    const updatedRequests = updateRequest(requests, formRequest.id, {
-      title: values.title.trim(),
-      description: values.description.trim(),
-      targetSector: values.targetSector,
-      responsibleName: values.responsibleName.trim() || null,
-      priority: values.priority,
-      dueDate: values.dueDate,
-    });
+  const handleEditRequest = async (values) => {
+    if (usingSupabase) {
+      const updated = await updateRemoteRequest(formRequest.id, { ...formRequest, ...values }, currentUser);
+      setRequests((current) => current.map((request) => (request.id === updated.id ? updated : request)));
+    } else {
+      persistRequests(updateRequest(requests, formRequest.id, {
+        title: values.title.trim(),
+        description: values.description.trim(),
+        targetSector: values.targetSector,
+        responsibleName: values.responsibleName.trim() || null,
+        priority: values.priority,
+        dueDate: values.dueDate,
+      }));
+    }
 
-    persistRequests(updatedRequests);
     setIsFormOpen(false);
     setFormRequest(null);
   };
 
-  const handleStatusChange = (requestId, status) => {
+  const handleStatusChange = async (requestId, status) => {
     const changedRequest = requests.find((request) => request.id === requestId);
-    persistRequests(updateRequestStatus(requests, requestId, status));
+    if (usingSupabase) {
+      const updated = await updateRemoteRequestStatus(requestId, status);
+      setRequests((current) => current.map((request) => (request.id === requestId ? updated : request)));
+    } else {
+      persistRequests(updateRequestStatus(requests, requestId, status));
+    }
 
     if (status === 'completed' && changedRequest?.status !== 'completed') {
       onAddNotification?.(buildRequestCompletedNotification({ ...changedRequest, status }));
@@ -107,46 +155,39 @@ function Requests({ onAddNotification }) {
   };
 
   const handleComplete = (requestId) => {
-    const changedRequest = requests.find((request) => request.id === requestId);
-    persistRequests(completeRequest(requests, requestId));
-
-    if (changedRequest?.status !== 'completed') {
-      onAddNotification?.(buildRequestCompletedNotification({ ...changedRequest, status: 'completed' }));
-    }
+    handleStatusChange(requestId, 'completed');
   };
 
   const handleCancel = (requestId) => {
-    const canCancel = window.confirm('Deseja cancelar esta solicitação?');
-    if (canCancel) {
-      persistRequests(cancelRequest(requests, requestId));
+    const canCancel = window.confirm('Deseja cancelar esta solicitacao?');
+    if (!canCancel) return;
+
+    if (usingSupabase) {
+      handleStatusChange(requestId, 'canceled');
+      return;
     }
-  };
-
-  const handleOpenEdit = (request) => {
-    setFormRequest(request);
-    setIsFormOpen(true);
-  };
-
-  const handleOpenCreate = () => {
-    setFormRequest(null);
-    setIsFormOpen(true);
+    persistRequests(cancelRequest(requests, requestId));
   };
 
   return (
     <div className="page-stack">
       <section className="page-heading requests-heading">
         <div>
-          <p className="eyebrow">Solicitações</p>
+          <p className="eyebrow">Solicitacoes</p>
           <h2>Gerencie demandas entre setores da empresa</h2>
           <span className="current-user-chip">
-            Usuário atual: {currentUser.name} · {currentUser.sector}
+            Usuario atual: {currentUser.name} - {currentUser.sector}
           </span>
         </div>
-        <button type="button" className="primary-button large" onClick={handleOpenCreate}>
+        <button type="button" className="primary-button large" onClick={() => setIsFormOpen(true)}>
           <Plus size={18} aria-hidden="true" />
-          Nova solicitação
+          Nova solicitacao
         </button>
       </section>
+
+      {!usingSupabase ? (
+        <div className="members-feedback">Usando solicitacoes locais ate a conexao Supabase estar disponivel.</div>
+      ) : null}
 
       <RequestStats stats={stats} />
 
@@ -161,7 +202,10 @@ function Requests({ onAddNotification }) {
           currentUser={currentUser}
           onStatusChange={handleStatusChange}
           onView={setDetailRequest}
-          onEdit={handleOpenEdit}
+          onEdit={(request) => {
+            setFormRequest(request);
+            setIsFormOpen(true);
+          }}
           onComplete={handleComplete}
           onCancel={handleCancel}
         />
