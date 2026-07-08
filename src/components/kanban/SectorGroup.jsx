@@ -29,9 +29,9 @@ function SectorGroup({
           {sector.name}
         </span>
         <span className="sector-stage-summary">
-          {tasks.length} etapas
-          <span>{activeCount} abertas</span>
-          <span>{finishedCount} feitas</span>
+          <span>{tasks.length} etapas</span>
+          <span className="sector-stage-summary-open">{activeCount} abertas</span>
+          <span className="sector-stage-summary-done">{finishedCount} feitas</span>
         </span>
       </button>
 

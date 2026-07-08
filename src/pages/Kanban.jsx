@@ -34,7 +34,7 @@ function Kanban() {
   };
 
   return (
-    <div className="page-stack">
+    <div className="page-stack kanban-page">
       <section className="page-heading">
         <div>
           <p className="eyebrow">Gestao de etapas</p>

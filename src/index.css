@@ -4898,3 +4898,158 @@ body {
   color: #ffffff;
   background: #ef4444;
 }
+
+/* Kanban page visual refresh */
+.kanban-page .page-heading {
+  padding: 22px 26px;
+  border: 1px solid var(--lt-border);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 14px 30px rgba(15, 23, 42, 0.05);
+}
+
+.kanban-page .page-heading h2 {
+  font-size: 1.34rem;
+}
+
+.kanban-page .page-heading p {
+  color: var(--lt-muted);
+}
+
+.kanban-table-shell {
+  gap: 18px;
+}
+
+.sector-stage-group {
+  border: 1px solid var(--lt-border-soft);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 10px 24px rgba(15, 23, 42, 0.05);
+  transition: box-shadow 0.18s ease;
+}
+
+.sector-stage-group:hover {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 18px 34px rgba(15, 23, 42, 0.08);
+}
+
+.sector-stage-header {
+  min-height: 60px;
+  padding: 0 22px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--sector-accent) 7%, #ffffff), #ffffff 62%);
+  transition: background 0.16s ease;
+}
+
+.sector-stage-header:hover {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--sector-accent) 12%, #ffffff), #ffffff 68%);
+}
+
+.sector-stage-title {
+  gap: 11px;
+  font-size: 1.02rem;
+  font-weight: 800;
+}
+
+.sector-stage-title svg {
+  padding: 4px;
+  border-radius: 8px;
+  color: var(--sector-accent);
+  background: color-mix(in srgb, var(--sector-accent) 14%, #ffffff);
+  box-sizing: content-box;
+}
+
+.sector-stage-summary {
+  gap: 8px;
+}
+
+.sector-stage-summary span {
+  min-height: 24px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.74rem;
+}
+
+.sector-stage-summary > span:first-child {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.sector-stage-summary-open {
+  color: #9a3412;
+  background: #ffedd5;
+}
+
+.sector-stage-summary-done {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.stage-table {
+  border-top-color: var(--lt-border-soft);
+}
+
+.stage-table-head {
+  min-height: 44px;
+  color: #64748b;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--lt-border-soft);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+}
+
+.stage-row {
+  border-bottom-color: #f1f5f9;
+  transition: background 0.14s ease;
+}
+
+.stage-row:not(.stage-table-head):hover {
+  background: #f9fbfd;
+}
+
+.stage-title-cell {
+  border-left-width: 3px;
+}
+
+.stage-title {
+  font-weight: 800;
+}
+
+.stage-cell input[type="text"],
+.stage-cell input[type="date"] {
+  min-height: 34px;
+  border: 1px solid var(--lt-border);
+  border-radius: 7px;
+  background: #ffffff;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.stage-cell input[type="text"]:focus,
+.stage-cell input[type="date"]:focus {
+  outline: none;
+  border-color: var(--lt-blue-2);
+  box-shadow: 0 0 0 3px var(--lt-blue-faint);
+}
+
+.stage-actions-cell .table-icon-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  transition: background 0.14s ease, border-color 0.14s ease, transform 0.1s ease;
+}
+
+.stage-actions-cell .table-icon-button:hover {
+  transform: translateY(-1px);
+}
+
+.add-stage-button {
+  gap: 9px;
+  border-top: 1px dashed var(--lt-border-soft);
+  font-weight: 800;
+}
+
+.add-stage-button svg {
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--lt-blue-faint);
+  box-sizing: content-box;
+}
