@@ -22,7 +22,7 @@ function SectorGroup({
   const ToggleIcon = collapsed ? ChevronRight : ChevronDown;
 
   return (
-    <section className="sector-stage-group">
+    <section className={`sector-stage-group sector-stage-${sector.id}`}>
       <button type="button" className="sector-stage-header" onClick={() => onToggle(sector.id)} aria-expanded={!collapsed}>
         <span className="sector-stage-title">
           <ToggleIcon size={18} aria-hidden="true" />

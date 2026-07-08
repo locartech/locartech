@@ -4805,3 +4805,96 @@ body {
     min-width: 980px;
   }
 }
+
+/* Monday-style kanban status blocks and sector accents */
+.sector-stage-group {
+  --sector-accent: #2563eb;
+}
+
+.sector-stage-compras {
+  --sector-accent: #2563eb;
+}
+
+.sector-stage-contabilidade {
+  --sector-accent: #f59e0b;
+}
+
+.sector-stage-financeiro {
+  --sector-accent: #ef4444;
+}
+
+.sector-stage-frotas {
+  --sector-accent: #0f766e;
+}
+
+.sector-stage-planejamento {
+  --sector-accent: #6366f1;
+}
+
+.sector-stage-recursos-humanos {
+  --sector-accent: #22c55e;
+}
+
+.sector-stage-group {
+  border-left-color: var(--sector-accent);
+}
+
+.sector-stage-header {
+  box-shadow: inset 3px 0 0 var(--sector-accent);
+}
+
+.sector-stage-title svg {
+  color: var(--sector-accent);
+}
+
+.stage-title-cell {
+  border-left-color: color-mix(in srgb, var(--sector-accent) 58%, #ffffff);
+}
+
+.stage-status,
+.stage-status-select {
+  width: 100%;
+  max-width: 190px;
+  min-height: 38px;
+  border: 0;
+  border-radius: 7px;
+  box-shadow: none;
+}
+
+.stage-status-select select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 30px 0 12px;
+  border: 0 !important;
+  color: inherit !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-weight: 850;
+  text-align: center;
+  cursor: pointer;
+  appearance: none;
+}
+
+.stage-status-select:focus-within {
+  outline: 3px solid rgba(37, 99, 235, 0.16);
+}
+
+.stage-status-todo {
+  color: #7c2d12;
+  background: #fb923c;
+}
+
+.stage-status-doing {
+  color: #713f12;
+  background: #fde047;
+}
+
+.stage-status-done {
+  color: #ffffff;
+  background: #22c55e;
+}
+
+.stage-status-canceled {
+  color: #ffffff;
+  background: #ef4444;
+}
