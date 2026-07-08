@@ -3205,8 +3205,30 @@ body {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.dashboard-task-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.dashboard-request-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .dashboard-metrics-grid .stat-card {
   min-height: 104px;
+}
+
+@media (max-width: 1280px) {
+  .dashboard-task-grid,
+  .dashboard-request-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .dashboard-task-grid,
+  .dashboard-request-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Compact Kanban */
