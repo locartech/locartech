@@ -25,7 +25,8 @@ function SectorGroup({
     <section className={`sector-stage-group sector-stage-${sector.id}`}>
       <button type="button" className="sector-stage-header" onClick={() => onToggle(sector.id)} aria-expanded={!collapsed}>
         <span className="sector-stage-title">
-          <ToggleIcon size={18} aria-hidden="true" />
+          <ToggleIcon size={16} aria-hidden="true" />
+          <span className="sector-dot" aria-hidden="true" />
           {sector.name}
         </span>
         <span className="sector-stage-summary">
