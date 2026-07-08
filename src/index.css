@@ -4499,9 +4499,10 @@ body {
 
 /* Final Locartech logo layout */
 .brand-block {
-  min-height: 74px;
-  gap: 10px;
-  padding: 6px 8px 22px;
+  min-height: 62px;
+  gap: 8px;
+  padding: 4px 8px 16px;
+  align-items: center;
 }
 
 .brand-mark {
@@ -4517,14 +4518,17 @@ body {
 }
 
 .brand-copy {
-  width: 158px;
-  height: 46px;
-  overflow: visible;
+  display: flex;
+  align-items: center;
+  width: 130px;
+  height: 38px;
+  overflow: hidden;
 }
 
 .brand-copy svg {
-  width: 154px !important;
-  max-width: 154px;
+  width: 126px !important;
+  max-width: 126px;
+  height: auto;
   transform: none;
 }
 
