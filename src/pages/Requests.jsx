@@ -1,82 +1,79 @@
 import { Plus } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import RequestFilters from '../components/requests/RequestFilters';
 import RequestForm from '../components/requests/RequestForm';
 import RequestModal from '../components/requests/RequestModal';
+import RequestRejectModal from '../components/requests/RequestRejectModal';
 import RequestStats from '../components/requests/RequestStats';
 import RequestTable from '../components/requests/RequestTable';
 import RequestTabs from '../components/requests/RequestTabs';
 import { useAuth } from '../contexts/AuthContext';
-import { initialRequests, REQUESTS_STORAGE_KEY } from '../data/requestsData';
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { KANBAN_STORAGE_KEY, initialKanbanTasks } from '../data/kanbanData';
+import { initialRequests, REQUESTS_STORAGE_KEY, requestStatusIds } from '../data/requestsData';
 import {
-  createRemoteRequest,
-  fetchRemoteRequests,
-  subscribeToRequests,
-  updateRemoteRequest,
-  updateRemoteRequestStatus,
-} from '../services/requestsService';
-import {
-  buildRequestCompletedNotification,
+  approveRequest,
+  buildRequestApprovedNotification,
   buildRequestCreatedNotification,
+  buildRequestRejectedNotification,
   cancelRequest,
+  createKanbanTaskFromRequest,
   createRequest,
   filterRequests,
-  getPendingRequests,
+  getPendingApprovalRequests,
   getReceivedRequests,
   getSentRequests,
   getTodayReceivedRequests,
+  normalizeRequest,
+  rejectRequest,
   updateRequest,
-  updateRequestStatus,
 } from '../utils/requestUtils';
 
 function loadRequests() {
   try {
     const savedRequests = localStorage.getItem(REQUESTS_STORAGE_KEY);
-    if (savedRequests) return JSON.parse(savedRequests);
+    if (savedRequests) return JSON.parse(savedRequests).map(normalizeRequest);
   } catch {
     localStorage.removeItem(REQUESTS_STORAGE_KEY);
   }
 
-  return initialRequests;
+  return initialRequests.map(normalizeRequest);
+}
+
+function loadKanbanTasks() {
+  try {
+    const savedTasks = localStorage.getItem(KANBAN_STORAGE_KEY);
+    if (savedTasks) return JSON.parse(savedTasks);
+  } catch {
+    localStorage.removeItem(KANBAN_STORAGE_KEY);
+  }
+
+  return initialKanbanTasks;
+}
+
+function saveKanbanTasks(tasks) {
+  localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(tasks));
 }
 
 function Requests({ onAddNotification }) {
   const { currentUser } = useAuth();
   const [requests, setRequests] = useState(loadRequests);
-  const [usingSupabase, setUsingSupabase] = useState(false);
   const [activeTab, setActiveTab] = useState('received');
-  const [filters, setFilters] = useState({ status: 'all', sector: 'all', date: '' });
+  const [filters, setFilters] = useState({
+    status: 'all',
+    requesterSector: 'all',
+    targetSector: 'all',
+    priority: 'all',
+    date: '',
+  });
   const [formRequest, setFormRequest] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [detailRequest, setDetailRequest] = useState(null);
+  const [rejectingRequest, setRejectingRequest] = useState(null);
 
-  const loadRemoteRequests = async () => {
-    if (!isSupabaseConfigured) return;
-    try {
-      const remoteRequests = await fetchRemoteRequests();
-      setRequests(remoteRequests);
-      setUsingSupabase(true);
-    } catch {
-      setUsingSupabase(false);
-    }
+  const persistRequests = (nextRequests) => {
+    setRequests(nextRequests);
+    localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(nextRequests));
   };
-
-  useEffect(() => {
-    loadRemoteRequests();
-  }, []);
-
-  useEffect(() => {
-    if (!usingSupabase) {
-      localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(requests));
-      return undefined;
-    }
-
-    const channel = subscribeToRequests(loadRemoteRequests);
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [requests, usingSupabase]);
 
   const receivedRequests = useMemo(() => getReceivedRequests(requests, currentUser), [requests, currentUser]);
   const sentRequests = useMemo(() => getSentRequests(requests, currentUser), [requests, currentUser]);
@@ -92,9 +89,10 @@ function Requests({ onAddNotification }) {
   const stats = useMemo(
     () => ({
       receivedToday: getTodayReceivedRequests(requests, currentUser).length,
-      pending: getPendingRequests(requests, currentUser).length,
-      completed: receivedRequests.filter((request) => request.status === 'completed').length,
-      sent: sentRequests.length,
+      pendingApproval: getPendingApprovalRequests(requests, currentUser).length,
+      approved: receivedRequests.filter((request) => request.requestStatus === requestStatusIds.approved).length,
+      rejected: receivedRequests.filter((request) => request.requestStatus === requestStatusIds.rejected).length,
+      sentByMe: sentRequests.length,
     }),
     [receivedRequests, requests, sentRequests, currentUser],
   );
@@ -105,67 +103,45 @@ function Requests({ onAddNotification }) {
     all: requests.length,
   };
 
-  const persistRequests = (nextRequests) => {
-    setRequests(nextRequests);
-    localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(nextRequests));
-  };
-
-  const handleCreateRequest = async (values) => {
-    const nextRequest = usingSupabase
-      ? await createRemoteRequest(values, currentUser)
-      : createRequest(values, currentUser);
-
-    setRequests((current) => [nextRequest, ...current]);
-    if (!usingSupabase) persistRequests([nextRequest, ...requests]);
+  const handleCreateRequest = (values) => {
+    const nextRequest = createRequest(values, currentUser);
+    persistRequests([nextRequest, ...requests]);
     onAddNotification?.(buildRequestCreatedNotification(nextRequest));
     setIsFormOpen(false);
   };
 
-  const handleEditRequest = async (values) => {
-    if (usingSupabase) {
-      const updated = await updateRemoteRequest(formRequest.id, { ...formRequest, ...values }, currentUser);
-      setRequests((current) => current.map((request) => (request.id === updated.id ? updated : request)));
-    } else {
-      persistRequests(updateRequest(requests, formRequest.id, {
-        title: values.title.trim(),
-        description: values.description.trim(),
-        targetSector: values.targetSector,
-        responsibleName: values.responsibleName.trim() || null,
-        priority: values.priority,
-        dueDate: values.dueDate,
-      }));
-    }
-
+  const handleEditRequest = (values) => {
+    persistRequests(updateRequest(requests, formRequest.id, values));
     setIsFormOpen(false);
     setFormRequest(null);
   };
 
-  const handleStatusChange = async (requestId, status) => {
-    const changedRequest = requests.find((request) => request.id === requestId);
-    if (usingSupabase) {
-      const updated = await updateRemoteRequestStatus(requestId, status);
-      setRequests((current) => current.map((request) => (request.id === requestId ? updated : request)));
-    } else {
-      persistRequests(updateRequestStatus(requests, requestId, status));
-    }
+  const handleApproveRequest = (request) => {
+    if (request.generatedTaskId) return;
 
-    if (status === 'completed' && changedRequest?.status !== 'completed') {
-      onAddNotification?.(buildRequestCompletedNotification({ ...changedRequest, status }));
-    }
+    const currentKanbanTasks = loadKanbanTasks();
+    const existingTask = currentKanbanTasks.find((task) => task.sourceRequestId === request.id);
+    const generatedTask = existingTask ?? createKanbanTaskFromRequest(request);
+    const nextKanbanTasks = existingTask ? currentKanbanTasks : [...currentKanbanTasks, generatedTask];
+    const updatedRequests = approveRequest(requests, request.id, generatedTask.id);
+    const updatedRequest = updatedRequests.find((item) => item.id === request.id);
+
+    saveKanbanTasks(nextKanbanTasks);
+    persistRequests(updatedRequests);
+    onAddNotification?.(buildRequestApprovedNotification(updatedRequest));
   };
 
-  const handleComplete = (requestId) => {
-    handleStatusChange(requestId, 'completed');
+  const handleRejectRequest = (request, reason) => {
+    const updatedRequests = rejectRequest(requests, request.id, reason);
+    const updatedRequest = updatedRequests.find((item) => item.id === request.id);
+    persistRequests(updatedRequests);
+    setRejectingRequest(null);
+    onAddNotification?.(buildRequestRejectedNotification(updatedRequest));
   };
 
-  const handleCancel = (requestId) => {
+  const handleCancelRequest = (requestId) => {
     const canCancel = window.confirm('Deseja cancelar esta solicitacao?');
     if (!canCancel) return;
-
-    if (usingSupabase) {
-      handleStatusChange(requestId, 'canceled');
-      return;
-    }
     persistRequests(cancelRequest(requests, requestId));
   };
 
@@ -185,10 +161,6 @@ function Requests({ onAddNotification }) {
         </button>
       </section>
 
-      {!usingSupabase ? (
-        <div className="members-feedback">Usando solicitacoes locais ate a conexao Supabase estar disponivel.</div>
-      ) : null}
-
       <RequestStats stats={stats} />
 
       <section className="requests-panel">
@@ -200,14 +172,15 @@ function Requests({ onAddNotification }) {
         <RequestTable
           requests={visibleRequests}
           currentUser={currentUser}
-          onStatusChange={handleStatusChange}
+          activeTab={activeTab}
           onView={setDetailRequest}
           onEdit={(request) => {
             setFormRequest(request);
             setIsFormOpen(true);
           }}
-          onComplete={handleComplete}
-          onCancel={handleCancel}
+          onApprove={handleApproveRequest}
+          onReject={setRejectingRequest}
+          onCancel={handleCancelRequest}
         />
       </section>
 
@@ -222,6 +195,12 @@ function Requests({ onAddNotification }) {
           onSubmit={formRequest ? handleEditRequest : handleCreateRequest}
         />
       ) : null}
+
+      <RequestRejectModal
+        request={rejectingRequest}
+        onClose={() => setRejectingRequest(null)}
+        onConfirm={handleRejectRequest}
+      />
 
       <RequestModal request={detailRequest} onClose={() => setDetailRequest(null)} />
     </div>

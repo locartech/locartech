@@ -6,6 +6,9 @@ function TaskRow({ task, onStatusChange, onDateChange, onEdit, onDelete, onCompl
     <div className="stage-row">
       <div className="stage-cell stage-title-cell">
         <span className="stage-title">{task.title}</span>
+        {task.sourceRequestId ? (
+          <span className="stage-source-chip">Solicitado por: {task.requesterSector}</span>
+        ) : null}
       </div>
       <div className="stage-cell">
         <span className="stage-assignee">{task.assignee}</span>

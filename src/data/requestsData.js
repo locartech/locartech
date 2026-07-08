@@ -1,10 +1,4 @@
-export const REQUESTS_STORAGE_KEY = 'locartech.requests.v2';
-
-export const currentUser = {
-  id: 'u1',
-  name: 'Marina Costa',
-  sector: 'Compras',
-};
+export const REQUESTS_STORAGE_KEY = 'locartech.requests.v3';
 
 export const requestSectors = [
   'Compras',
@@ -15,11 +9,18 @@ export const requestSectors = [
   'Recursos Humanos',
 ];
 
+export const requestStatusIds = {
+  pendingApproval: 'pending_approval',
+  approved: 'approved',
+  rejected: 'rejected',
+  canceled: 'canceled',
+};
+
 export const requestStatuses = [
-  { id: 'pending', label: 'Pendente' },
-  { id: 'in_progress', label: 'Em andamento' },
-  { id: 'completed', label: 'Concluida' },
-  { id: 'canceled', label: 'Cancelada' },
+  { id: requestStatusIds.pendingApproval, label: 'Pendente de aprovacao' },
+  { id: requestStatusIds.approved, label: 'Aprovada' },
+  { id: requestStatusIds.rejected, label: 'Recusada' },
+  { id: requestStatusIds.canceled, label: 'Cancelada' },
 ];
 
 export const requestPriorities = [

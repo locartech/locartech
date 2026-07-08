@@ -20,6 +20,8 @@ export function createKanbanTask(sectorId, values) {
     assignee: values.assignee.trim(),
     status: values.status,
     date: values.date,
+    description: values.description ?? '',
+    priority: values.priority ?? 'medium',
   };
 }
 

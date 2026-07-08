@@ -2,30 +2,12 @@ import StatCard from '../dashboard/StatCard';
 
 function RequestStats({ stats }) {
   return (
-    <section className="stats-grid">
-      <StatCard
-        label="Solicitações recebidas hoje"
-        value={stats.receivedToday}
-        detail="Criadas hoje para o setor atual"
-        tone="blue"
-      />
-      <StatCard
-        label="Pendentes"
-        value={stats.pending}
-        detail="Pendentes ou em andamento"
-        tone="amber"
-      />
-      <StatCard
-        label="Concluídas"
-        value={stats.completed}
-        detail="Finalizadas pelo setor responsável"
-        tone="green"
-      />
-      <StatCard
-        label="Solicitações enviadas"
-        value={stats.sent}
-        detail="Criadas pelo usuário ou setor atual"
-      />
+    <section className="stats-grid request-stats-grid">
+      <StatCard label="Recebidas hoje" value={stats.receivedToday} detail="Criadas hoje para o setor atual" tone="blue" />
+      <StatCard label="Pendentes de aprovacao" value={stats.pendingApproval} detail="Aguardando decisao do setor" tone="amber" />
+      <StatCard label="Aprovadas" value={stats.approved} detail="Ja adicionadas ao fluxo do Kanban" tone="green" />
+      <StatCard label="Recusadas" value={stats.rejected} detail="Nao entraram no Kanban" />
+      <StatCard label="Enviadas por mim" value={stats.sentByMe} detail="Criadas pelo usuario ou setor atual" tone="blue" />
     </section>
   );
 }

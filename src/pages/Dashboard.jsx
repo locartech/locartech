@@ -1,8 +1,9 @@
 import StatCard from '../components/dashboard/StatCard';
 import { initialKanbanTasks, KANBAN_STORAGE_KEY } from '../data/kanbanData';
 import { initialRequests, REQUESTS_STORAGE_KEY } from '../data/requestsData';
+import { useAuth } from '../contexts/AuthContext';
 
-const today = new Date('2026-07-06T12:00:00');
+const today = new Date('2026-07-08T12:00:00');
 
 function loadStoredItems(storageKey, fallback) {
   try {
@@ -16,11 +17,13 @@ function loadStoredItems(storageKey, fallback) {
 }
 
 function getDaysUntil(dateValue) {
+  if (!dateValue) return Number.POSITIVE_INFINITY;
   const targetDate = new Date(`${dateValue}T12:00:00`);
   return Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
 }
 
 function Dashboard() {
+  const { currentUser } = useAuth();
   const stageTasks = loadStoredItems(KANBAN_STORAGE_KEY, initialKanbanTasks);
   const requests = loadStoredItems(REQUESTS_STORAGE_KEY, initialRequests);
 
@@ -29,16 +32,31 @@ function Dashboard() {
   const todoTasks = stageTasks.filter((task) => task.status === 'todo').length;
   const doingTasks = stageTasks.filter((task) => task.status === 'doing').length;
   const dueSoonTasks = stageTasks.filter((task) => {
-    const daysUntil = getDaysUntil(task.date);
-    return task.status !== 'done' && daysUntil >= 0 && daysUntil <= 7;
+    const daysUntil = getDaysUntil(task.dueDate ?? task.date);
+    return !['done', 'canceled'].includes(task.status) && daysUntil >= 0 && daysUntil <= 7;
   }).length;
-  const overdueTasks = stageTasks.filter((task) => task.status !== 'done' && getDaysUntil(task.date) < 0).length;
+  const overdueTasks = stageTasks.filter(
+    (task) => !['done', 'canceled'].includes(task.status) && getDaysUntil(task.dueDate ?? task.date) < 0,
+  ).length;
   const completionRate = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  const receivedRequests = requests.filter((request) => request.targetSector === 'Compras');
-  const sentRequests = requests.filter((request) => request.requesterSector === 'Compras');
-  const urgentRequests = requests.filter((request) => request.priority === 'urgent').length;
-  const pendingRequests = requests.filter((request) => ['pending', 'in_progress'].includes(request.status)).length;
+  const currentSector = currentUser?.sector ?? 'Compras';
+  const receivedRequests = requests.filter((request) => request.targetSector === currentSector);
+  const sentRequests = requests.filter(
+    (request) =>
+      request.requesterUserId === currentUser?.id ||
+      request.requesterName === currentUser?.name ||
+      request.requesterSector === currentSector,
+  );
+  const relevantRequests = requests.filter(
+    (request) =>
+      request.targetSector === currentSector ||
+      request.requesterUserId === currentUser?.id ||
+      request.requesterName === currentUser?.name ||
+      request.requesterSector === currentSector,
+  );
+  const urgentRequests = relevantRequests.filter((request) => request.priority === 'urgent').length;
+  const pendingRequests = relevantRequests.filter((request) => request.requestStatus === 'pending_approval').length;
 
   return (
     <div className="page-stack">
