@@ -26,7 +26,7 @@ function Sidebar({ activePage, onNavigate, unreadCount, chatUnreadCount, collaps
           <span>LT</span>
         </div>
         <div className="brand-copy">
-          <LocarTechLogo width={120} />
+          <LocarTechLogo width={154} />
         </div>
         <button
           type="button"

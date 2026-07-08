@@ -13,16 +13,18 @@ const views = {
 function LoginPage() {
   const [view, setView] = useState('login');
   const ActiveView = views[view] ?? Login;
-  const logoWidth = view === 'login' ? 260 : 220;
 
   return (
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-login-logo">
-          <LocarTechLogo width={logoWidth} />
+          <LocarTechLogo width={190} />
         </div>
         <ActiveView onNavigate={setView} />
       </section>
+      <aside className="auth-logo-showcase" aria-hidden="true">
+        <LocarTechLogo width={540} className="auth-showcase-logo" />
+      </aside>
     </main>
   );
 }

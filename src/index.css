@@ -4494,3 +4494,133 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Final Locartech logo layout */
+.brand-block {
+  min-height: 74px;
+  gap: 10px;
+  padding: 6px 8px 22px;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(219, 234, 254, 0.16);
+  background: rgba(219, 234, 254, 0.08);
+}
+
+.brand-mark span {
+  color: #bfdbfe;
+  font-size: 0.68rem;
+}
+
+.brand-copy {
+  width: 158px;
+  height: 46px;
+  overflow: visible;
+}
+
+.brand-copy svg {
+  width: 154px !important;
+  max-width: 154px;
+  transform: none;
+}
+
+.sidebar.collapsed .brand-copy {
+  display: none;
+}
+
+.auth-page {
+  grid-template-columns: minmax(340px, 430px) minmax(420px, 1fr);
+  align-items: center;
+  gap: clamp(28px, 6vw, 96px);
+  padding: clamp(28px, 5vw, 70px);
+  background:
+    radial-gradient(circle at 82% 44%, rgba(123, 201, 239, 0.18), transparent 28rem),
+    linear-gradient(135deg, #0f2a43 0%, #0f172a 100%);
+}
+
+.auth-card {
+  justify-self: end;
+  width: min(100%, 430px);
+}
+
+.auth-login-logo {
+  min-height: 74px;
+  margin-bottom: 8px;
+}
+
+.auth-login-logo svg {
+  width: min(190px, 70%) !important;
+  margin: 0 auto;
+}
+
+.auth-logo-showcase {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: min(68vh, 560px);
+  padding: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(219, 234, 254, 0.12);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015)),
+    rgba(15, 42, 67, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.auth-logo-showcase::before {
+  content: "";
+  position: absolute;
+  inset: 16%;
+  border-radius: 999px;
+  background: rgba(123, 201, 239, 0.09);
+  filter: blur(42px);
+}
+
+.auth-showcase-logo {
+  position: relative;
+  z-index: 1;
+  width: min(540px, 88%) !important;
+  filter: drop-shadow(0 26px 54px rgba(0, 0, 0, 0.2));
+  animation: logoFloat 4.2s ease-in-out 0.4s infinite;
+}
+
+@media (max-width: 980px) {
+  .auth-page {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .auth-card {
+    justify-self: center;
+    order: 2;
+  }
+
+  .auth-logo-showcase {
+    order: 1;
+    width: min(100%, 430px);
+    min-height: 180px;
+    padding: 16px;
+  }
+
+  .auth-showcase-logo {
+    width: min(320px, 88%) !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .auth-page {
+    padding: 18px;
+  }
+
+  .auth-logo-showcase {
+    min-height: 124px;
+    border-radius: 12px;
+  }
+
+  .auth-showcase-logo {
+    width: min(240px, 88%) !important;
+  }
+}
