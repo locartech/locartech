@@ -4926,6 +4926,7 @@ body {
 
 .sector-stage-group {
   border: 1px solid var(--lt-border-soft);
+  border-left: 5px solid var(--sector-accent);
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 10px 24px rgba(15, 23, 42, 0.05);
   transition: box-shadow 0.18s ease;
@@ -4938,25 +4939,28 @@ body {
 .sector-stage-header {
   min-height: 60px;
   padding: 0 22px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--sector-accent) 7%, #ffffff), #ffffff 62%);
-  transition: background 0.16s ease;
+  background: linear-gradient(135deg, var(--sector-accent), color-mix(in srgb, var(--sector-accent) 72%, black));
+  border-left: 0;
+  transition: filter 0.16s ease;
 }
 
 .sector-stage-header:hover {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--sector-accent) 12%, #ffffff), #ffffff 68%);
+  filter: brightness(1.06);
 }
 
 .sector-stage-title {
   gap: 11px;
+  color: #ffffff;
   font-size: 1.02rem;
   font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
 }
 
 .sector-stage-title svg {
   padding: 4px;
   border-radius: 8px;
-  color: var(--sector-accent);
-  background: color-mix(in srgb, var(--sector-accent) 14%, #ffffff);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.2);
   box-sizing: content-box;
 }
 
@@ -4967,25 +4971,24 @@ body {
 .sector-stage-summary span {
   min-height: 24px;
   padding: 0 10px;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 999px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
   font-weight: 800;
   font-size: 0.74rem;
 }
 
 .sector-stage-summary > span:first-child {
-  color: #475569;
-  background: #f1f5f9;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .sector-stage-summary-open {
-  color: #9a3412;
-  background: #ffedd5;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .sector-stage-summary-done {
-  color: #166534;
-  background: #dcfce7;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .stage-table {
