@@ -41,6 +41,7 @@ function SectorGroup({
             <div className="stage-cell" role="columnheader">Etapa</div>
             <div className="stage-cell" role="columnheader">Responsável</div>
             <div className="stage-cell" role="columnheader">Status</div>
+            <div className="stage-cell" role="columnheader">Prioridade</div>
             <div className="stage-cell" role="columnheader">Data</div>
             <div className="stage-cell" role="columnheader">Ações</div>
           </div>

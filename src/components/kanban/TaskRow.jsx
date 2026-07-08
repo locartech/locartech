@@ -1,4 +1,5 @@
 import { CheckCircle2, Pencil, Trash2 } from 'lucide-react';
+import RequestPriorityBadge from '../requests/RequestPriorityBadge';
 import StatusBadge from './StatusBadge';
 
 function TaskRow({ task, onStatusChange, onDateChange, onEdit, onDelete, onComplete }) {
@@ -15,6 +16,9 @@ function TaskRow({ task, onStatusChange, onDateChange, onEdit, onDelete, onCompl
       </div>
       <div className="stage-cell">
         <StatusBadge value={task.status} onChange={(status) => onStatusChange(task.id, status)} />
+      </div>
+      <div className="stage-cell">
+        <RequestPriorityBadge value={task.priority ?? 'medium'} />
       </div>
       <div className="stage-cell">
         <input

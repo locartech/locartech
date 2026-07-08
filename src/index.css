@@ -4757,3 +4757,32 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Kanban priority column */
+.stage-row {
+  grid-template-columns:
+    minmax(250px, 1.55fr) minmax(170px, 0.95fr) minmax(142px, 0.75fr) minmax(126px, 0.65fr)
+    minmax(132px, 0.6fr) minmax(132px, 0.58fr);
+  min-width: 1050px;
+}
+
+.stage-cell .request-priority {
+  width: 100%;
+  max-width: 112px;
+  border-radius: 7px;
+}
+
+.stage-priority-select {
+  max-width: 124px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 7px;
+  color: #334155;
+  background: #ffffff;
+}
+
+@media (max-width: 1120px) {
+  .stage-row {
+    min-width: 980px;
+  }
+}

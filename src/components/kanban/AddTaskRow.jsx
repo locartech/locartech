@@ -1,11 +1,13 @@
 import { Check, X } from 'lucide-react';
 import { useState } from 'react';
+import { requestPriorities } from '../../data/requestsData';
 import StatusBadge from './StatusBadge';
 
 const blankTask = {
   title: '',
   assignee: '',
   status: 'todo',
+  priority: 'medium',
   date: '',
 };
 
@@ -45,6 +47,20 @@ function AddTaskRow({ onAdd, onCancel }) {
       </div>
       <div className="stage-cell">
         <StatusBadge value={draft.status} onChange={(value) => updateDraft('status', value)} />
+      </div>
+      <div className="stage-cell">
+        <select
+          className="stage-priority-select"
+          value={draft.priority}
+          onChange={(event) => updateDraft('priority', event.target.value)}
+          aria-label="Prioridade da etapa"
+        >
+          {requestPriorities.map((priority) => (
+            <option key={priority.id} value={priority.id}>
+              {priority.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="stage-cell">
         <input

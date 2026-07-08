@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { kanbanStatuses } from '../../data/kanbanData';
+import { requestPriorities } from '../../data/requestsData';
 
 function EditTaskModal({ task, onClose, onSave }) {
   const [draft, setDraft] = useState(task);
@@ -22,6 +23,7 @@ function EditTaskModal({ task, onClose, onSave }) {
       title: draft.title.trim(),
       assignee: draft.assignee.trim(),
       status: draft.status,
+      priority: draft.priority ?? 'medium',
       date: draft.date,
     });
   };
@@ -56,6 +58,17 @@ function EditTaskModal({ task, onClose, onSave }) {
               {kanbanStatuses.map((status) => (
                 <option key={status.id} value={status.id}>
                   {status.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            <span>Prioridade</span>
+            <select value={draft.priority ?? 'medium'} onChange={(event) => updateDraft('priority', event.target.value)}>
+              {requestPriorities.map((priority) => (
+                <option key={priority.id} value={priority.id}>
+                  {priority.label}
                 </option>
               ))}
             </select>

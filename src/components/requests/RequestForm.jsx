@@ -21,8 +21,8 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
   useEffect(() => {
     if (request) {
       setDraft({
-        title: request.title,
-        description: request.description,
+        title: request.stepName,
+        description: request.description ?? '',
         stepName: request.stepName,
         targetSector: request.targetSector,
         responsibleName: request.responsibleName ?? '',
@@ -45,13 +45,16 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
     event.preventDefault();
     setError('');
 
-    if (!draft.title.trim()) return setError('Informe o titulo da solicitacao.');
     if (!draft.stepName.trim()) return setError('Informe a etapa que sera criada no Kanban.');
     if (!draft.targetSector) return setError('Escolha o setor responsavel.');
     if (!draft.dueDate) return setError('Informe a data de vencimento.');
     if (!draft.priority) return setError('Escolha a prioridade.');
 
-    onSubmit(draft);
+    onSubmit({
+      ...draft,
+      title: draft.stepName,
+      description: '',
+    });
   };
 
   return (
@@ -60,7 +63,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
         <div className="edit-modal-header">
           <div>
             <p className="eyebrow">{request ? 'Editar solicitacao' : 'Nova solicitacao'}</p>
-            <h2 id="request-form-title">{request ? request.title : 'Solicitar demanda para outro setor'}</h2>
+            <h2 id="request-form-title">{request ? request.stepName : 'Criar etapa para aprovacao'}</h2>
           </div>
           <button type="button" className="icon-button" onClick={onClose} title="Fechar modal">
             <X size={18} aria-hidden="true" />
@@ -70,30 +73,12 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
         <form className="edit-modal-form request-form" onSubmit={handleSubmit}>
           {error ? <div className="auth-alert error">{error}</div> : null}
 
-          <div className="request-form-context">
-            <span>Solicitante</span>
-            <strong>{currentUser.name}</strong>
-            <span>{currentUser.sector}</span>
-          </div>
-
           <div className="form-grid-two">
             <label>
-              <span>Titulo da solicitacao</span>
-              <input type="text" value={draft.title} onChange={(event) => updateDraft('title', event.target.value)} />
-            </label>
-
-            <label>
-              <span>Etapa no Kanban</span>
+              <span>Etapa</span>
               <input type="text" value={draft.stepName} onChange={(event) => updateDraft('stepName', event.target.value)} />
             </label>
-          </div>
 
-          <label>
-            <span>Descricao</span>
-            <textarea value={draft.description} onChange={(event) => updateDraft('description', event.target.value)} />
-          </label>
-
-          <div className="form-grid-two">
             <label>
               <span>Setor responsavel/destino</span>
               <select value={draft.targetSector} onChange={(event) => updateDraft('targetSector', event.target.value)}>
@@ -104,7 +89,9 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
                 ))}
               </select>
             </label>
+          </div>
 
+          <div className="form-grid-two">
             <label>
               <span>Responsavel</span>
               <input
@@ -114,9 +101,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
                 placeholder="Opcional"
               />
             </label>
-          </div>
 
-          <div className="form-grid-two">
             <label>
               <span>Status inicial no Kanban</span>
               <select value={draft.kanbanStatus} onChange={(event) => updateDraft('kanbanStatus', event.target.value)}>
@@ -127,23 +112,25 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
                 ))}
               </select>
             </label>
+          </div>
 
+          <div className="form-grid-two">
             <label>
               <span>Data de vencimento</span>
               <input type="date" value={draft.dueDate} onChange={(event) => updateDraft('dueDate', event.target.value)} />
             </label>
-          </div>
 
-          <label>
-            <span>Prioridade</span>
-            <select value={draft.priority} onChange={(event) => updateDraft('priority', event.target.value)}>
-              {requestPriorities.map((priority) => (
-                <option key={priority.id} value={priority.id}>
-                  {priority.label}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label>
+              <span>Prioridade</span>
+              <select value={draft.priority} onChange={(event) => updateDraft('priority', event.target.value)}>
+                {requestPriorities.map((priority) => (
+                  <option key={priority.id} value={priority.id}>
+                    {priority.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
 
           <div className="modal-actions">
             <button type="button" className="ghost-button" onClick={onClose}>
