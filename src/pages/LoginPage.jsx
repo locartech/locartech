@@ -17,7 +17,7 @@ function LoginPage() {
   return (
     <main className="auth-page">
       <aside className="auth-logo-showcase" aria-hidden="true">
-        <LocarTechLogo width={560} className="auth-showcase-logo" />
+        <LocarTechLogo width={640} className="auth-showcase-logo" />
       </aside>
       <section className="auth-card">
         <p className="auth-badge">

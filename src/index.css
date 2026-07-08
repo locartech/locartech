@@ -4533,17 +4533,34 @@ body {
 }
 
 .auth-page {
-  grid-template-columns: minmax(380px, 1.05fr) minmax(360px, 460px);
+  position: relative;
+  grid-template-columns: minmax(340px, 0.85fr) minmax(420px, 540px);
   align-items: center;
-  gap: clamp(28px, 6vw, 96px);
+  gap: clamp(28px, 5vw, 72px);
   padding: clamp(28px, 5vw, 70px);
+  overflow: hidden;
   background:
     radial-gradient(circle at 20% 40%, rgba(123, 201, 239, 0.18), transparent 30rem),
     linear-gradient(135deg, #0f2a43 0%, #0f172a 100%);
 }
 
+.auth-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    repeating-radial-gradient(circle at 24% 46%, transparent 0, transparent 64px, rgba(148, 197, 255, 0.05) 65px, transparent 66px, transparent 128px),
+    linear-gradient(rgba(148, 197, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 197, 255, 0.05) 1px, transparent 1px);
+  background-size: auto, 46px 46px, 46px 46px;
+  mask-image: radial-gradient(circle at 24% 46%, black, transparent 72%);
+  -webkit-mask-image: radial-gradient(circle at 24% 46%, black, transparent 72%);
+}
+
 .auth-logo-showcase {
   position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
   min-height: min(60vh, 480px);
@@ -4564,14 +4581,16 @@ body {
 .auth-showcase-logo {
   position: relative;
   z-index: 1;
-  width: min(600px, 86%) !important;
+  width: min(660px, 92%) !important;
   filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.28));
   animation: logoFloat 4.2s ease-in-out 0.4s infinite;
 }
 
 .auth-card {
-  justify-self: end;
-  width: min(100%, 420px);
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: min(100%, 440px);
   padding: 38px 34px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 20px;
