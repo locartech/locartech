@@ -4939,13 +4939,13 @@ body {
 .sector-stage-header {
   min-height: 56px;
   padding: 0 20px;
-  background: #ffffff;
+  background: color-mix(in srgb, var(--sector-accent) 7%, #ffffff);
   border-left: 0;
   transition: background 0.14s ease;
 }
 
 .sector-stage-header:hover {
-  background: #fafbfc;
+  background: color-mix(in srgb, var(--sector-accent) 11%, #ffffff);
 }
 
 .sector-stage-title {
