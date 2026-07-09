@@ -1,4 +1,5 @@
 import { ExternalLink, X } from 'lucide-react';
+import { normalizeKnowledgeType } from '../../utils/knowledgeUtils';
 
 const formatDate = (value) =>
   new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(
@@ -22,7 +23,7 @@ function KnowledgeDetailsModal({ record, onClose }) {
         </div>
 
         <div className="knowledge-detail-body">
-          <span className="knowledge-type-badge">{record.type}</span>
+          <span className="knowledge-type-badge">{normalizeKnowledgeType(record.type)}</span>
           <p>{record.description}</p>
           <dl className="profile-detail-grid">
             <div>

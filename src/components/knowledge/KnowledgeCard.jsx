@@ -1,4 +1,5 @@
 import { ExternalLink, FileText, Pencil, Trash2 } from 'lucide-react';
+import { normalizeKnowledgeType } from '../../utils/knowledgeUtils';
 
 const formatDate = (value) =>
   new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(
@@ -13,7 +14,7 @@ function KnowledgeCard({ record, onView, onEdit, onDelete }) {
       </div>
       <div className="knowledge-card-content">
         <div className="knowledge-card-heading">
-          <span className="knowledge-type-badge">{record.type}</span>
+          <span className="knowledge-type-badge">{normalizeKnowledgeType(record.type)}</span>
           <time>{formatDate(record.publishedAt)}</time>
         </div>
         <h3>{record.title}</h3>

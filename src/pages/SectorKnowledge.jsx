@@ -116,10 +116,10 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
             <ArrowLeft size={16} aria-hidden="true" />
             Voltar para setores
           </button>
-          <p className="eyebrow">Base de conhecimento</p>
-          <h2>Base de Conhecimento - {sector.name}</h2>
+          <p className="eyebrow">Documentos</p>
+          <h2>Documentos - {sector.name}</h2>
           <p>
-            Organize documentos, manuais, links e processos internos do setor em um unico lugar.
+            Organize manuais do setor, POPs, documentos e outros arquivos internos em um unico lugar.
           </p>
         </div>
         <button
@@ -131,12 +131,12 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
           }}
         >
           <Plus size={17} aria-hidden="true" />
-          Novo registro
+          Novo documento
         </button>
       </section>
 
       {!usingSupabase ? (
-        <div className="members-feedback">Usando base local ate a conexao Supabase estar disponivel.</div>
+        <div className="members-feedback">Usando documentos locais ate a conexao Supabase estar disponivel.</div>
       ) : null}
 
       <KnowledgeStats stats={stats} />
@@ -145,7 +145,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
         <KnowledgeFilters filters={filters} onChange={setFilters} />
       </section>
 
-      <section className="knowledge-grid" aria-label={`Registros da base de conhecimento de ${sector.name}`}>
+      <section className="knowledge-grid" aria-label={`Documentos do setor ${sector.name}`}>
         {filteredRecords.length > 0 ? (
           filteredRecords.map((record) => (
             <KnowledgeCard

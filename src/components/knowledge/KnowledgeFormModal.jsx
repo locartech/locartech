@@ -1,12 +1,12 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { knowledgeTypes } from '../../data/knowledgeData';
-import { validateKnowledgeRecord } from '../../utils/knowledgeUtils';
+import { normalizeKnowledgeType, validateKnowledgeRecord } from '../../utils/knowledgeUtils';
 
 const emptyRecord = {
   title: '',
   description: '',
-  type: 'Documento',
+  type: 'Manual do setor',
   responsible: '',
   publishedAt: '',
   driveLink: '',
@@ -21,7 +21,7 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit }) {
       setDraft({
         title: record.title,
         description: record.description,
-        type: record.type,
+        type: normalizeKnowledgeType(record.type),
         responsible: record.responsible,
         publishedAt: record.publishedAt,
         driveLink: record.driveLink,
@@ -53,7 +53,7 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit }) {
         <div className="edit-modal-header">
           <div>
             <p className="eyebrow">{sectorName}</p>
-            <h2 id="knowledge-form-title">{record ? 'Editar registro' : 'Novo registro'}</h2>
+            <h2 id="knowledge-form-title">{record ? 'Editar documento' : 'Novo documento'}</h2>
           </div>
           <button type="button" className="icon-button" onClick={onClose} title="Fechar modal">
             <X size={18} aria-hidden="true" />
@@ -69,7 +69,7 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit }) {
           </label>
 
           <label>
-            <span>Descrição</span>
+            <span>Descricao</span>
             <textarea value={draft.description} onChange={(event) => updateDraft('description', event.target.value)} />
           </label>
 
@@ -85,14 +85,14 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit }) {
               </select>
             </label>
             <label>
-              <span>Responsável</span>
+              <span>Responsavel</span>
               <input value={draft.responsible} onChange={(event) => updateDraft('responsible', event.target.value)} />
             </label>
           </div>
 
           <div className="form-grid-two">
             <label>
-              <span>Data de publicação</span>
+              <span>Data de publicacao</span>
               <input type="date" value={draft.publishedAt} onChange={(event) => updateDraft('publishedAt', event.target.value)} />
             </label>
             <label>
@@ -106,7 +106,7 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit }) {
               Cancelar
             </button>
             <button type="submit" className="primary-button">
-              {record ? 'Salvar alterações' : 'Criar registro'}
+              {record ? 'Salvar alteracoes' : 'Criar documento'}
             </button>
           </div>
         </form>

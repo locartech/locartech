@@ -2,6 +2,17 @@ import { KNOWLEDGE_STORAGE_KEY, initialKnowledgeRecords } from '../data/knowledg
 
 const today = '2026-07-07';
 
+export function normalizeKnowledgeType(type) {
+  return {
+    Documento: 'Documentos',
+    Manual: 'Manual do setor',
+    Treinamento: 'Outros',
+    Link: 'Outros',
+    Processo: 'POPs',
+    Outro: 'Outros',
+  }[type] ?? type;
+}
+
 export function loadKnowledgeRecords() {
   try {
     const savedRecords = localStorage.getItem(KNOWLEDGE_STORAGE_KEY);
@@ -59,11 +70,12 @@ export function filterKnowledgeRecords(records, sector, filters) {
   const normalizedQuery = filters.query.trim().toLowerCase();
 
   return records.filter((record) => {
+    const recordType = normalizeKnowledgeType(record.type);
     const sectorMatches = record.sector === sector;
-    const typeMatches = filters.type === 'Todos' || record.type === filters.type;
+    const typeMatches = filters.type === 'Todos' || recordType === filters.type;
     const queryMatches =
       !normalizedQuery ||
-      `${record.title} ${record.description} ${record.type} ${record.responsible}`
+      `${record.title} ${record.description} ${recordType} ${record.responsible}`
         .toLowerCase()
         .includes(normalizedQuery);
 
@@ -74,11 +86,10 @@ export function filterKnowledgeRecords(records, sector, filters) {
 export function getKnowledgeStats(records, sector) {
   const sectorRecords = records.filter((record) => record.sector === sector);
   return {
-    total: sectorRecords.length,
-    documents: sectorRecords.filter((record) => record.type === 'Documento').length,
-    manuals: sectorRecords.filter((record) => record.type === 'Manual').length,
-    trainings: sectorRecords.filter((record) => record.type === 'Treinamento').length,
-    responsibles: new Set(sectorRecords.map((record) => record.responsible)).size,
+    sectorManual: sectorRecords.filter((record) => normalizeKnowledgeType(record.type) === 'Manual do setor').length,
+    pops: sectorRecords.filter((record) => normalizeKnowledgeType(record.type) === 'POPs').length,
+    documents: sectorRecords.filter((record) => normalizeKnowledgeType(record.type) === 'Documentos').length,
+    others: sectorRecords.filter((record) => normalizeKnowledgeType(record.type) === 'Outros').length,
   };
 }
 

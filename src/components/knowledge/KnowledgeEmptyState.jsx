@@ -3,8 +3,8 @@ import EmptyState from '../common/EmptyState';
 function KnowledgeEmptyState() {
   return (
     <EmptyState
-      title="Nenhum registro encontrado"
-      description="Cadastre documentos, links, manuais ou treinamentos para este setor."
+      title="Nenhum documento encontrado"
+      description="Cadastre manuais do setor, POPs, documentos ou outros arquivos para este setor."
     />
   );
 }

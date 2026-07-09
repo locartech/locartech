@@ -13,7 +13,7 @@ function KnowledgeFilters({ filters, onChange }) {
         <input
           value={filters.query}
           onChange={(event) => updateFilter('query', event.target.value)}
-          placeholder="Buscar por título, responsável, descrição ou tipo"
+          placeholder="Buscar por titulo, descricao ou tipo"
         />
       </label>
       <label>
