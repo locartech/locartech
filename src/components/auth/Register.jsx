@@ -33,15 +33,20 @@ function Register({ onNavigate }) {
     }
 
     setLoading(true);
-    const result = await register(form);
-    setLoading(false);
-    if (!result.ok) {
-      setError(result.message);
-      return;
-    }
+    try {
+      const result = await register(form);
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
 
-    setMessage(result.message);
-    setForm(initialForm);
+      setMessage(result.message);
+      setForm(initialForm);
+    } catch {
+      setError('Nao foi possivel concluir o cadastro. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -1,12 +1,6 @@
 import { supabase } from '../lib/supabase';
-import { mapProfileFromDb, mapProfileToDb, getInitials } from '../utils/profileMapper';
+import { mapProfileFromDb, mapProfileToDb } from '../utils/profileMapper';
 import { fetchSectorIdByName } from './sectorsService';
-
-async function resolveOrganizationId() {
-  const { data, error } = await supabase.from('organizations').select('id').limit(1).maybeSingle();
-  if (error) throw error;
-  return data?.id ?? null;
-}
 
 export async function fetchProfiles() {
   const { data, error } = await supabase
@@ -41,26 +35,16 @@ export async function fetchProfileByEmail(email) {
 }
 
 export async function createPendingProfile(values, authUserId = null) {
-  const [organizationId, sectorId] = await Promise.all([
-    resolveOrganizationId(),
-    fetchSectorIdByName(values.sector),
-  ]);
+  const sectorId = await fetchSectorIdByName(values.sector);
 
-  const payload = {
-    auth_user_id: authUserId,
-    organization_id: organizationId,
-    sector_ref_id: sectorId,
-    name: values.name.trim(),
-    email: values.email.trim().toLowerCase(),
-    sector: values.sector,
-    role: values.role.trim(),
-    job_title: values.role.trim(),
-    account_type: values.accountType || 'member',
-    status: values.status || 'Pendente',
-    avatar_initials: getInitials(values.name),
-  };
+  const { data, error } = await supabase.rpc('create_pending_profile', {
+    p_auth_user_id: authUserId,
+    p_name: values.name.trim(),
+    p_email: values.email.trim().toLowerCase(),
+    p_sector_id: sectorId,
+    p_role: values.role.trim(),
+  });
 
-  const { data, error } = await supabase.from('profiles').insert(payload).select('*').single();
   if (error) throw error;
   return mapProfileFromDb(data);
 }

@@ -107,7 +107,11 @@ export function AuthProvider({ children }) {
     const { data, error } = await supabase.auth.signUp({ email: normalizedEmail, password: values.password });
     if (error) return { ok: false, message: error.message };
 
-    await createPendingProfile({ ...values, email: normalizedEmail }, data.user?.id ?? null);
+    try {
+      await createPendingProfile({ ...values, email: normalizedEmail }, data.user?.id ?? null);
+    } catch (profileError) {
+      return { ok: false, message: profileError.message ?? 'Nao foi possivel concluir o cadastro. Tente novamente.' };
+    }
 
     if (data.session) {
       setSession(data.session);

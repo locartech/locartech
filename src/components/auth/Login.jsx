@@ -13,9 +13,14 @@ function Login({ onNavigate }) {
     event.preventDefault();
     setError('');
     setLoading(true);
-    const result = await login(form);
-    setLoading(false);
-    if (!result.ok) setError(result.message);
+    try {
+      const result = await login(form);
+      if (!result.ok) setError(result.message);
+    } catch {
+      setError('Nao foi possivel entrar. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
