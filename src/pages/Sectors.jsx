@@ -1,7 +1,7 @@
 import SectorCard from '../components/sectors/SectorCard';
 import { sectors } from '../data/mockData';
 
-function Sectors({ tasks, onOpenKnowledge }) {
+function Sectors({ onOpenKnowledge }) {
   return (
     <div className="page-stack">
       <section className="page-heading">
@@ -10,13 +10,13 @@ function Sectors({ tasks, onOpenKnowledge }) {
           <h2>Setores da empresa</h2>
         </div>
         <p>
-          Acesse cada area para consultar e manter documentos, manuais, links e processos internos.
+          Acesse rapidamente a base de conhecimento de cada area da empresa.
         </p>
       </section>
 
       <section className="sectors-grid">
         {sectors.map((sector) => (
-          <SectorCard key={sector.id} sector={sector} tasks={tasks} onOpen={onOpenKnowledge} />
+          <SectorCard key={sector.id} sector={sector} onOpen={onOpenKnowledge} />
         ))}
       </section>
     </div>
