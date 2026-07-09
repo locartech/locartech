@@ -32,7 +32,7 @@ const pageDetails = {
     subtitle: 'Consulte areas, responsaveis e atividades em aberto.',
   },
   sectorKnowledge: {
-    eyebrow: 'Registros do setor',
+    eyebrow: '',
     title: 'Registros do setor',
     subtitle: 'Consulte manuais do setor, POPs, documentos e outros arquivos internos.',
   },
@@ -49,7 +49,7 @@ function Header({ activePage, unreadCount, onOpenNotifications }) {
   return (
     <header className="top-header">
       <div className="header-title-block">
-        <p className="eyebrow">{details.eyebrow}</p>
+        {details.eyebrow ? <p className="eyebrow">{details.eyebrow}</p> : null}
         <h1>{details.title}</h1>
         <span>{details.subtitle}</span>
       </div>
