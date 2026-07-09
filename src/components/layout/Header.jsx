@@ -32,8 +32,8 @@ const pageDetails = {
     subtitle: 'Consulte areas, responsaveis e atividades em aberto.',
   },
   sectorKnowledge: {
-    eyebrow: 'Documentos',
-    title: 'Documentos por setor',
+    eyebrow: 'Registros do setor',
+    title: 'Registros do setor',
     subtitle: 'Consulte manuais do setor, POPs, documentos e outros arquivos internos.',
   },
   members: {

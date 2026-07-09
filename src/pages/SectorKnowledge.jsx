@@ -116,8 +116,8 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
             <ArrowLeft size={16} aria-hidden="true" />
             Voltar para setores
           </button>
-          <p className="eyebrow">Documentos</p>
-          <h2>Documentos - {sector.name}</h2>
+          <p className="eyebrow">Registros do setor</p>
+          <h2>Registros do setor</h2>
           <p>
             Organize manuais do setor, POPs, documentos e outros arquivos internos em um unico lugar.
           </p>
