@@ -1,30 +1,10 @@
 import { LogOut, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { isSupabaseConfigured } from '../../lib/supabase';
-import { updateProfilePhoto } from '../../services/profilesService';
-import { loadMembers, saveMembers, updateMemberPhoto } from '../../utils/membersUtils';
 import AvatarUploader from './AvatarUploader';
 
 function UserProfileModal({ onClose }) {
-  const { currentUser, setCurrentUser, isAdmin, logout } = useAuth();
-
-  const handlePhotoChange = async (photoUrl) => {
-    if (isSupabaseConfigured && currentUser.authUserId) {
-      try {
-        const updated = await updateProfilePhoto(currentUser.id, photoUrl);
-        setCurrentUser(updated);
-        return;
-      } catch {
-        // Fallback to local profile photo.
-      }
-    }
-
-    const members = loadMembers();
-    const nextMembers = updateMemberPhoto(members, currentUser.id, photoUrl);
-    saveMembers(nextMembers);
-    setCurrentUser({ ...currentUser, photoUrl });
-  };
+  const { currentUser, isAdmin, logout, uploadAvatar, removeAvatar } = useAuth();
 
   return createPortal(
     <div className="modal-backdrop" role="presentation">
@@ -40,7 +20,7 @@ function UserProfileModal({ onClose }) {
         </div>
 
         <div className="profile-modal-body">
-          <AvatarUploader user={currentUser} onChangePhoto={handlePhotoChange} />
+          <AvatarUploader user={currentUser} onUpload={uploadAvatar} onRemove={removeAvatar} />
           <dl className="profile-detail-grid">
             <div>
               <dt>E-mail</dt>

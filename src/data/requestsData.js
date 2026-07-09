@@ -1,5 +1,3 @@
-export const REQUESTS_STORAGE_KEY = 'locartech.requests.v3';
-
 export const requestSectors = [
   'Compras',
   'Contabilidade',
@@ -29,5 +27,3 @@ export const requestPriorities = [
   { id: 'high', label: 'Alta' },
   { id: 'urgent', label: 'Urgente' },
 ];
-
-export const initialRequests = [];

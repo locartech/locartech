@@ -1,5 +1,12 @@
 import { supabase } from '../lib/supabase';
 import { mapProfileFromDb, mapProfileToDb, getInitials } from '../utils/profileMapper';
+import { fetchSectorIdByName } from './sectorsService';
+
+async function resolveOrganizationId() {
+  const { data, error } = await supabase.from('organizations').select('id').limit(1).maybeSingle();
+  if (error) throw error;
+  return data?.id ?? null;
+}
 
 export async function fetchProfiles() {
   const { data, error } = await supabase
@@ -34,12 +41,20 @@ export async function fetchProfileByEmail(email) {
 }
 
 export async function createPendingProfile(values, authUserId = null) {
+  const [organizationId, sectorId] = await Promise.all([
+    resolveOrganizationId(),
+    fetchSectorIdByName(values.sector),
+  ]);
+
   const payload = {
     auth_user_id: authUserId,
+    organization_id: organizationId,
+    sector_ref_id: sectorId,
     name: values.name.trim(),
     email: values.email.trim().toLowerCase(),
     sector: values.sector,
     role: values.role.trim(),
+    job_title: values.role.trim(),
     account_type: values.accountType || 'member',
     status: values.status || 'Pendente',
     avatar_initials: getInitials(values.name),
@@ -51,9 +66,11 @@ export async function createPendingProfile(values, authUserId = null) {
 }
 
 export async function updateProfile(memberId, values) {
+  const sectorId = values.sectorId ?? (values.sector ? await fetchSectorIdByName(values.sector) : undefined);
+
   const { data, error } = await supabase
     .from('profiles')
-    .update({ ...mapProfileToDb(values), updated_at: new Date().toISOString() })
+    .update({ ...mapProfileToDb({ ...values, sectorId }), updated_at: new Date().toISOString() })
     .eq('id', memberId)
     .select('*')
     .single();
@@ -93,4 +110,22 @@ export async function updateProfilePhoto(memberId, photoUrl) {
 
 export async function touchLastAccess(memberId) {
   await supabase.from('profiles').update({ last_access: new Date().toISOString() }).eq('id', memberId);
+}
+
+export async function approveMemberRpc(profileId) {
+  const { data, error } = await supabase.rpc('approve_member', { p_profile_id: profileId });
+  if (error) throw error;
+  return mapProfileFromDb(data);
+}
+
+export async function rejectMemberRpc(profileId) {
+  const { data, error } = await supabase.rpc('reject_member', { p_profile_id: profileId });
+  if (error) throw error;
+  return mapProfileFromDb(data);
+}
+
+export async function deactivateMemberRpc(profileId) {
+  const { data, error } = await supabase.rpc('deactivate_member', { p_profile_id: profileId });
+  if (error) throw error;
+  return mapProfileFromDb(data);
 }

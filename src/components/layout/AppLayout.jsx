@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
-function AppLayout({ activePage, onNavigate, unreadCount, chatUnreadCount, onResetDemo, onOpenNotifications, children }) {
+function AppLayout({ activePage, onNavigate, unreadCount, chatUnreadCount, onOpenNotifications, children }) {
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem('locartech.sidebar.collapsed') === 'true';
@@ -28,7 +28,6 @@ function AppLayout({ activePage, onNavigate, unreadCount, chatUnreadCount, onRes
       <div className="main-shell">
         <Header
           activePage={activePage}
-          onResetDemo={onResetDemo}
           unreadCount={unreadCount}
           onOpenNotifications={onOpenNotifications}
         />

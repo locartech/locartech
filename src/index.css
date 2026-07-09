@@ -5247,3 +5247,63 @@ body {
 .sidebar.collapsed .sidebar-collapse-button {
   position: static;
 }
+
+.account-status-card {
+  grid-column: 1 / -1;
+  justify-self: center;
+  align-self: center;
+  width: min(100%, 440px);
+  padding: 38px 34px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: 0 30px 80px rgba(2, 8, 20, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.account-status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 16px;
+  border-radius: 999px;
+  color: #7dd3fc;
+  background: rgba(123, 201, 239, 0.16);
+}
+
+.account-status-card .eyebrow {
+  color: #a8d8f0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.account-status-card h1 {
+  margin: 10px 0 8px;
+  color: #f8fafc;
+  font-size: 1.25rem;
+}
+
+.account-status-card p {
+  margin: 0 0 6px;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.account-status-email {
+  color: #94a3b8 !important;
+  font-size: 0.82rem !important;
+}
+
+.account-status-card .ghost-button {
+  margin-top: 18px;
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.06);
+}

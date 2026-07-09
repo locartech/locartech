@@ -6,8 +6,7 @@ import KnowledgeEmptyState from '../components/knowledge/KnowledgeEmptyState';
 import KnowledgeFilters from '../components/knowledge/KnowledgeFilters';
 import KnowledgeFormModal from '../components/knowledge/KnowledgeFormModal';
 import KnowledgeStats from '../components/knowledge/KnowledgeStats';
-import { sectors } from '../data/mockData';
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import {
   createRemoteKnowledgeRecord,
   deleteRemoteKnowledgeRecord,
@@ -15,66 +14,66 @@ import {
   subscribeToKnowledge,
   updateRemoteKnowledgeRecord,
 } from '../services/knowledgeService';
-import {
-  createKnowledgeRecord,
-  deleteKnowledgeRecord,
-  filterKnowledgeRecords,
-  getKnowledgeStats,
-  loadKnowledgeRecords,
-  saveKnowledgeRecords,
-  updateKnowledgeRecord,
-} from '../utils/knowledgeUtils';
+import { fetchSectors } from '../services/sectorsService';
+import { filterKnowledgeRecords, getKnowledgeStats } from '../utils/knowledgeUtils';
 
 function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
-  const sector = sectors.find((item) => item.id === knowledgeSectorId) ?? sectors[0];
-  const [records, setRecords] = useState(loadKnowledgeRecords);
-  const [usingSupabase, setUsingSupabase] = useState(false);
+  const [sector, setSector] = useState(null);
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filters, setFilters] = useState({ query: '', type: 'Todos' });
   const [formOpen, setFormOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [detailRecord, setDetailRecord] = useState(null);
 
-  const loadRemoteRecords = async () => {
-    if (!isSupabaseConfigured) return;
+  const loadRecords = async () => {
     try {
       const remoteRecords = await fetchKnowledgeRecords();
       setRecords(remoteRecords);
-      setUsingSupabase(true);
-    } catch {
-      setUsingSupabase(false);
+      setError('');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel carregar os documentos.');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadRemoteRecords();
+    let mounted = true;
+    fetchSectors()
+      .then((sectorList) => {
+        if (!mounted) return;
+        setSector(sectorList.find((item) => item.slug === knowledgeSectorId) ?? sectorList[0] ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [knowledgeSectorId]);
+
+  useEffect(() => {
+    loadRecords();
   }, []);
 
   useEffect(() => {
-    if (!usingSupabase) {
-      saveKnowledgeRecords(records);
-      return undefined;
-    }
-
-    const channel = subscribeToKnowledge(loadRemoteRecords);
+    const channel = subscribeToKnowledge(loadRecords);
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [records, usingSupabase]);
+  }, []);
 
   const filteredRecords = useMemo(
-    () => filterKnowledgeRecords(records, sector.name, filters),
-    [records, sector.name, filters],
+    () => (sector ? filterKnowledgeRecords(records, sector.name, filters) : []),
+    [records, sector, filters],
   );
 
-  const stats = useMemo(() => getKnowledgeStats(records, sector.name), [records, sector.name]);
-
-  const persistRecords = (nextRecords) => {
-    setRecords(nextRecords);
-    saveKnowledgeRecords(nextRecords);
-  };
+  const stats = useMemo(() => (sector ? getKnowledgeStats(records, sector.name) : null), [records, sector]);
 
   const handleSubmit = async (values) => {
-    if (usingSupabase) {
+    if (!sector) return;
+
+    try {
       const saved = editingRecord
         ? await updateRemoteKnowledgeRecord(editingRecord.id, sector.name, values)
         : await createRemoteKnowledgeRecord(sector.name, values);
@@ -84,29 +83,33 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
           ? current.map((record) => (record.id === saved.id ? saved : record))
           : [saved, ...current],
       );
-    } else {
-      const nextRecords = editingRecord
-        ? updateKnowledgeRecord(records, editingRecord.id, values)
-        : [createKnowledgeRecord(sector.name, values), ...records];
-      persistRecords(nextRecords);
+      setFormOpen(false);
+      setEditingRecord(null);
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel salvar o documento.');
     }
-
-    setFormOpen(false);
-    setEditingRecord(null);
   };
 
   const handleDelete = async (record) => {
-    const shouldDelete = window.confirm('Deseja excluir este registro da base de conhecimento?');
+    const shouldDelete = window.confirm('Deseja excluir este documento?');
     if (!shouldDelete) return;
 
-    if (usingSupabase) {
+    try {
       await deleteRemoteKnowledgeRecord(record.id);
       setRecords((current) => current.filter((item) => item.id !== record.id));
-      return;
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel excluir o documento.');
     }
-
-    persistRecords(deleteKnowledgeRecord(records, record.id));
   };
+
+  if (!sector) {
+    return (
+      <div className="page-stack knowledge-page">
+        {loading ? <div className="members-feedback">Carregando...</div> : null}
+        {error ? <div className="members-feedback error">{error}</div> : null}
+      </div>
+    );
+  }
 
   return (
     <div className="page-stack knowledge-page">
@@ -133,11 +136,9 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
         </button>
       </section>
 
-      {!usingSupabase ? (
-        <div className="members-feedback">Usando documentos locais ate a conexao Supabase estar disponivel.</div>
-      ) : null}
+      {error ? <div className="members-feedback error">{error}</div> : null}
 
-      <KnowledgeStats stats={stats} />
+      {stats ? <KnowledgeStats stats={stats} /> : null}
 
       <section className="panel knowledge-toolbar">
         <KnowledgeFilters filters={filters} onChange={setFilters} />

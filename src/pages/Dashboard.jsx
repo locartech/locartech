@@ -1,42 +1,56 @@
+import { useEffect, useState } from 'react';
 import StatCard from '../components/dashboard/StatCard';
-import { initialKanbanTasks, KANBAN_STORAGE_KEY } from '../data/kanbanData';
-import { initialRequests, REQUESTS_STORAGE_KEY } from '../data/requestsData';
 import { useAuth } from '../contexts/AuthContext';
-
-const today = new Date('2026-07-08T12:00:00');
-
-function loadStoredItems(storageKey, fallback) {
-  try {
-    const savedItems = localStorage.getItem(storageKey);
-    if (savedItems) return JSON.parse(savedItems);
-  } catch {
-    localStorage.removeItem(storageKey);
-  }
-
-  return fallback;
-}
+import { fetchKanbanTasks } from '../services/kanbanService';
+import { fetchRemoteRequests } from '../services/requestsService';
 
 function getDaysUntil(dateValue) {
   if (!dateValue) return Number.POSITIVE_INFINITY;
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
   const targetDate = new Date(`${dateValue}T12:00:00`);
   return Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
 }
 
 function Dashboard() {
   const { currentUser } = useAuth();
-  const stageTasks = loadStoredItems(KANBAN_STORAGE_KEY, initialKanbanTasks);
-  const requests = loadStoredItems(REQUESTS_STORAGE_KEY, initialRequests);
+  const [stageTasks, setStageTasks] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let mounted = true;
+
+    Promise.all([fetchKanbanTasks(), fetchRemoteRequests()])
+      .then(([tasks, requestList]) => {
+        if (!mounted) return;
+        setStageTasks(tasks);
+        setRequests(requestList);
+        setError('');
+      })
+      .catch((err) => {
+        if (mounted) setError(err.message ?? 'Nao foi possivel carregar os indicadores.');
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const totalTasks = stageTasks.length;
   const completedTasks = stageTasks.filter((task) => task.status === 'done').length;
   const todoTasks = stageTasks.filter((task) => task.status === 'todo').length;
   const doingTasks = stageTasks.filter((task) => task.status === 'doing').length;
   const dueSoonTasks = stageTasks.filter((task) => {
-    const daysUntil = getDaysUntil(task.dueDate ?? task.date);
+    const daysUntil = getDaysUntil(task.date);
     return !['done', 'canceled'].includes(task.status) && daysUntil >= 0 && daysUntil <= 7;
   }).length;
   const overdueTasks = stageTasks.filter(
-    (task) => !['done', 'canceled'].includes(task.status) && getDaysUntil(task.dueDate ?? task.date) < 0,
+    (task) => !['done', 'canceled'].includes(task.status) && getDaysUntil(task.date) < 0,
   ).length;
   const completionRate = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
@@ -71,6 +85,9 @@ function Dashboard() {
           <small>conclusao das tarefas</small>
         </div>
       </section>
+
+      {error ? <div className="members-feedback error">{error}</div> : null}
+      {loading ? <div className="members-feedback">Carregando indicadores...</div> : null}
 
       <section className="dashboard-indicators-section">
         <div className="section-heading compact">

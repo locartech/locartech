@@ -1,17 +1,17 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 
-function TransferAdminModal({ members, currentAdminEmail, onClose, onTransfer }) {
-  const activeMembers = members.filter((member) => member.status === 'Ativo' && member.email !== currentAdminEmail);
-  const [selectedEmail, setSelectedEmail] = useState(activeMembers[0]?.email ?? '');
-  const selectedMember = activeMembers.find((member) => member.email === selectedEmail);
+function TransferAdminModal({ members, primaryAdminId, onClose, onTransfer }) {
+  const activeMembers = members.filter((member) => member.status === 'Ativo' && member.id !== primaryAdminId);
+  const [selectedId, setSelectedId] = useState(activeMembers[0]?.id ?? '');
+  const selectedMember = activeMembers.find((member) => member.id === selectedId);
 
   const handleSubmit = (event) => {
     event.preventDefault();
     if (!selectedMember) return;
     const confirmed = window.confirm(`Transferir administração principal para ${selectedMember.name}?`);
     if (confirmed) {
-      onTransfer(selectedMember.email);
+      onTransfer(selectedMember.id);
     }
   };
 
@@ -35,9 +35,9 @@ function TransferAdminModal({ members, currentAdminEmail, onClose, onTransfer })
           </p>
           <label>
             <span>Novo administrador</span>
-            <select value={selectedEmail} onChange={(event) => setSelectedEmail(event.target.value)}>
+            <select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
               {activeMembers.map((member) => (
-                <option key={member.id} value={member.email}>
+                <option key={member.id} value={member.id}>
                   {member.name} · {member.sector}
                 </option>
               ))}
@@ -47,7 +47,7 @@ function TransferAdminModal({ members, currentAdminEmail, onClose, onTransfer })
             <button type="button" className="ghost-button" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="primary-button" disabled={!selectedEmail}>
+            <button type="submit" className="primary-button" disabled={!selectedId}>
               Transferir administração
             </button>
           </div>

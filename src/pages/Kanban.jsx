@@ -1,36 +1,70 @@
 import { useEffect, useState } from 'react';
 import KanbanTable from '../components/kanban/KanbanTable';
-import { initialKanbanTasks, KANBAN_STORAGE_KEY } from '../data/kanbanData';
-import { createKanbanTask, deleteKanbanTask, updateKanbanTask } from '../utils/kanbanUtils';
-
-function loadKanbanTasks() {
-  try {
-    const savedTasks = localStorage.getItem(KANBAN_STORAGE_KEY);
-    if (savedTasks) return JSON.parse(savedTasks);
-  } catch {
-    localStorage.removeItem(KANBAN_STORAGE_KEY);
-  }
-
-  return initialKanbanTasks;
-}
+import {
+  createRemoteKanbanTask,
+  deleteRemoteKanbanTask,
+  fetchKanbanTasks,
+  subscribeToKanban,
+  updateRemoteKanbanTask,
+} from '../services/kanbanService';
+import { supabase } from '../lib/supabase';
 
 function Kanban() {
-  const [stageTasks, setStageTasks] = useState(loadKanbanTasks);
+  const [stageTasks, setStageTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadTasks = async () => {
+    try {
+      const tasks = await fetchKanbanTasks();
+      setStageTasks(tasks);
+      setError('');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel carregar as etapas.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(stageTasks));
-  }, [stageTasks]);
+    loadTasks();
+  }, []);
 
-  const handleAddTask = (sectorId, values) => {
-    setStageTasks((current) => [...current, createKanbanTask(sectorId, values)]);
+  useEffect(() => {
+    const channel = subscribeToKanban(loadTasks);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const handleAddTask = async (sectorId, values) => {
+    try {
+      const created = await createRemoteKanbanTask(sectorId, values);
+      setStageTasks((current) => [...current, created]);
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel criar a etapa.');
+    }
   };
 
-  const handleUpdateTask = (taskId, values) => {
-    setStageTasks((current) => updateKanbanTask(current, taskId, values));
+  const handleUpdateTask = async (taskId, values) => {
+    const current = stageTasks.find((task) => task.id === taskId);
+    if (!current) return;
+
+    try {
+      const updated = await updateRemoteKanbanTask(taskId, current.sectorId, { ...current, ...values });
+      setStageTasks((prev) => prev.map((task) => (task.id === taskId ? updated : task)));
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel atualizar a etapa.');
+    }
   };
 
-  const handleDeleteTask = (taskId) => {
-    setStageTasks((current) => deleteKanbanTask(current, taskId));
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await deleteRemoteKanbanTask(taskId);
+      setStageTasks((current) => current.filter((task) => task.id !== taskId));
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel excluir a etapa.');
+    }
   };
 
   return (
@@ -45,6 +79,9 @@ function Kanban() {
           acompanhamento em uma visao gerencial agrupada.
         </p>
       </section>
+
+      {error ? <div className="members-feedback error">{error}</div> : null}
+      {loading ? <div className="members-feedback">Carregando etapas...</div> : null}
 
       <KanbanTable
         tasks={stageTasks}

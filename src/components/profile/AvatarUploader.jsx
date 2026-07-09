@@ -1,21 +1,41 @@
 import { ImagePlus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { readImageAsDataUrl, validateProfileImage } from '../../utils/profileUtils';
+import { validateProfileImage } from '../../utils/profileUtils';
 
-function AvatarUploader({ user, onChangePhoto }) {
+function AvatarUploader({ user, onUpload, onRemove }) {
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
   const handleFile = async (event) => {
     const file = event.target.files?.[0];
+    event.target.value = '';
     const validationError = validateProfileImage(file);
     if (validationError) {
       setError(validationError);
       return;
     }
 
-    const dataUrl = await readImageAsDataUrl(file);
-    onChangePhoto(dataUrl);
-    setError('');
+    setBusy(true);
+    try {
+      await onUpload(file);
+      setError('');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel enviar a foto.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    setBusy(true);
+    try {
+      await onRemove();
+      setError('');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel remover a foto.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -27,9 +47,9 @@ function AvatarUploader({ user, onChangePhoto }) {
         <label className="ghost-button">
           <ImagePlus size={15} aria-hidden="true" />
           Trocar foto
-          <input type="file" accept="image/png,image/jpeg,image/jpg" onChange={handleFile} />
+          <input type="file" accept="image/png,image/jpeg,image/jpg" onChange={handleFile} disabled={busy} />
         </label>
-        <button type="button" className="ghost-button" onClick={() => onChangePhoto(null)}>
+        <button type="button" className="ghost-button" onClick={handleRemove} disabled={busy || !user.photoUrl}>
           <Trash2 size={15} aria-hidden="true" />
           Remover foto
         </button>

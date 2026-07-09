@@ -10,7 +10,7 @@ function Notifications({ notifications, onMarkRead }) {
           <p className="eyebrow">Comunicação entre setores</p>
           <h2>Notificações</h2>
         </div>
-        <p>{unreadCount} aviso(s) pendente(s) de leitura no fluxo simulado da Locartech.</p>
+        <p>{unreadCount} aviso(s) pendente(s) de leitura.</p>
       </section>
 
       <NotificationPanel notifications={notifications} onMarkRead={onMarkRead} />

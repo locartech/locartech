@@ -1,81 +1,65 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { AUTH_STORAGE_KEY } from '../config/authConfig';
-import { initialMembers } from '../data/membersData';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { fetchOrganization, transferAdmin as transferAdminRpc } from '../services/organizationService';
 import {
   createPendingProfile,
   fetchProfileByAuthUser,
   fetchProfileByEmail,
   touchLastAccess,
+  updateProfile as updateProfileRow,
+  updateProfilePhoto,
 } from '../services/profilesService';
-import { canAccessSystem, getCompanyAdminEmail, isCompanyAdmin, setCompanyAdminEmail } from '../utils/authUtils';
-import { createMember, loadMembers, saveMembers } from '../utils/membersUtils';
+import { removeAvatar as removeAvatarFile, uploadAvatar as uploadAvatarFile } from '../services/storageService';
+import { canAccessSystem } from '../utils/authUtils';
 
 const AuthContext = createContext(null);
 
-function loadCurrentUser() {
-  try {
-    const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (savedUser) return JSON.parse(savedUser);
-  } catch {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
-
-  return null;
-}
-
-function syncInitialMembers() {
-  const members = loadMembers();
-  if (!members?.length) {
-    saveMembers(initialMembers);
-    return initialMembers;
-  }
-  return members;
-}
-
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUserState] = useState(loadCurrentUser);
-  const [companyAdminEmail, setCompanyAdminEmailState] = useState(getCompanyAdminEmail);
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [organization, setOrganization] = useState(null);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
 
-  const setCurrentUser = (user) => {
-    setCurrentUserState(user);
-    if (user) {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+  const loadProfile = async (authUserId) => {
+    try {
+      const nextProfile = await fetchProfileByAuthUser(authUserId);
+      setProfile(nextProfile);
+      if (nextProfile && canAccessSystem(nextProfile)) touchLastAccess(nextProfile.id);
+      return nextProfile;
+    } catch {
+      setProfile(null);
+      return null;
     }
   };
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return undefined;
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return undefined;
+    }
 
     let mounted = true;
 
-    const restoreSession = async () => {
+    fetchOrganization()
+      .then((org) => mounted && setOrganization(org))
+      .catch(() => {});
+
+    const init = async () => {
       const { data } = await supabase.auth.getSession();
-      const authUser = data.session?.user;
-      if (!authUser || !mounted) return;
-
-      try {
-        const profile = await fetchProfileByAuthUser(authUser.id);
-        if (profile && canAccessSystem(profile)) {
-          setCurrentUser(profile);
-          touchLastAccess(profile.id);
-        }
-      } catch {
-        // The local fallback stays active until the Supabase schema is applied.
-      }
+      if (!mounted) return;
+      setSession(data.session ?? null);
+      if (data.session?.user) await loadProfile(data.session.user.id);
+      if (mounted) setLoading(false);
     };
+    init();
 
-    restoreSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!session?.user) return;
-      try {
-        const profile = await fetchProfileByAuthUser(session.user.id);
-        if (profile && canAccessSystem(profile)) setCurrentUser(profile);
-      } catch {
-        // Ignore setup-time database errors.
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+      if (!mounted) return;
+      setSession(nextSession);
+      if (nextSession?.user) {
+        await loadProfile(nextSession.user.id);
+      } else {
+        setProfile(null);
       }
     });
 
@@ -90,130 +74,117 @@ export function AuthProvider({ children }) {
     if (!normalizedEmail || !password.trim()) {
       return { ok: false, message: 'Preencha e-mail e senha para entrar.' };
     }
-
-    if (isSupabaseConfigured) {
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password,
-        });
-
-        if (error) return { ok: false, message: error.message };
-
-        const profile = await fetchProfileByAuthUser(data.user.id);
-        if (!profile) return { ok: false, message: 'Conta sem perfil cadastrado no sistema.' };
-        if (!canAccessSystem(profile)) {
-          await supabase.auth.signOut();
-          return { ok: false, message: `Conta com status ${profile.status}. Aguarde aprovacao ou contate o administrador.` };
-        }
-
-        setCurrentUser(profile);
-        touchLastAccess(profile.id);
-        return { ok: true };
-      } catch {
-        // Fallback keeps the app usable until the database is created.
-      }
+    if (!isSupabaseConfigured) {
+      return { ok: false, message: 'Supabase nao configurado neste ambiente.' };
     }
 
-    const members = syncInitialMembers();
-    const member = members.find((item) => item.email.toLowerCase() === normalizedEmail);
+    const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+    if (error) return { ok: false, message: error.message };
 
-    if (!member) return { ok: false, message: 'E-mail nao encontrado.' };
-    if (!canAccessSystem(member)) {
-      return { ok: false, message: `Conta com status ${member.status}. Aguarde aprovacao ou contate o administrador.` };
+    setSession(data.session);
+    const nextProfile = await loadProfile(data.user.id);
+    if (!nextProfile) {
+      await supabase.auth.signOut();
+      return { ok: false, message: 'Conta sem perfil cadastrado no sistema.' };
     }
 
-    setCurrentUser({ ...member, lastAccess: new Date().toISOString().slice(0, 10) });
     return { ok: true };
   };
 
   const register = async (values) => {
-    const normalizedEmail = values.email.trim().toLowerCase();
+    if (!isSupabaseConfigured) {
+      return { ok: false, message: 'Supabase nao configurado neste ambiente.' };
+    }
 
+    const normalizedEmail = values.email.trim().toLowerCase();
     if (values.password !== values.confirmPassword) {
       return { ok: false, message: 'As senhas nao coincidem.' };
     }
 
-    if (isSupabaseConfigured) {
-      try {
-        const existingProfile = await fetchProfileByEmail(normalizedEmail);
-        if (existingProfile) return { ok: false, message: 'Ja existe uma conta com este e-mail.' };
+    const existingProfile = await fetchProfileByEmail(normalizedEmail);
+    if (existingProfile) return { ok: false, message: 'Ja existe uma conta com este e-mail.' };
 
-        const { data, error } = await supabase.auth.signUp({
-          email: normalizedEmail,
-          password: values.password,
-        });
+    const { data, error } = await supabase.auth.signUp({ email: normalizedEmail, password: values.password });
+    if (error) return { ok: false, message: error.message };
 
-        if (error) return { ok: false, message: error.message };
+    await createPendingProfile({ ...values, email: normalizedEmail }, data.user?.id ?? null);
 
-        await createPendingProfile({ ...values, email: normalizedEmail }, data.user?.id);
-        return { ok: true, message: 'Conta criada. Aguarde aprovacao do administrador principal para acessar o sistema.' };
-      } catch {
-        // Fallback below works while the Supabase schema is not applied.
-      }
+    if (data.session) {
+      setSession(data.session);
+      await loadProfile(data.user.id);
     }
 
-    const members = syncInitialMembers();
-    if (members.some((member) => member.email.toLowerCase() === normalizedEmail)) {
-      return { ok: false, message: 'Ja existe uma conta com este e-mail.' };
-    }
-
-    const newMember = createMember({
-      name: values.name,
-      email: normalizedEmail,
-      sector: values.sector,
-      role: values.role,
-      accountType: 'member',
-      status: 'Pendente',
-    });
-
-    saveMembers([...members, newMember]);
     return { ok: true, message: 'Conta criada. Aguarde aprovacao do administrador principal para acessar o sistema.' };
   };
 
   const requestPasswordReset = async (email) => {
     const normalizedEmail = email.trim().toLowerCase();
-
-    if (isSupabaseConfigured) {
-      try {
-        const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail);
-        if (error) return { ok: false, message: error.message };
-        return { ok: true, message: 'Se o e-mail existir, as instrucoes de recuperacao serao enviadas.' };
-      } catch {
-        // Continue to local fallback.
-      }
+    if (!isSupabaseConfigured) {
+      return { ok: false, message: 'Supabase nao configurado neste ambiente.' };
     }
 
-    const members = syncInitialMembers();
-    const exists = members.some((member) => member.email.toLowerCase() === normalizedEmail);
-    if (!exists) return { ok: false, message: 'Nao encontramos uma conta com este e-mail.' };
-    return { ok: true, message: 'Instrucoes simuladas enviadas. Integracao real sera feita com backend futuramente.' };
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail);
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Se o e-mail existir, as instrucoes de recuperacao serao enviadas.' };
   };
 
   const logout = async () => {
     if (isSupabaseConfigured) await supabase.auth.signOut();
-    setCurrentUser(null);
+    setSession(null);
+    setProfile(null);
   };
 
-  const transferAdmin = (email) => {
-    setCompanyAdminEmail(email);
-    setCompanyAdminEmailState(email);
+  const updateProfile = async (values) => {
+    if (!profile) throw new Error('Nenhum perfil carregado.');
+    const updated = await updateProfileRow(profile.id, { ...profile, ...values });
+    setProfile(updated);
+    return updated;
+  };
+
+  const uploadAvatar = async (file) => {
+    if (!session?.user?.id || !profile) throw new Error('Sessao invalida.');
+    const publicUrl = await uploadAvatarFile(session.user.id, file);
+    const updated = await updateProfilePhoto(profile.id, publicUrl);
+    setProfile(updated);
+    return updated;
+  };
+
+  const removeAvatar = async () => {
+    if (!session?.user?.id || !profile) throw new Error('Sessao invalida.');
+    await removeAvatarFile(session.user.id);
+    const updated = await updateProfilePhoto(profile.id, null);
+    setProfile(updated);
+    return updated;
+  };
+
+  const transferAdmin = async (newAdminProfileId) => {
+    const org = await transferAdminRpc(newAdminProfileId);
+    setOrganization(org);
+    return org;
   };
 
   const value = useMemo(
     () => ({
-      currentUser,
-      setCurrentUser,
+      session,
+      profile,
+      currentUser: profile,
+      setCurrentUser: setProfile,
+      organization,
+      loading,
+      isAuthenticated: Boolean(session),
+      isActive: canAccessSystem(profile),
+      isAdmin: profile?.accountType === 'admin',
+      isPrimaryAdmin: Boolean(profile && organization && profile.id === organization.adminProfileId),
       login,
       register,
       requestPasswordReset,
       logout,
-      companyAdminEmail,
+      updateProfile,
+      uploadAvatar,
+      removeAvatar,
       transferAdmin,
-      isAdmin: currentUser?.accountType === 'admin' || isCompanyAdmin(currentUser, companyAdminEmail),
-      isAuthenticated: Boolean(currentUser),
     }),
-    [companyAdminEmail, currentUser],
+    [session, profile, organization, loading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

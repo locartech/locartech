@@ -1,7 +1,3 @@
-import { KNOWLEDGE_STORAGE_KEY, initialKnowledgeRecords } from '../data/knowledgeData';
-
-const today = '2026-07-07';
-
 export function normalizeKnowledgeType(type) {
   return {
     Documento: 'Documentos',
@@ -11,59 +7,6 @@ export function normalizeKnowledgeType(type) {
     Processo: 'POPs',
     Outro: 'Outros',
   }[type] ?? type;
-}
-
-export function loadKnowledgeRecords() {
-  try {
-    const savedRecords = localStorage.getItem(KNOWLEDGE_STORAGE_KEY);
-    if (savedRecords) {
-      return JSON.parse(savedRecords);
-    }
-  } catch {
-    localStorage.removeItem(KNOWLEDGE_STORAGE_KEY);
-  }
-
-  return initialKnowledgeRecords;
-}
-
-export function saveKnowledgeRecords(records) {
-  localStorage.setItem(KNOWLEDGE_STORAGE_KEY, JSON.stringify(records));
-}
-
-export function createKnowledgeRecord(sector, values) {
-  return {
-    id: `kb-${crypto.randomUUID()}`,
-    sector,
-    title: values.title.trim(),
-    description: values.description.trim(),
-    type: values.type,
-    responsible: values.responsible.trim(),
-    publishedAt: values.publishedAt,
-    driveLink: values.driveLink.trim(),
-    createdAt: today,
-    updatedAt: null,
-  };
-}
-
-export function updateKnowledgeRecord(records, recordId, values) {
-  return records.map((record) =>
-    record.id === recordId
-      ? {
-          ...record,
-          title: values.title.trim(),
-          description: values.description.trim(),
-          type: values.type,
-          responsible: values.responsible.trim(),
-          publishedAt: values.publishedAt,
-          driveLink: values.driveLink.trim(),
-          updatedAt: today,
-        }
-      : record,
-  );
-}
-
-export function deleteKnowledgeRecord(records, recordId) {
-  return records.filter((record) => record.id !== recordId);
 }
 
 export function filterKnowledgeRecords(records, sector, filters) {

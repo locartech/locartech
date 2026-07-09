@@ -17,13 +17,14 @@ const sectorIcons = {
   'recursos-humanos': UsersRound,
 };
 
-function SectorCard({ sector, onOpen }) {
+function SectorCard({ sector, openTasksCount = 0, knowledgeCount = 0, onOpen }) {
   const Icon = sectorIcons[sector.id] ?? ClipboardCheck;
 
   return (
     <button
       type="button"
       className={`sector-card sector-card-button sector-card-${sector.id}`}
+      title={`${openTasksCount} tarefa(s) aberta(s) - ${knowledgeCount} registro(s) de conhecimento`}
       onClick={() => onOpen?.(sector.id)}
     >
       <span className="sector-card-accent" aria-hidden="true" />

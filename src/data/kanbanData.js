@@ -1,5 +1,3 @@
-export const KANBAN_STORAGE_KEY = 'locartech.stage-management.v2';
-
 export const kanbanSectors = [
   { id: 'compras', name: 'Compras' },
   { id: 'contabilidade', name: 'Contabilidade' },
@@ -15,5 +13,3 @@ export const kanbanStatuses = [
   { id: 'done', label: 'Feito' },
   { id: 'canceled', label: 'Cancelado' },
 ];
-
-export const initialKanbanTasks = [];

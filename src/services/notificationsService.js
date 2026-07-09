@@ -4,9 +4,11 @@ export function mapNotificationFromDb(notification) {
   return {
     id: notification.id,
     userId: notification.user_id,
+    recipientSectorId: notification.recipient_sector_id,
     title: notification.title,
     message: notification.message,
     category: notification.category,
+    type: notification.type,
     targetSectorName: notification.target_sector_name,
     targetUserName: notification.target_user_name,
     read: notification.read,
@@ -14,11 +16,10 @@ export function mapNotificationFromDb(notification) {
   };
 }
 
-export async function fetchNotifications(userId) {
+export async function fetchNotifications() {
   const { data, error } = await supabase
     .from('notifications')
     .select('*')
-    .or(`user_id.eq.${userId},user_id.is.null`)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -28,9 +29,11 @@ export async function fetchNotifications(userId) {
 export async function createNotification(values) {
   const payload = {
     user_id: values.userId ?? null,
+    recipient_sector_id: values.recipientSectorId ?? null,
     title: values.title,
     message: values.message,
     category: values.category || 'Geral',
+    type: values.type ?? null,
     target_sector_name: values.targetSectorName || null,
     target_user_name: values.targetUserName || null,
   };
@@ -52,16 +55,9 @@ export async function markNotificationRead(notificationId) {
   return mapNotificationFromDb(data);
 }
 
-export function subscribeToNotifications(userId, onChange) {
+export function subscribeToNotifications(onChange) {
   return supabase
-    .channel(`notifications:${userId}`)
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'notifications' },
-      (payload) => {
-        const next = payload.new || payload.old;
-        if (!next?.user_id || next.user_id === userId) onChange();
-      },
-    )
+    .channel('notifications:all')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, onChange)
     .subscribe();
 }

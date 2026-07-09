@@ -6,46 +6,42 @@ import MembersStats from '../components/members/MembersStats';
 import MembersTable from '../components/members/MembersTable';
 import TransferAdminModal from '../components/members/TransferAdminModal';
 import { useAuth } from '../contexts/AuthContext';
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import {
+  approveMemberRpc,
+  deactivateMemberRpc,
   deleteProfile,
   fetchProfiles,
+  rejectMemberRpc,
   updateProfile,
-  updateProfileStatus,
 } from '../services/profilesService';
-import {
-  approveMember,
-  deactivateMember,
-  getMemberStats,
-  loadMembers,
-  rejectMember,
-  removeMember,
-  saveMembers,
-  updateMember,
-} from '../utils/membersUtils';
+import { getMemberStats } from '../utils/membersUtils';
 
 function Members() {
-  const { currentUser, isAdmin, setCurrentUser, companyAdminEmail, transferAdmin } = useAuth();
-  const [members, setMembers] = useState(loadMembers);
+  const { profile: currentUser, isAdmin, setCurrentUser, organization, transferAdmin } = useAuth();
+  const [members, setMembers] = useState([]);
   const [editingMember, setEditingMember] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [feedback, setFeedback] = useState('');
-  const [usingSupabase, setUsingSupabase] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const stats = useMemo(() => getMemberStats(members), [members]);
+  const primaryAdminId = organization?.adminProfileId;
 
   const loadRemoteMembers = async () => {
-    if (!isSupabaseConfigured) return;
     try {
       const remoteMembers = await fetchProfiles();
       setMembers(remoteMembers);
-      setUsingSupabase(true);
+      setError('');
 
-      const refreshedCurrentUser = remoteMembers.find((member) => member.id === currentUser.id);
+      const refreshedCurrentUser = remoteMembers.find((member) => member.id === currentUser?.id);
       if (refreshedCurrentUser) setCurrentUser(refreshedCurrentUser);
-    } catch {
-      setUsingSupabase(false);
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel carregar os membros.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,8 +50,6 @@ function Members() {
   }, []);
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !usingSupabase) return undefined;
-
     const channel = supabase
       .channel('profiles:members-page')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, loadRemoteMembers)
@@ -64,15 +58,7 @@ function Members() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [usingSupabase]);
-
-  const persistMembers = (nextMembers) => {
-    setMembers(nextMembers);
-    saveMembers(nextMembers);
-
-    const refreshedCurrentUser = nextMembers.find((member) => member.id === currentUser.id);
-    if (refreshedCurrentUser) setCurrentUser(refreshedCurrentUser);
-  };
+  }, []);
 
   if (!isAdmin) {
     return (
@@ -83,21 +69,21 @@ function Members() {
   }
 
   const handleEditMember = async (values) => {
-    if (usingSupabase) {
+    try {
       const updated = await updateProfile(editingMember.id, values);
       setMembers((current) => current.map((member) => (member.id === updated.id ? updated : member)));
       if (updated.id === currentUser.id) setCurrentUser(updated);
-    } else {
-      persistMembers(updateMember(members, editingMember.id, values));
+      setFeedback('Membro atualizado com sucesso.');
+    } catch (err) {
+      setFeedback(err.message ?? 'Nao foi possivel atualizar o membro.');
     }
 
     setIsModalOpen(false);
     setEditingMember(null);
-    setFeedback('Membro atualizado com sucesso.');
   };
 
   const handleRemoveMember = async (member) => {
-    if (member.email === companyAdminEmail) {
+    if (member.id === primaryAdminId) {
       setFeedback('O administrador principal nao pode ser removido.');
       return;
     }
@@ -105,45 +91,59 @@ function Members() {
     const canRemove = window.confirm(`Deseja remover ${member.name}?`);
     if (!canRemove) return;
 
-    if (usingSupabase) {
+    try {
       await deleteProfile(member.id);
       setMembers((current) => current.filter((item) => item.id !== member.id));
-    } else {
-      persistMembers(removeMember(members, member.id));
+      setFeedback('Membro removido com sucesso.');
+    } catch (err) {
+      setFeedback(err.message ?? 'Nao foi possivel remover o membro.');
     }
-    setFeedback('Membro removido com sucesso.');
   };
 
   const handleDeactivateMember = async (memberId) => {
-    const member = members.find((candidate) => candidate.id === memberId);
-    if (member?.email === companyAdminEmail) {
+    if (memberId === primaryAdminId) {
       setFeedback('O administrador principal nao pode ser desativado antes de transferir a administracao.');
       return;
     }
 
-    if (usingSupabase) {
-      const updated = await updateProfileStatus(memberId, 'Inativo');
+    try {
+      const updated = await deactivateMemberRpc(memberId);
       setMembers((current) => current.map((item) => (item.id === memberId ? updated : item)));
-    } else {
-      persistMembers(deactivateMember(members, memberId));
+      setFeedback('Membro desativado com sucesso.');
+    } catch (err) {
+      setFeedback(err.message ?? 'Nao foi possivel desativar o membro.');
     }
-    setFeedback('Membro desativado com sucesso.');
   };
 
-  const handleStatusChange = async (memberId, status, message) => {
-    if (usingSupabase) {
-      const updated = await updateProfileStatus(memberId, status);
+  const handleApprove = async (memberId) => {
+    try {
+      const updated = await approveMemberRpc(memberId);
       setMembers((current) => current.map((item) => (item.id === memberId ? updated : item)));
-    } else {
-      persistMembers(status === 'Ativo' ? approveMember(members, memberId) : rejectMember(members, memberId));
+      setFeedback('Conta aprovada com sucesso.');
+    } catch (err) {
+      setFeedback(err.message ?? 'Nao foi possivel aprovar a conta.');
     }
-    setFeedback(message);
   };
 
-  const handleTransferAdmin = (email) => {
-    transferAdmin(email);
-    setIsTransferOpen(false);
-    setFeedback('Administracao principal transferida com sucesso.');
+  const handleReject = async (memberId) => {
+    try {
+      const updated = await rejectMemberRpc(memberId);
+      setMembers((current) => current.map((item) => (item.id === memberId ? updated : item)));
+      setFeedback('Conta rejeitada.');
+    } catch (err) {
+      setFeedback(err.message ?? 'Nao foi possivel rejeitar a conta.');
+    }
+  };
+
+  const handleTransferAdmin = async (newAdminProfileId) => {
+    try {
+      await transferAdmin(newAdminProfileId);
+      setIsTransferOpen(false);
+      setFeedback('Administracao principal transferida com sucesso.');
+      loadRemoteMembers();
+    } catch (err) {
+      setFeedback(err.message ?? 'Nao foi possivel transferir a administracao.');
+    }
   };
 
   return (
@@ -163,26 +163,23 @@ function Members() {
       </section>
 
       {feedback ? <div className="members-feedback">{feedback}</div> : null}
-      {!usingSupabase ? (
-        <div className="members-feedback">
-          Usando dados locais ate as tabelas do Supabase serem aplicadas.
-        </div>
-      ) : null}
+      {error ? <div className="members-feedback error">{error}</div> : null}
+      {loading ? <div className="members-feedback">Carregando membros...</div> : null}
 
       <MembersStats stats={stats} />
 
       <section className="members-panel">
         <MembersTable
           members={members}
-          companyAdminEmail={companyAdminEmail}
+          primaryAdminId={primaryAdminId}
           onEdit={(member) => {
             setEditingMember(member);
             setIsModalOpen(true);
           }}
           onRemove={handleRemoveMember}
           onDeactivate={handleDeactivateMember}
-          onApprove={(memberId) => handleStatusChange(memberId, 'Ativo', 'Conta aprovada com sucesso.')}
-          onReject={(memberId) => handleStatusChange(memberId, 'Rejeitado', 'Conta rejeitada.')}
+          onApprove={handleApprove}
+          onReject={handleReject}
         />
       </section>
 
@@ -200,7 +197,7 @@ function Members() {
       {isTransferOpen ? (
         <TransferAdminModal
           members={members}
-          currentAdminEmail={companyAdminEmail}
+          primaryAdminId={primaryAdminId}
           onClose={() => setIsTransferOpen(false)}
           onTransfer={handleTransferAdmin}
         />

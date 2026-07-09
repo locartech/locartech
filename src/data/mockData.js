@@ -43,20 +43,3 @@ export const users = [
   { id: 'user-3', name: 'Helena Prado', role: 'Analista de Compras', sectorId: 'compras' },
   { id: 'user-4', name: 'Patricia Gomes', role: 'Analista Contabil', sectorId: 'contabilidade' },
 ];
-
-export const statuses = [
-  { id: 'todo', label: 'A Fazer' },
-  { id: 'in_progress', label: 'Em Andamento' },
-  { id: 'waiting', label: 'Aguardando' },
-  { id: 'done', label: 'Concluido' },
-];
-
-export const priorityLabels = {
-  baixa: 'Baixa',
-  media: 'Media',
-  alta: 'Alta',
-};
-
-export const initialTasks = [];
-
-export const initialNotifications = [];

@@ -11,24 +11,3 @@ export function groupTasksBySector(tasks) {
     };
   }, {});
 }
-
-export function createKanbanTask(sectorId, values) {
-  return {
-    id: `stage-${crypto.randomUUID()}`,
-    sectorId,
-    title: values.title.trim(),
-    assignee: values.assignee.trim(),
-    status: values.status,
-    date: values.date,
-    description: values.description ?? '',
-    priority: values.priority ?? 'medium',
-  };
-}
-
-export function updateKanbanTask(tasks, taskId, values) {
-  return tasks.map((task) => (task.id === taskId ? { ...task, ...values } : task));
-}
-
-export function deleteKanbanTask(tasks, taskId) {
-  return tasks.filter((task) => task.id !== taskId);
-}

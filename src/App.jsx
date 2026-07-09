@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CHAT_STORAGE_KEY, initialChatConversations } from './data/chatData';
-import { initialNotifications, initialTasks } from './data/mockData';
+import AccountStatusScreen from './components/auth/AccountStatusScreen';
 import AppLayout from './components/layout/AppLayout';
 import Chat from './pages/Chat';
 import Dashboard from './pages/Dashboard';
@@ -11,18 +10,9 @@ import Requests from './pages/Requests';
 import Members from './pages/Members';
 import Sectors from './pages/Sectors';
 import SectorKnowledge from './pages/SectorKnowledge';
-import { isSupabaseConfigured, supabase } from './lib/supabase';
-import {
-  createNotification,
-  fetchNotifications,
-  markNotificationRead,
-  subscribeToNotifications,
-} from './services/notificationsService';
-import { getTotalUnreadCount } from './utils/chatUtils';
+import { supabase } from './lib/supabase';
+import { fetchNotifications, markNotificationRead, subscribeToNotifications } from './services/notificationsService';
 import { useAuth } from './contexts/AuthContext';
-import { completeTask, updateTaskStatus } from './utils/workflow';
-
-const STORAGE_KEY = 'locartech.workspace.v2';
 
 const pages = {
   dashboard: Dashboard,
@@ -35,138 +25,54 @@ const pages = {
   members: Members,
 };
 
-function loadChatUnreadCount() {
-  try {
-    const savedConversations = localStorage.getItem(CHAT_STORAGE_KEY);
-    if (savedConversations) return getTotalUnreadCount(JSON.parse(savedConversations));
-  } catch {
-    localStorage.removeItem(CHAT_STORAGE_KEY);
-  }
-
-  return getTotalUnreadCount(initialChatConversations);
-}
-
-function loadWorkspace() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch {
-    localStorage.removeItem(STORAGE_KEY);
-  }
-
-  return {
-    tasks: initialTasks,
-    notifications: initialNotifications,
-  };
-}
-
 function App() {
-  const { currentUser } = useAuth();
+  const { session, profile, loading, isActive } = useAuth();
   const [activePage, setActivePage] = useState('dashboard');
   const [knowledgeSectorId, setKnowledgeSectorId] = useState('compras');
-  const [chatUnreadCount, setChatUnreadCount] = useState(loadChatUnreadCount);
-  const [{ tasks, notifications }, setWorkspace] = useState(loadWorkspace);
-  const [usingRemoteNotifications, setUsingRemoteNotifications] = useState(false);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
 
-  useEffect(() => {
-    if (!usingRemoteNotifications) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, notifications }));
-    }
-  }, [tasks, notifications, usingRemoteNotifications]);
-
-  const loadRemoteNotifications = async () => {
-    if (!isSupabaseConfigured || !currentUser?.id) return;
-
+  const loadNotifications = async () => {
+    if (!profile?.id) return;
     try {
-      const remoteNotifications = await fetchNotifications(currentUser.id);
-      setWorkspace((current) => ({ ...current, notifications: remoteNotifications }));
-      setUsingRemoteNotifications(true);
+      const remoteNotifications = await fetchNotifications();
+      setNotifications(remoteNotifications);
     } catch {
-      setUsingRemoteNotifications(false);
+      // Notifications stay at their last known value if the fetch fails.
     }
   };
 
   useEffect(() => {
-    loadRemoteNotifications();
-  }, [currentUser?.id]);
+    loadNotifications();
+  }, [profile?.id]);
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !usingRemoteNotifications || !currentUser?.id) return undefined;
+    if (!profile?.id) return undefined;
 
-    const channel = subscribeToNotifications(currentUser.id, loadRemoteNotifications);
+    const channel = subscribeToNotifications(loadNotifications);
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUser?.id, usingRemoteNotifications]);
+  }, [profile?.id]);
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.read).length,
     [notifications],
   );
 
-  const handleTaskStatus = (taskId, status) => {
-    setWorkspace((current) => ({
-      ...current,
-      tasks: updateTaskStatus(current.tasks, taskId, status),
-    }));
-  };
-
-  const handleCompleteTask = (taskId) => {
-    setWorkspace((current) => completeTask(current.tasks, current.notifications, taskId));
-  };
-
   const handleMarkRead = async (notificationId) => {
-    if (usingRemoteNotifications) {
-      const updated = await markNotificationRead(notificationId);
-      setWorkspace((current) => ({
-        ...current,
-        notifications: current.notifications.map((notification) =>
-          notification.id === notificationId ? updated : notification,
-        ),
-      }));
-      return;
-    }
-
-    setWorkspace((current) => ({
-      ...current,
-      notifications: current.notifications.map((notification) =>
-        notification.id === notificationId ? { ...notification, read: true } : notification,
-      ),
-    }));
-  };
-
-  const handleAddNotification = async (notification) => {
-    if (usingRemoteNotifications) {
-      const created = await createNotification({
-        ...notification,
-        userId: notification.userId ?? currentUser.id,
-      });
-      setWorkspace((current) => ({
-        ...current,
-        notifications: [created, ...current.notifications],
-      }));
-      return;
-    }
-
-    setWorkspace((current) => ({
-      ...current,
-      notifications: [notification, ...current.notifications],
-    }));
-  };
-
-  const handleResetDemo = () => {
-    const initialWorkspace = {
-      tasks: initialTasks,
-      notifications: initialNotifications,
-    };
-
-    setWorkspace(initialWorkspace);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialWorkspace));
+    const updated = await markNotificationRead(notificationId);
+    setNotifications((current) =>
+      current.map((notification) => (notification.id === notificationId ? updated : notification)),
+    );
   };
 
   const ActivePage = pages[activePage] ?? Dashboard;
 
-  if (!currentUser) return <LoginPage />;
+  if (loading) return null;
+  if (!session) return <LoginPage />;
+  if (!profile) return <LoginPage />;
+  if (!isActive) return <AccountStatusScreen status={profile.status} />;
 
   return (
     <AppLayout
@@ -174,16 +80,11 @@ function App() {
       onNavigate={setActivePage}
       unreadCount={unreadCount}
       chatUnreadCount={chatUnreadCount}
-      onResetDemo={handleResetDemo}
       onOpenNotifications={() => setActivePage('notifications')}
     >
       <ActivePage
-        tasks={tasks}
         notifications={notifications}
-        onCompleteTask={handleCompleteTask}
-        onTaskStatus={handleTaskStatus}
         onMarkRead={handleMarkRead}
-        onAddNotification={handleAddNotification}
         onChatUnreadChange={setChatUnreadCount}
         onNavigate={setActivePage}
         knowledgeSectorId={knowledgeSectorId}

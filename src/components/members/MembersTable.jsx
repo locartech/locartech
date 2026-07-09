@@ -9,7 +9,7 @@ const formatDate = (value) =>
       )
     : 'Sem registro';
 
-function MembersTable({ members, companyAdminEmail, onEdit, onRemove, onDeactivate, onApprove, onReject }) {
+function MembersTable({ members, primaryAdminId, onEdit, onRemove, onDeactivate, onApprove, onReject }) {
   return (
     <div className="members-table-shell">
       <div className="members-table">
@@ -24,7 +24,7 @@ function MembersTable({ members, companyAdminEmail, onEdit, onRemove, onDeactiva
         </div>
 
         {members.map((member) => {
-          const isCompanyAdmin = member.email === companyAdminEmail;
+          const isCompanyAdmin = member.id === primaryAdminId;
 
           return (
             <div className={`members-row ${member.status === 'Inativo' ? 'inactive' : ''}`} key={member.id}>

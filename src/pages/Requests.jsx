@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import RequestFilters from '../components/requests/RequestFilters';
 import RequestForm from '../components/requests/RequestForm';
 import RequestModal from '../components/requests/RequestModal';
@@ -8,55 +8,30 @@ import RequestStats from '../components/requests/RequestStats';
 import RequestTable from '../components/requests/RequestTable';
 import RequestTabs from '../components/requests/RequestTabs';
 import { useAuth } from '../contexts/AuthContext';
-import { KANBAN_STORAGE_KEY, initialKanbanTasks } from '../data/kanbanData';
-import { initialRequests, REQUESTS_STORAGE_KEY, requestStatusIds } from '../data/requestsData';
+import { supabase } from '../lib/supabase';
+import { requestStatusIds } from '../data/requestsData';
 import {
-  approveRequest,
-  buildRequestApprovedNotification,
-  buildRequestCreatedNotification,
-  buildRequestRejectedNotification,
-  cancelRequest,
-  createKanbanTaskFromRequest,
-  createRequest,
+  approveRequestRpc,
+  cancelRemoteRequest,
+  createRemoteRequest,
+  fetchRemoteRequests,
+  rejectRequestRpc,
+  subscribeToRequests,
+  updateRemoteRequest,
+} from '../services/requestsService';
+import {
   filterRequests,
   getPendingApprovalRequests,
   getReceivedRequests,
   getSentRequests,
   getTodayReceivedRequests,
-  normalizeRequest,
-  rejectRequest,
-  updateRequest,
 } from '../utils/requestUtils';
 
-function loadRequests() {
-  try {
-    const savedRequests = localStorage.getItem(REQUESTS_STORAGE_KEY);
-    if (savedRequests) return JSON.parse(savedRequests).map(normalizeRequest);
-  } catch {
-    localStorage.removeItem(REQUESTS_STORAGE_KEY);
-  }
-
-  return initialRequests.map(normalizeRequest);
-}
-
-function loadKanbanTasks() {
-  try {
-    const savedTasks = localStorage.getItem(KANBAN_STORAGE_KEY);
-    if (savedTasks) return JSON.parse(savedTasks);
-  } catch {
-    localStorage.removeItem(KANBAN_STORAGE_KEY);
-  }
-
-  return initialKanbanTasks;
-}
-
-function saveKanbanTasks(tasks) {
-  localStorage.setItem(KANBAN_STORAGE_KEY, JSON.stringify(tasks));
-}
-
-function Requests({ onAddNotification }) {
+function Requests() {
   const { currentUser } = useAuth();
-  const [requests, setRequests] = useState(loadRequests);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('received');
   const [filters, setFilters] = useState({
     status: 'all',
@@ -70,10 +45,28 @@ function Requests({ onAddNotification }) {
   const [detailRequest, setDetailRequest] = useState(null);
   const [rejectingRequest, setRejectingRequest] = useState(null);
 
-  const persistRequests = (nextRequests) => {
-    setRequests(nextRequests);
-    localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(nextRequests));
+  const loadRequests = async () => {
+    try {
+      const remoteRequests = await fetchRemoteRequests();
+      setRequests(remoteRequests);
+      setError('');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel carregar as solicitacoes.');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    loadRequests();
+  }, []);
+
+  useEffect(() => {
+    const channel = subscribeToRequests(loadRequests);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const receivedRequests = useMemo(() => getReceivedRequests(requests, currentUser), [requests, currentUser]);
   const sentRequests = useMemo(() => getSentRequests(requests, currentUser), [requests, currentUser]);
@@ -103,46 +96,58 @@ function Requests({ onAddNotification }) {
     all: requests.length,
   };
 
-  const handleCreateRequest = (values) => {
-    const nextRequest = createRequest(values, currentUser);
-    persistRequests([nextRequest, ...requests]);
-    onAddNotification?.(buildRequestCreatedNotification(nextRequest));
-    setIsFormOpen(false);
+  const handleCreateRequest = async (values) => {
+    try {
+      const created = await createRemoteRequest(values, currentUser);
+      setRequests((current) => [created, ...current]);
+      setIsFormOpen(false);
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel criar a solicitacao.');
+    }
   };
 
-  const handleEditRequest = (values) => {
-    persistRequests(updateRequest(requests, formRequest.id, values));
-    setIsFormOpen(false);
-    setFormRequest(null);
+  const handleEditRequest = async (values) => {
+    try {
+      const updated = await updateRemoteRequest(formRequest.id, values);
+      setRequests((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      setIsFormOpen(false);
+      setFormRequest(null);
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel salvar a solicitacao.');
+    }
   };
 
-  const handleApproveRequest = (request) => {
+  const handleApproveRequest = async (request) => {
     if (request.generatedTaskId) return;
 
-    const currentKanbanTasks = loadKanbanTasks();
-    const existingTask = currentKanbanTasks.find((task) => task.sourceRequestId === request.id);
-    const generatedTask = existingTask ?? createKanbanTaskFromRequest(request);
-    const nextKanbanTasks = existingTask ? currentKanbanTasks : [...currentKanbanTasks, generatedTask];
-    const updatedRequests = approveRequest(requests, request.id, generatedTask.id);
-    const updatedRequest = updatedRequests.find((item) => item.id === request.id);
-
-    saveKanbanTasks(nextKanbanTasks);
-    persistRequests(updatedRequests);
-    onAddNotification?.(buildRequestApprovedNotification(updatedRequest));
+    try {
+      const updated = await approveRequestRpc(request.id);
+      setRequests((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel aprovar a solicitacao.');
+    }
   };
 
-  const handleRejectRequest = (request, reason) => {
-    const updatedRequests = rejectRequest(requests, request.id, reason);
-    const updatedRequest = updatedRequests.find((item) => item.id === request.id);
-    persistRequests(updatedRequests);
-    setRejectingRequest(null);
-    onAddNotification?.(buildRequestRejectedNotification(updatedRequest));
+  const handleRejectRequest = async (request, reason) => {
+    try {
+      const updated = await rejectRequestRpc(request.id, reason);
+      setRequests((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      setRejectingRequest(null);
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel recusar a solicitacao.');
+    }
   };
 
-  const handleCancelRequest = (requestId) => {
+  const handleCancelRequest = async (requestId) => {
     const canCancel = window.confirm('Deseja cancelar esta solicitacao?');
     if (!canCancel) return;
-    persistRequests(cancelRequest(requests, requestId));
+
+    try {
+      const updated = await cancelRemoteRequest(requestId);
+      setRequests((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel cancelar a solicitacao.');
+    }
   };
 
   return (
@@ -160,6 +165,9 @@ function Requests({ onAddNotification }) {
           Nova solicitacao
         </button>
       </section>
+
+      {error ? <div className="members-feedback error">{error}</div> : null}
+      {loading ? <div className="members-feedback">Carregando solicitacoes...</div> : null}
 
       <RequestStats stats={stats} />
 
