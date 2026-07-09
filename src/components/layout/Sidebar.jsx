@@ -22,11 +22,8 @@ function Sidebar({ activePage, onNavigate, unreadCount, chatUnreadCount, collaps
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="brand-block">
-        <div className="brand-mark">
-          <span>LT</span>
-        </div>
         <div className="brand-copy">
-          <LocarTechLogo width={112} />
+          <LocarTechLogo width={136} />
         </div>
         <button
           type="button"
