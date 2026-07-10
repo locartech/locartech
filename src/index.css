@@ -5227,8 +5227,9 @@ body {
 }
 
 .sidebar .brand-copy svg {
-  width: 142px !important;
-  max-width: 142px;
+  width: 112px !important;
+  max-width: 112px;
+  transform: none;
 }
 
 .sidebar .sidebar-collapse-button {
