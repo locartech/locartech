@@ -5538,6 +5538,56 @@ body {
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
+.purchase-status-menu {
+  position: relative;
+  width: 142px;
+}
+
+.purchase-status-trigger,
+.purchase-status-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 142px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 850;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+.purchase-status-trigger {
+  justify-content: space-between;
+  padding: 0 10px 0 14px;
+}
+
+.purchase-status-trigger:hover,
+.purchase-status-option:hover {
+  filter: saturate(1.05) brightness(0.98);
+}
+
+.purchase-status-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  gap: 6px;
+  width: 154px;
+  padding: 8px;
+  border: 1px solid #dbe5f0;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.14);
+}
+
+.purchase-status-option {
+  width: 100%;
+}
+
 .purchase-status-select select {
   width: 100%;
   min-height: 32px;

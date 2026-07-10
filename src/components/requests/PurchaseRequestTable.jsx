@@ -1,3 +1,5 @@
+import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 import EmptyState from '../common/EmptyState';
 import RequestPriorityBadge from './RequestPriorityBadge';
 import { purchaseStatuses } from '../../data/purchaseRequestsData';
@@ -9,6 +11,46 @@ const formatDate = (value) =>
         new Date(`${value}T12:00:00`),
       )
     : 'Sem prazo';
+
+function PurchaseStatusMenu({ request, onStatusChange }) {
+  const [open, setOpen] = useState(false);
+  const currentStatus = purchaseStatuses.find((status) => status.id === request.status) ?? purchaseStatuses[0];
+
+  const handleStatusSelect = (statusId) => {
+    setOpen(false);
+    if (statusId !== request.status) {
+      onStatusChange(request, statusId);
+    }
+  };
+
+  return (
+    <div className="purchase-status-menu">
+      <button
+        type="button"
+        className={`purchase-status-trigger purchase-status-${request.status}`}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>{currentStatus.label}</span>
+        <ChevronDown size={15} aria-hidden="true" />
+      </button>
+
+      {open ? (
+        <div className="purchase-status-options">
+          {purchaseStatuses.map((status) => (
+            <button
+              key={status.id}
+              type="button"
+              className={`purchase-status-option purchase-status-${status.id}`}
+              onClick={() => handleStatusSelect(status.id)}
+            >
+              {status.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function PurchaseRequestTable({ requests, canManage, onStatusChange }) {
   if (requests.length === 0) {
@@ -45,16 +87,7 @@ function PurchaseRequestTable({ requests, canManage, onStatusChange }) {
             <div>{formatDate(request.dueDate)}</div>
             <div>
               {canManage ? (
-                <label className={`purchase-status-select purchase-status-${request.status}`}>
-                  <span className="sr-only">Status da compra solicitada</span>
-                  <select value={request.status} onChange={(event) => onStatusChange(request, event.target.value)}>
-                    {purchaseStatuses.map((status) => (
-                      <option key={status.id} value={status.id}>
-                        {status.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <PurchaseStatusMenu request={request} onStatusChange={onStatusChange} />
               ) : (
                 <PurchaseRequestStatusBadge value={request.status} />
               )}

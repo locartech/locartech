@@ -147,6 +147,9 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const handleStatusChange = async (request, status) => {
     setFeedback('');
     setError('');
+    setRequests((current) =>
+      current.map((item) => (item.id === request.id ? { ...item, status } : item)),
+    );
 
     try {
       if (usingSupabase) {
@@ -173,6 +176,9 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
 
       setFeedback('Status atualizado com sucesso.');
     } catch (err) {
+      setRequests((current) =>
+        current.map((item) => (item.id === request.id ? { ...item, status: request.status } : item)),
+      );
       setError(err.message ?? 'Nao foi possivel atualizar o status.');
     }
   };
