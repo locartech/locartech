@@ -5453,7 +5453,7 @@ body {
 
 .purchase-table-shell {
   overflow-x: auto;
-  border: 1px solid var(--lt-border);
+  border: 1px solid #d7e2ee;
   border-radius: 8px;
   background: #ffffff;
 }
@@ -5466,7 +5466,7 @@ body {
   display: grid;
   grid-template-columns: 1.7fr 1.3fr 1fr 1fr 140px 140px 170px;
   min-height: 64px;
-  border-bottom: 1px solid #edf2f7;
+  border-bottom: 1.5px solid #dbe5f0;
 }
 
 .purchase-row:last-child {
@@ -5478,7 +5478,7 @@ body {
   align-items: flex-start;
   padding: 12px 14px;
   color: #334155;
-  border-right: 1px solid #edf2f7;
+  border-right: 1px solid #e4edf6;
   line-height: 1.35;
 }
 
@@ -5492,6 +5492,7 @@ body {
 
 .purchase-table-head {
   min-height: 42px;
+  border-bottom: 1.5px solid #d4deea;
   background: #f8fafc;
 }
 
@@ -5534,6 +5535,7 @@ body {
   border-radius: 7px;
   font-size: 0.78rem;
   font-weight: 850;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
 .purchase-status-select select {
@@ -5546,6 +5548,12 @@ body {
   background: transparent;
   font: inherit;
   cursor: pointer;
+  outline: none;
+  appearance: none;
+}
+
+.purchase-status-select:focus-within {
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08), 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .purchase-status-nova {
@@ -5554,8 +5562,8 @@ body {
 }
 
 .purchase-status-pending_approval {
-  color: #1d4ed8;
-  background: #dbeafe;
+  color: #1e3a8a;
+  background: #bfdbfe;
 }
 
 .purchase-status-em_analise {
@@ -5569,8 +5577,8 @@ body {
 }
 
 .purchase-status-approved {
-  color: #065f46;
-  background: #bbf7d0;
+  color: #064e3b;
+  background: #86efac;
 }
 
 .purchase-status-em_compra {
@@ -5595,7 +5603,7 @@ body {
 
 .purchase-status-rejected {
   color: #7f1d1d;
-  background: #fecaca;
+  background: #fca5a5;
 }
 
 .purchase-status-cancelada {
@@ -5604,8 +5612,8 @@ body {
 }
 
 .purchase-status-canceled {
-  color: #475569;
-  background: #e2e8f0;
+  color: #334155;
+  background: #cbd5e1;
 }
 
 .purchase-modal {
