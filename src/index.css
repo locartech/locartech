@@ -5307,3 +5307,248 @@ body {
   color: #f1f5f9;
   background: rgba(255, 255, 255, 0.06);
 }
+
+/* Purchase requests */
+.purchase-panel-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.purchase-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffffff, #f8fbff);
+}
+
+.purchase-hero h2 {
+  margin: 4px 0 6px;
+  color: var(--lt-text);
+  font-size: 1.15rem;
+}
+
+.purchase-hero p:last-child {
+  margin: 0;
+  max-width: 640px;
+  color: var(--lt-muted);
+}
+
+.purchase-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.purchase-stats-grid .stat-card {
+  min-height: 108px;
+}
+
+.purchase-filters {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 190px 190px;
+  gap: 12px;
+  width: 100%;
+}
+
+.purchase-search {
+  position: relative;
+}
+
+.purchase-search svg {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  color: #64748b;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.purchase-search input {
+  padding-left: 42px;
+}
+
+.purchase-filters label {
+  display: grid;
+  gap: 6px;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.purchase-filters input,
+.purchase-filters select,
+.purchase-form input,
+.purchase-form select,
+.purchase-form textarea {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+  color: var(--lt-text);
+  background: #ffffff;
+}
+
+.purchase-form textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.purchase-table-shell {
+  overflow-x: auto;
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.purchase-table {
+  min-width: 980px;
+}
+
+.purchase-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.7fr 1fr 140px 140px 170px;
+  min-height: 64px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.purchase-row:last-child {
+  border-bottom: 0;
+}
+
+.purchase-row > div {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  color: #334155;
+  border-right: 1px solid #edf2f7;
+}
+
+.purchase-row > div:last-child {
+  border-right: 0;
+}
+
+.purchase-row:not(.purchase-table-head):hover {
+  background: #f8fbff;
+}
+
+.purchase-table-head {
+  min-height: 42px;
+  background: #f8fafc;
+}
+
+.purchase-table-head > div {
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.purchase-item-cell {
+  display: grid !important;
+  align-content: center;
+  gap: 4px;
+}
+
+.purchase-item-cell strong {
+  color: #0f172a;
+  font-weight: 850;
+}
+
+.purchase-item-cell span {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.purchase-status,
+.purchase-status-select {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 142px;
+  min-height: 32px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.purchase-status-select select {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 28px 0 10px;
+  border: 0;
+  border-radius: 7px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.purchase-status-nova {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.purchase-status-em_analise {
+  color: #92400e;
+  background: #fde68a;
+}
+
+.purchase-status-aprovada {
+  color: #065f46;
+  background: #bbf7d0;
+}
+
+.purchase-status-em_compra {
+  color: #0f766e;
+  background: #ccfbf1;
+}
+
+.purchase-status-comprada {
+  color: #14532d;
+  background: #86efac;
+}
+
+.purchase-status-entregue {
+  color: #ffffff;
+  background: #16a34a;
+}
+
+.purchase-status-recusada {
+  color: #7f1d1d;
+  background: #fecaca;
+}
+
+.purchase-status-cancelada {
+  color: #475569;
+  background: #e2e8f0;
+}
+
+.purchase-modal {
+  max-width: 760px;
+}
+
+@media (max-width: 1120px) {
+  .purchase-stats-grid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+
+  .purchase-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .purchase-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .purchase-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

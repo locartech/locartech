@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { purchaseRequestSource, purchaseRequestTargetSector } from '../data/purchaseRequestsData';
 import { fetchSectorIdByName } from './sectorsService';
 
 function mapRequestFromDb(request) {
@@ -29,6 +30,7 @@ export async function fetchRemoteRequests() {
   const { data, error } = await supabase
     .from('requests')
     .select('*')
+    .or(`from_sector.neq.${purchaseRequestSource},to_sector.neq.${purchaseRequestTargetSector}`)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
