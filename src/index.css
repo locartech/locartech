@@ -5546,12 +5546,22 @@ body {
   background: #dbeafe;
 }
 
+.purchase-status-pending_approval {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
 .purchase-status-em_analise {
   color: #92400e;
   background: #fde68a;
 }
 
 .purchase-status-aprovada {
+  color: #065f46;
+  background: #bbf7d0;
+}
+
+.purchase-status-approved {
   color: #065f46;
   background: #bbf7d0;
 }
@@ -5576,7 +5586,17 @@ body {
   background: #fecaca;
 }
 
+.purchase-status-rejected {
+  color: #7f1d1d;
+  background: #fecaca;
+}
+
 .purchase-status-cancelada {
+  color: #475569;
+  background: #e2e8f0;
+}
+
+.purchase-status-canceled {
   color: #475569;
   background: #e2e8f0;
 }

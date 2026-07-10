@@ -76,7 +76,7 @@ export function normalizePurchaseRequest(request) {
     requesterName: request.requesterName ?? request.requester_name ?? '',
     sourceSector: request.sourceSector ?? request.from_sector ?? purchaseRequestSource,
     targetSector: request.targetSector ?? request.to_sector ?? purchaseRequestTargetSector,
-    status: request.status ?? 'nova',
+    status: request.status === 'nova' ? 'pending_approval' : request.status ?? 'pending_approval',
     priority: normalizePriority(request.priority),
     dueDate: request.dueDate ?? request.due_date ?? '',
     createdAt: request.createdAt ?? request.created_at?.slice?.(0, 10) ?? today,
@@ -111,7 +111,7 @@ export function createLocalPurchaseRequest(values, currentUser) {
     requesterName: values.requesterName.trim(),
     sourceSector: purchaseRequestSource,
     targetSector: purchaseRequestTargetSector,
-    status: 'nova',
+    status: 'pending_approval',
     priority: values.priority,
     dueDate: values.dueDate,
     createdAt: today,
@@ -133,11 +133,11 @@ export function updateLocalPurchaseStatus(requests, requestId, status) {
 
 export function getPurchaseStats(requests) {
   return {
-    novas: requests.filter((request) => request.status === 'nova').length,
+    novas: requests.filter((request) => request.status === 'pending_approval' || request.status === 'nova').length,
     urgentes: requests.filter((request) => request.priority === 'urgent').length,
-    emCompra: requests.filter((request) => request.status === 'em_compra').length,
-    compradas: requests.filter((request) => request.status === 'comprada').length,
-    entregues: requests.filter((request) => request.status === 'entregue').length,
+    aprovadas: requests.filter((request) => request.status === 'approved').length,
+    recusadas: requests.filter((request) => request.status === 'rejected').length,
+    canceladas: requests.filter((request) => request.status === 'canceled').length,
   };
 }
 

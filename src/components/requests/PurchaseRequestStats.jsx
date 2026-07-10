@@ -5,9 +5,9 @@ function PurchaseRequestStats({ stats }) {
     <section className="stats-grid purchase-stats-grid">
       <StatCard label="Novas" value={stats.novas} detail="Aguardando analise de Compras" tone="blue" />
       <StatCard label="Urgentes" value={stats.urgentes} detail="Prioridade maxima" tone="amber" />
-      <StatCard label="Em compra" value={stats.emCompra} detail="Processos em andamento" />
-      <StatCard label="Compradas" value={stats.compradas} detail="Itens ja comprados" tone="green" />
-      <StatCard label="Entregues" value={stats.entregues} detail="Solicitacoes finalizadas" tone="green" />
+      <StatCard label="Aprovadas" value={stats.aprovadas} detail="Liberadas por Compras" tone="green" />
+      <StatCard label="Recusadas" value={stats.recusadas} detail="Nao aprovadas" tone="red" />
+      <StatCard label="Canceladas" value={stats.canceladas} detail="Solicitacoes interrompidas" />
     </section>
   );
 }

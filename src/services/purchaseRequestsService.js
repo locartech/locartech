@@ -25,7 +25,7 @@ async function mapPurchaseRequestToDb(values, currentUser) {
     requester_id: currentUser.id,
     requester_name: values.requesterName.trim(),
     responsible_name: null,
-    status: 'nova',
+    status: 'pending_approval',
     kanban_status: 'todo',
     priority: values.priority,
     due_date: values.dueDate,

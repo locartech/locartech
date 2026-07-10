@@ -4,14 +4,10 @@ export const purchaseRequestSource = 'Gestao da obra';
 export const purchaseRequestTargetSector = 'Compras';
 
 export const purchaseStatuses = [
-  { id: 'nova', label: 'Nova' },
-  { id: 'em_analise', label: 'Em analise' },
-  { id: 'aprovada', label: 'Aprovada' },
-  { id: 'em_compra', label: 'Em compra' },
-  { id: 'comprada', label: 'Comprada' },
-  { id: 'entregue', label: 'Entregue' },
-  { id: 'recusada', label: 'Recusada' },
-  { id: 'cancelada', label: 'Cancelada' },
+  { id: 'pending_approval', label: 'Nova' },
+  { id: 'approved', label: 'Aprovada' },
+  { id: 'rejected', label: 'Recusada' },
+  { id: 'canceled', label: 'Cancelada' },
 ];
 
 export const purchasePriorities = [
