@@ -12,7 +12,7 @@ const emptyForm = {
   dueDate: '',
 };
 
-function PurchaseRequestFormModal({ currentUser, onClose, onSubmit }) {
+function PurchaseRequestFormModal({ currentUser, submitError = '', onClose, onSubmit }) {
   const [draft, setDraft] = useState(emptyForm);
   const [error, setError] = useState('');
 
@@ -52,7 +52,7 @@ function PurchaseRequestFormModal({ currentUser, onClose, onSubmit }) {
         </div>
 
         <form className="edit-modal-form purchase-form" onSubmit={handleSubmit}>
-          {error ? <div className="auth-alert error">{error}</div> : null}
+          {error || submitError ? <div className="auth-alert error">{error || submitError}</div> : null}
 
           <label>
             <span>Solicitante</span>

@@ -12,10 +12,12 @@ import { fetchSectorIdByName } from './sectorsService';
 
 async function mapPurchaseRequestToDb(values, currentUser) {
   const targetSectorId = await fetchSectorIdByName(purchaseRequestTargetSector).catch(() => null);
+  const title = getPurchaseRequestTitle(values);
 
   return {
-    title: getPurchaseRequestTitle(values),
+    title,
     description: encodePurchaseDescription(values),
+    step_name: title,
     from_sector: purchaseRequestSource,
     to_sector: purchaseRequestTargetSector,
     requester_sector_id: currentUser.sectorId ?? null,
@@ -24,6 +26,7 @@ async function mapPurchaseRequestToDb(values, currentUser) {
     requester_name: values.requesterName.trim(),
     responsible_name: null,
     status: 'nova',
+    kanban_status: 'todo',
     priority: values.priority,
     due_date: values.dueDate,
     organization_id: currentUser.organizationId ?? null,

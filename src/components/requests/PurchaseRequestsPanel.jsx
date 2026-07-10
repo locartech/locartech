@@ -28,36 +28,44 @@ function getStatusLabel(statusId) {
 }
 
 async function notifyComprasTeam(request) {
-  const profiles = await fetchProfiles();
-  const purchaseMembers = profiles.filter(
-    (profile) => profile.status === 'Ativo' && profile.sector === 'Compras',
-  );
+  try {
+    const profiles = await fetchProfiles();
+    const purchaseMembers = profiles.filter(
+      (profile) => profile.status === 'Ativo' && profile.sector === 'Compras',
+    );
 
-  await Promise.all(
-    purchaseMembers.map((member) =>
-      createNotification({
-        userId: member.id,
-        title: 'Nova compra solicitada',
-        message: `${request.requesterName} solicitou a compra de ${request.item}.`,
-        category: 'Compras solicitadas',
-        targetSectorName: 'Compras',
-        targetUserName: member.name,
-      }),
-    ),
-  );
+    await Promise.all(
+      purchaseMembers.map((member) =>
+        createNotification({
+          userId: member.id,
+          title: 'Nova compra solicitada',
+          message: `${request.requesterName} solicitou a compra de ${request.item}.`,
+          category: 'Compras solicitadas',
+          targetSectorName: 'Compras',
+          targetUserName: member.name,
+        }),
+      ),
+    );
+  } catch {
+    // A compra nao deve falhar se apenas a notificacao estiver indisponivel.
+  }
 }
 
 async function notifyRequester(request, status) {
   if (!request.requesterId) return;
 
-  await createNotification({
-    userId: request.requesterId,
-    title: 'Compra solicitada atualizada',
-    message: `A solicitacao de compra ${request.item} mudou para ${getStatusLabel(status)}.`,
-    category: 'Compras solicitadas',
-    targetSectorName: 'Compras',
-    targetUserName: request.requesterName,
-  });
+  try {
+    await createNotification({
+      userId: request.requesterId,
+      title: 'Compra solicitada atualizada',
+      message: `A solicitacao de compra ${request.item} mudou para ${getStatusLabel(status)}.`,
+      category: 'Compras solicitadas',
+      targetSectorName: 'Compras',
+      targetUserName: request.requesterName,
+    });
+  } catch {
+    // A atualizacao de status nao deve falhar se apenas a notificacao estiver indisponivel.
+  }
 }
 
 function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }) {
@@ -66,6 +74,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const [formOpen, setFormOpen] = useState(false);
   const [filters, setFilters] = useState({ query: '', status: 'all', priority: 'all' });
   const [feedback, setFeedback] = useState('');
+  const [error, setError] = useState('');
 
   const loadRemote = async () => {
     if (!isSupabaseConfigured) return;
@@ -104,12 +113,18 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
 
   const handleCreate = async (values) => {
     setFeedback('');
+    setError('');
 
-    if (usingSupabase) {
-      const created = await createRemotePurchaseRequest(values, currentUser);
-      setRequests((current) => [created, ...current]);
-      await notifyComprasTeam(created);
-    } else {
+    try {
+      if (usingSupabase) {
+        const created = await createRemotePurchaseRequest(values, currentUser);
+        setRequests((current) => [created, ...current]);
+        setFormOpen(false);
+        setFeedback('Solicitacao de compra criada com sucesso.');
+        await notifyComprasTeam(created);
+        return;
+      }
+
       const created = createLocalPurchaseRequest(values, currentUser);
       setRequests((current) => [created, ...current]);
       onAddNotification?.({
@@ -121,20 +136,27 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
         targetSectorName: 'Compras',
         read: false,
       });
-    }
 
-    setFormOpen(false);
-    setFeedback('Solicitacao de compra criada com sucesso.');
+      setFormOpen(false);
+      setFeedback('Solicitacao de compra criada com sucesso.');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel criar a solicitacao de compra.');
+    }
   };
 
   const handleStatusChange = async (request, status) => {
     setFeedback('');
+    setError('');
 
-    if (usingSupabase) {
-      const updated = await updateRemotePurchaseRequestStatus(request.id, status);
-      setRequests((current) => current.map((item) => (item.id === request.id ? updated : item)));
-      await notifyRequester(updated, status);
-    } else {
+    try {
+      if (usingSupabase) {
+        const updated = await updateRemotePurchaseRequestStatus(request.id, status);
+        setRequests((current) => current.map((item) => (item.id === request.id ? updated : item)));
+        setFeedback('Status atualizado com sucesso.');
+        await notifyRequester(updated, status);
+        return;
+      }
+
       const nextRequests = updateLocalPurchaseStatus(requests, request.id, status);
       const updated = nextRequests.find((item) => item.id === request.id);
       setRequests(nextRequests);
@@ -148,9 +170,11 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
         targetUserName: updated?.requesterName,
         read: false,
       });
-    }
 
-    setFeedback('Status atualizado com sucesso.');
+      setFeedback('Status atualizado com sucesso.');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel atualizar o status.');
+    }
   };
 
   return (
@@ -161,13 +185,21 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
           <h2>Pedidos da obra para Compras</h2>
           <p>Centralize itens solicitados pela operacao e acompanhe prioridade, prazo e status de compra.</p>
         </div>
-        <button type="button" className="primary-button large" onClick={() => setFormOpen(true)}>
+        <button
+          type="button"
+          className="primary-button large"
+          onClick={() => {
+            setError('');
+            setFormOpen(true);
+          }}
+        >
           <Plus size={18} aria-hidden="true" />
           Nova compra solicitada
         </button>
       </section>
 
       {feedback ? <div className="members-feedback">{feedback}</div> : null}
+      {error ? <div className="members-feedback error">{error}</div> : null}
       {!usingSupabase ? (
         <div className="members-feedback">Usando dados locais ate a conexao Supabase estar disponivel.</div>
       ) : null}
@@ -188,6 +220,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
       {formOpen ? (
         <PurchaseRequestFormModal
           currentUser={currentUser}
+          submitError={error}
           onClose={() => setFormOpen(false)}
           onSubmit={handleCreate}
         />
