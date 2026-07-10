@@ -5475,10 +5475,11 @@ body {
 
 .purchase-row > div {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: 12px 14px;
   color: #334155;
   border-right: 1px solid #edf2f7;
+  line-height: 1.35;
 }
 
 .purchase-row > div:last-child {
@@ -5511,6 +5512,11 @@ body {
 .purchase-item-cell strong {
   color: #0f172a;
   font-weight: 850;
+  white-space: pre-line;
+}
+
+.purchase-text-cell {
+  white-space: pre-line;
 }
 
 .purchase-item-cell span {

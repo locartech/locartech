@@ -38,7 +38,7 @@ function PurchaseRequestTable({ requests, canManage, onStatusChange }) {
             <div className="purchase-item-cell">
               <strong>{request.description}</strong>
             </div>
-            <div>{request.notes || '-'}</div>
+            <div className="purchase-text-cell">{request.notes || '-'}</div>
             <div>{request.requesterName}</div>
             <div>{request.workLocation || '-'}</div>
             <div>
