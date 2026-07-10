@@ -5509,14 +5509,14 @@ body {
   gap: 4px;
 }
 
-.purchase-item-cell strong {
-  color: #0f172a;
-  font-weight: 850;
+.purchase-text-cell {
+  color: #334155;
+  font-weight: 500;
   white-space: pre-line;
 }
 
-.purchase-text-cell {
-  white-space: pre-line;
+.purchase-description-cell {
+  color: #0f172a;
 }
 
 .purchase-item-cell span {

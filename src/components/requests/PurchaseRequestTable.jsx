@@ -35,9 +35,7 @@ function PurchaseRequestTable({ requests, canManage, onStatusChange }) {
 
         {requests.map((request) => (
           <div className="purchase-row" key={request.id}>
-            <div className="purchase-item-cell">
-              <strong>{request.description}</strong>
-            </div>
+            <div className="purchase-text-cell purchase-description-cell">{request.description}</div>
             <div className="purchase-text-cell">{request.notes || '-'}</div>
             <div>{request.requesterName}</div>
             <div>{request.workLocation || '-'}</div>
