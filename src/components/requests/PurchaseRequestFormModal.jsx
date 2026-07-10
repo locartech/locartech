@@ -4,8 +4,8 @@ import { purchasePriorities } from '../../data/purchaseRequestsData';
 import { validatePurchaseRequest } from '../../utils/purchaseRequestUtils';
 
 const emptyForm = {
-  item: '',
   description: '',
+  notes: '',
   requesterName: '',
   workLocation: '',
   priority: 'medium',
@@ -54,21 +54,19 @@ function PurchaseRequestFormModal({ currentUser, onClose, onSubmit }) {
         <form className="edit-modal-form purchase-form" onSubmit={handleSubmit}>
           {error ? <div className="auth-alert error">{error}</div> : null}
 
-          <div className="form-grid-two">
-            <label>
-              <span>Item solicitado</span>
-              <input value={draft.item} onChange={(event) => updateDraft('item', event.target.value)} />
-            </label>
-
-            <label>
-              <span>Solicitante</span>
-              <input value={draft.requesterName} onChange={(event) => updateDraft('requesterName', event.target.value)} />
-            </label>
-          </div>
+          <label>
+            <span>Solicitante</span>
+            <input value={draft.requesterName} onChange={(event) => updateDraft('requesterName', event.target.value)} />
+          </label>
 
           <label>
             <span>Descricao da compra</span>
             <textarea value={draft.description} onChange={(event) => updateDraft('description', event.target.value)} />
+          </label>
+
+          <label>
+            <span>Observacao</span>
+            <textarea value={draft.notes} onChange={(event) => updateDraft('notes', event.target.value)} />
           </label>
 
           <div className="form-grid-two">
@@ -77,7 +75,6 @@ function PurchaseRequestFormModal({ currentUser, onClose, onSubmit }) {
               <input
                 value={draft.workLocation}
                 onChange={(event) => updateDraft('workLocation', event.target.value)}
-                placeholder="Opcional"
               />
             </label>
 

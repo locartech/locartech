@@ -24,9 +24,10 @@ function PurchaseRequestTable({ requests, canManage, onStatusChange }) {
     <div className="purchase-table-shell">
       <div className="purchase-table">
         <div className="purchase-row purchase-table-head">
-          <div>Item</div>
           <div>Descricao</div>
+          <div>Observacao</div>
           <div>Solicitante</div>
+          <div>Obra/local</div>
           <div>Prioridade</div>
           <div>Prazo</div>
           <div>Status</div>
@@ -35,11 +36,11 @@ function PurchaseRequestTable({ requests, canManage, onStatusChange }) {
         {requests.map((request) => (
           <div className="purchase-row" key={request.id}>
             <div className="purchase-item-cell">
-              <strong>{request.item}</strong>
-              {request.workLocation ? <span>{request.workLocation}</span> : null}
+              <strong>{request.description}</strong>
             </div>
-            <div>{request.description}</div>
+            <div>{request.notes || '-'}</div>
             <div>{request.requesterName}</div>
+            <div>{request.workLocation || '-'}</div>
             <div>
               <RequestPriorityBadge value={request.priority} />
             </div>

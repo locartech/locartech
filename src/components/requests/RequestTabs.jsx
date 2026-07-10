@@ -1,7 +1,6 @@
 const tabs = [
   { id: 'received', label: 'Recebidas' },
   { id: 'sent', label: 'Enviadas' },
-  { id: 'purchase', label: 'Compras solicitadas' },
   { id: 'all', label: 'Todas' },
 ];
 

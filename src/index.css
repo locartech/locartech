@@ -5248,6 +5248,59 @@ body {
   position: static;
 }
 
+.nav-group {
+  display: grid;
+  gap: 4px;
+}
+
+.nav-chevron {
+  margin-left: auto;
+  color: currentColor;
+  transition: transform 0.16s ease;
+}
+
+.nav-chevron.open {
+  transform: rotate(180deg);
+}
+
+.nav-submenu {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 4px 14px;
+  padding-left: 14px;
+  border-left: 1px solid rgba(191, 219, 254, 0.32);
+}
+
+.nav-subitem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  color: #dbeafe;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.nav-subitem:hover,
+.nav-subitem.active {
+  color: #ffffff;
+  background: rgba(37, 99, 235, 0.42);
+}
+
+.nav-subitem .nav-label {
+  font-size: 0.84rem;
+}
+
+.sidebar.collapsed .nav-submenu,
+.sidebar.collapsed .nav-chevron {
+  display: none;
+}
+
 .account-status-card {
   grid-column: 1 / -1;
   justify-self: center;
@@ -5405,12 +5458,12 @@ body {
 }
 
 .purchase-table {
-  min-width: 980px;
+  min-width: 1120px;
 }
 
 .purchase-row {
   display: grid;
-  grid-template-columns: 1.2fr 1.7fr 1fr 140px 140px 170px;
+  grid-template-columns: 1.7fr 1.3fr 1fr 1fr 140px 140px 170px;
   min-height: 64px;
   border-bottom: 1px solid #edf2f7;
 }

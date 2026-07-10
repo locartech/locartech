@@ -16,6 +16,11 @@ const pageDetails = {
     title: 'Solicitacoes',
     subtitle: 'Gerencie pedidos entre areas da empresa.',
   },
+  purchaseRequests: {
+    eyebrow: 'Compras solicitadas',
+    title: 'Solicitacoes de compras',
+    subtitle: 'Acompanhe pedidos de compra enviados pela obra para o setor de Compras.',
+  },
   chat: {
     eyebrow: 'Comunicacao interna',
     title: 'Chat corporativo',

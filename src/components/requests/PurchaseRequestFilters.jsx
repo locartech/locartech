@@ -13,7 +13,7 @@ function PurchaseRequestFilters({ filters, onChange }) {
         <input
           value={filters.query}
           onChange={(event) => updateFilter('query', event.target.value)}
-          placeholder="Buscar por item, descricao, solicitante ou obra"
+          placeholder="Buscar por descricao, observacao, solicitante ou obra"
         />
       </label>
       <label>

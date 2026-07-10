@@ -25,10 +25,11 @@ function normalizePriority(value) {
   return priorities[normalizedValue] ?? 'medium';
 }
 
-export function encodePurchaseDescription({ description, workLocation }) {
+export function encodePurchaseDescription({ description, notes = '', workLocation }) {
   return JSON.stringify({
     kind: 'purchase_request',
     description: description.trim(),
+    notes: notes.trim(),
     workLocation: workLocation.trim(),
   });
 }
@@ -39,6 +40,7 @@ export function decodePurchaseDescription(value = '') {
     if (parsed?.kind === 'purchase_request') {
       return {
         description: parsed.description ?? '',
+        notes: parsed.notes ?? '',
         workLocation: parsed.workLocation ?? '',
       };
     }
@@ -48,8 +50,16 @@ export function decodePurchaseDescription(value = '') {
 
   return {
     description: value,
+    notes: '',
     workLocation: '',
   };
+}
+
+export function getPurchaseRequestTitle(values) {
+  const description = values.description?.trim?.() ?? '';
+  if (!description) return 'Solicitacao de compra';
+
+  return description.length > 72 ? `${description.slice(0, 69).trim()}...` : description;
 }
 
 export function normalizePurchaseRequest(request) {
@@ -60,6 +70,7 @@ export function normalizePurchaseRequest(request) {
     item: request.item ?? request.title ?? '',
     title: request.title ?? request.item ?? '',
     description: decoded.description,
+    notes: request.notes ?? decoded.notes,
     workLocation: request.workLocation ?? decoded.workLocation,
     requesterId: request.requesterId ?? request.requester_id ?? null,
     requesterName: request.requesterName ?? request.requester_name ?? '',
@@ -91,9 +102,10 @@ export function savePurchaseRequests(requests) {
 export function createLocalPurchaseRequest(values, currentUser) {
   return {
     id: `purchase-${crypto.randomUUID()}`,
-    item: values.item.trim(),
-    title: values.item.trim(),
+    item: getPurchaseRequestTitle(values),
+    title: getPurchaseRequestTitle(values),
     description: values.description.trim(),
+    notes: values.notes.trim(),
     workLocation: values.workLocation.trim(),
     requesterId: currentUser.id,
     requesterName: values.requesterName.trim(),
@@ -137,7 +149,7 @@ export function filterPurchaseRequests(requests, filters) {
     const priorityMatches = filters.priority === 'all' || request.priority === filters.priority;
     const queryMatches =
       !query ||
-      `${request.item} ${request.description} ${request.requesterName} ${request.workLocation}`
+      `${request.item} ${request.description} ${request.notes} ${request.requesterName} ${request.workLocation}`
         .toLowerCase()
         .includes(query);
 
@@ -146,7 +158,6 @@ export function filterPurchaseRequests(requests, filters) {
 }
 
 export function validatePurchaseRequest(values) {
-  if (!values.item.trim()) return 'Informe o item que precisa ser comprado.';
   if (!values.description.trim()) return 'Informe a descricao da compra.';
   if (!values.requesterName.trim()) return 'Informe quem esta solicitando.';
   if (!values.priority) return 'Informe a prioridade.';

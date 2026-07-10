@@ -7,6 +7,7 @@ import Kanban from './pages/Kanban';
 import LoginPage from './pages/LoginPage';
 import Notifications from './pages/Notifications';
 import Requests from './pages/Requests';
+import PurchaseRequests from './pages/PurchaseRequests';
 import Members from './pages/Members';
 import Sectors from './pages/Sectors';
 import SectorKnowledge from './pages/SectorKnowledge';
@@ -18,6 +19,7 @@ const pages = {
   dashboard: Dashboard,
   kanban: Kanban,
   requests: Requests,
+  purchaseRequests: PurchaseRequests,
   chat: Chat,
   notifications: Notifications,
   sectors: Sectors,

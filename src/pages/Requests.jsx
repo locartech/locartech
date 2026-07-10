@@ -7,7 +7,6 @@ import RequestRejectModal from '../components/requests/RequestRejectModal';
 import RequestStats from '../components/requests/RequestStats';
 import RequestTable from '../components/requests/RequestTable';
 import RequestTabs from '../components/requests/RequestTabs';
-import PurchaseRequestsPanel from '../components/requests/PurchaseRequestsPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { requestStatusIds } from '../data/requestsData';
@@ -28,7 +27,7 @@ import {
   getTodayReceivedRequests,
 } from '../utils/requestUtils';
 
-function Requests({ onAddNotification }) {
+function Requests() {
   const { currentUser } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +44,6 @@ function Requests({ onAddNotification }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [detailRequest, setDetailRequest] = useState(null);
   const [rejectingRequest, setRejectingRequest] = useState(null);
-  const [purchaseCount, setPurchaseCount] = useState(0);
 
   const loadRequests = async () => {
     try {
@@ -95,7 +93,6 @@ function Requests({ onAddNotification }) {
   const counts = {
     received: receivedRequests.length,
     sent: sentRequests.length,
-    purchase: purchaseCount,
     all: requests.length,
   };
 
@@ -163,12 +160,10 @@ function Requests({ onAddNotification }) {
             Usuario atual: {currentUser.name} - {currentUser.sector}
           </span>
         </div>
-        {activeTab !== 'purchase' ? (
-          <button type="button" className="primary-button large" onClick={() => setIsFormOpen(true)}>
-            <Plus size={18} aria-hidden="true" />
-            Nova solicitacao
-          </button>
-        ) : null}
+        <button type="button" className="primary-button large" onClick={() => setIsFormOpen(true)}>
+          <Plus size={18} aria-hidden="true" />
+          Nova solicitacao
+        </button>
       </section>
 
       {error ? <div className="members-feedback error">{error}</div> : null}
@@ -177,33 +172,23 @@ function Requests({ onAddNotification }) {
       <section className="requests-panel">
         <div className="requests-toolbar">
           <RequestTabs activeTab={activeTab} onTabChange={setActiveTab} counts={counts} />
-          {activeTab !== 'purchase' ? <RequestFilters filters={filters} onChange={setFilters} /> : null}
+          <RequestFilters filters={filters} onChange={setFilters} />
         </div>
 
-        {activeTab === 'purchase' ? (
-          <PurchaseRequestsPanel
-            currentUser={currentUser}
-            onAddNotification={onAddNotification}
-            onCountChange={setPurchaseCount}
-          />
-        ) : (
-          <>
-            <RequestStats stats={stats} />
-            <RequestTable
-              requests={visibleRequests}
-              currentUser={currentUser}
-              activeTab={activeTab}
-              onView={setDetailRequest}
-              onEdit={(request) => {
-                setFormRequest(request);
-                setIsFormOpen(true);
-              }}
-              onApprove={handleApproveRequest}
-              onReject={setRejectingRequest}
-              onCancel={handleCancelRequest}
-            />
-          </>
-        )}
+        <RequestStats stats={stats} />
+        <RequestTable
+          requests={visibleRequests}
+          currentUser={currentUser}
+          activeTab={activeTab}
+          onView={setDetailRequest}
+          onEdit={(request) => {
+            setFormRequest(request);
+            setIsFormOpen(true);
+          }}
+          onApprove={handleApproveRequest}
+          onReject={setRejectingRequest}
+          onCancel={handleCancelRequest}
+        />
       </section>
 
       {isFormOpen ? (

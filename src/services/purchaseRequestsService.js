@@ -5,6 +5,7 @@ import {
 import { supabase } from '../lib/supabase';
 import {
   encodePurchaseDescription,
+  getPurchaseRequestTitle,
   normalizePurchaseRequest,
 } from '../utils/purchaseRequestUtils';
 import { fetchSectorIdByName } from './sectorsService';
@@ -13,7 +14,7 @@ async function mapPurchaseRequestToDb(values, currentUser) {
   const targetSectorId = await fetchSectorIdByName(purchaseRequestTargetSector).catch(() => null);
 
   return {
-    title: values.item.trim(),
+    title: getPurchaseRequestTitle(values),
     description: encodePurchaseDescription(values),
     from_sector: purchaseRequestSource,
     to_sector: purchaseRequestTargetSector,
