@@ -5153,6 +5153,10 @@ body {
   --sector-card-accent: #4f46e5;
 }
 
+.sector-card-projetos {
+  --sector-card-accent: #7c3aed;
+}
+
 .sector-card-recursos-humanos {
   --sector-card-accent: #16a34a;
 }

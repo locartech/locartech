@@ -1,5 +1,16 @@
 import { supabase } from '../lib/supabase';
 
+const localSectors = [
+  {
+    id: 'local-projetos',
+    organizationId: null,
+    slug: 'projetos',
+    name: 'Projetos',
+    description: 'Projetos',
+    initialManagerName: null,
+  },
+];
+
 function mapSectorFromDb(sector) {
   if (!sector) return null;
   return {
@@ -12,10 +23,23 @@ function mapSectorFromDb(sector) {
   };
 }
 
+function mergeLocalSectors(sectors) {
+  const knownSlugs = new Set(sectors.map((sector) => sector.slug));
+  const knownNames = new Set(sectors.map((sector) => sector.name.toLowerCase()));
+  const merged = [
+    ...sectors,
+    ...localSectors.filter(
+      (sector) => !knownSlugs.has(sector.slug) && !knownNames.has(sector.name.toLowerCase()),
+    ),
+  ];
+
+  return merged.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+}
+
 export async function fetchSectors() {
   const { data, error } = await supabase.from('sectors').select('*').order('name', { ascending: true });
   if (error) throw error;
-  return data.map(mapSectorFromDb);
+  return mergeLocalSectors(data.map(mapSectorFromDb));
 }
 
 export async function fetchSectorIdByName(name) {

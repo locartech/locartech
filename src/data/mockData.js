@@ -30,6 +30,12 @@ export const sectors = [
     manager: 'Clara Ribeiro',
   },
   {
+    id: 'projetos',
+    name: 'Projetos',
+    description: 'Projetos',
+    manager: '',
+  },
+  {
     id: 'recursos-humanos',
     name: 'Recursos Humanos',
     description: 'Cuida de pessoas, documentacao interna e desenvolvimento.',

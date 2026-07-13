@@ -2,6 +2,7 @@ import {
   ArrowRight,
   Calculator,
   ClipboardCheck,
+  FolderKanban,
   CreditCard,
   Route,
   ShoppingCart,
@@ -14,6 +15,7 @@ const sectorIcons = {
   financeiro: CreditCard,
   frotas: Route,
   planejamento: ClipboardCheck,
+  projetos: FolderKanban,
   'recursos-humanos': UsersRound,
 };
 
