@@ -30,7 +30,7 @@ function KanbanTable({
   };
 
   const handleDeleteTask = (taskId) => {
-    const canDelete = window.confirm('Deseja excluir esta etapa? Essa ação remove a linha da gestão.');
+    const canDelete = window.confirm('Deseja excluir esta atividade? Essa acao remove a linha da gestao.');
     if (canDelete) {
       onDeleteTask(taskId);
     }

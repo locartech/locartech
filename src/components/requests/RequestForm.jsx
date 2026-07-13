@@ -45,7 +45,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
     event.preventDefault();
     setError('');
 
-    if (!draft.stepName.trim()) return setError('Informe a etapa que sera criada no Kanban.');
+    if (!draft.stepName.trim()) return setError('Informe a atividade que sera criada no Kanban.');
     if (!draft.targetSector) return setError('Escolha o setor responsavel.');
     if (!draft.dueDate) return setError('Informe a data de vencimento.');
     if (!draft.priority) return setError('Escolha a prioridade.');
@@ -63,7 +63,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
         <div className="edit-modal-header">
           <div>
             <p className="eyebrow">{request ? 'Editar solicitacao' : 'Nova solicitacao'}</p>
-            <h2 id="request-form-title">{request ? request.stepName : 'Criar etapa para aprovacao'}</h2>
+            <h2 id="request-form-title">{request ? request.stepName : 'Criar atividade para aprovacao'}</h2>
           </div>
           <button type="button" className="icon-button" onClick={onClose} title="Fechar modal">
             <X size={18} aria-hidden="true" />
@@ -75,7 +75,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
 
           <div className="form-grid-two">
             <label>
-              <span>Etapa</span>
+              <span>Atividade</span>
               <input type="text" value={draft.stepName} onChange={(event) => updateDraft('stepName', event.target.value)} />
             </label>
 

@@ -3,11 +3,19 @@ import { useEffect, useState } from 'react';
 import { kanbanStatuses } from '../../data/kanbanData';
 import { requestPriorities } from '../../data/requestsData';
 
+const blankDraft = {
+  title: '',
+  assignee: '',
+  status: 'todo',
+  priority: 'medium',
+  date: '',
+};
+
 function EditTaskModal({ task, onClose, onSave }) {
-  const [draft, setDraft] = useState(task);
+  const [draft, setDraft] = useState(blankDraft);
 
   useEffect(() => {
-    setDraft(task);
+    setDraft(task ?? blankDraft);
   }, [task]);
 
   if (!task) return null;
@@ -30,11 +38,11 @@ function EditTaskModal({ task, onClose, onSave }) {
 
   return (
     <div className="modal-backdrop" role="presentation">
-      <section className="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-stage-title">
+      <section className="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-activity-title">
         <div className="edit-modal-header">
           <div>
-            <p className="eyebrow">Editar etapa</p>
-            <h2 id="edit-stage-title">{task.title}</h2>
+            <p className="eyebrow">Editar atividade</p>
+            <h2 id="edit-activity-title">{task.title}</h2>
           </div>
           <button type="button" className="icon-button" onClick={onClose} title="Fechar modal">
             <X size={18} aria-hidden="true" />
@@ -43,7 +51,7 @@ function EditTaskModal({ task, onClose, onSave }) {
 
         <form className="edit-modal-form" onSubmit={handleSubmit}>
           <label>
-            <span>Etapa</span>
+            <span>Atividade</span>
             <input type="text" value={draft.title} onChange={(event) => updateDraft('title', event.target.value)} />
           </label>
 

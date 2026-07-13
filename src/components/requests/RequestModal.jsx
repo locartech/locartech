@@ -37,7 +37,7 @@ function RequestModal({ request, onClose }) {
 
           <dl className="request-detail-grid">
             <div>
-              <dt>Etapa</dt>
+              <dt>Atividade</dt>
               <dd>{request.stepName}</dd>
             </div>
             <div>

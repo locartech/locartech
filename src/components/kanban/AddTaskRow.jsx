@@ -32,8 +32,8 @@ function AddTaskRow({ onAdd, onCancel }) {
           type="text"
           value={draft.title}
           onChange={(event) => updateDraft('title', event.target.value)}
-          placeholder="Nome da etapa"
-          aria-label="Nome da etapa"
+          placeholder="Nome da atividade"
+          aria-label="Nome da atividade"
         />
       </div>
       <div className="stage-cell">
@@ -53,7 +53,7 @@ function AddTaskRow({ onAdd, onCancel }) {
           className="stage-priority-select"
           value={draft.priority}
           onChange={(event) => updateDraft('priority', event.target.value)}
-          aria-label="Prioridade da etapa"
+          aria-label="Prioridade da atividade"
         >
           {requestPriorities.map((priority) => (
             <option key={priority.id} value={priority.id}>
@@ -68,11 +68,11 @@ function AddTaskRow({ onAdd, onCancel }) {
           value={draft.date}
           min="2026-01-01"
           onChange={(event) => updateDraft('date', event.target.value)}
-          aria-label="Data da etapa"
+          aria-label="Data da atividade"
         />
       </div>
       <div className="stage-cell stage-actions-cell">
-        <button type="submit" className="table-icon-button primary" title="Salvar etapa">
+        <button type="submit" className="table-icon-button primary" title="Salvar atividade">
           <Check size={16} aria-hidden="true" />
         </button>
         <button type="button" className="table-icon-button" onClick={onCancel} title="Cancelar inclusão">

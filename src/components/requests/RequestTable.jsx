@@ -33,7 +33,7 @@ function RequestTable({
       <div className="request-table">
         <div className="request-row request-table-head">
           <div>Titulo</div>
-          <div>Etapa</div>
+          <div>Atividade</div>
           <div>Solicitante</div>
           <div>Destino</div>
           <div>Status</div>

@@ -97,9 +97,9 @@ function Dashboard() {
           </div>
         </div>
         <div className="stats-grid dashboard-metrics-grid dashboard-task-grid">
-          <StatCard label="Tarefas concluidas" value={completedTasks} detail="Etapas finalizadas" tone="green" />
-          <StatCard label="A fazer" value={todoTasks} detail="Etapas ainda nao iniciadas" tone="blue" />
-          <StatCard label="Em andamento" value={doingTasks} detail="Etapas sendo executadas" tone="amber" />
+          <StatCard label="Tarefas concluidas" value={completedTasks} detail="Atividades finalizadas" tone="green" />
+          <StatCard label="A fazer" value={todoTasks} detail="Atividades ainda nao iniciadas" tone="blue" />
+          <StatCard label="Em andamento" value={doingTasks} detail="Atividades sendo executadas" tone="amber" />
           <StatCard label="Vencem em 7 dias" value={dueSoonTasks} detail="Prazos proximos" tone="blue" />
           <StatCard label="Atrasadas" value={overdueTasks} detail="Pendencias fora do prazo" tone="amber" />
         </div>

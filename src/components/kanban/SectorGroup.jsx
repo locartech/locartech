@@ -30,16 +30,16 @@ function SectorGroup({
           {sector.name}
         </span>
         <span className="sector-stage-summary">
-          <span>{tasks.length} etapas</span>
+          <span>{tasks.length} atividades</span>
           <span className="sector-stage-summary-open">{activeCount} abertas</span>
           <span className="sector-stage-summary-done">{finishedCount} feitas</span>
         </span>
       </button>
 
       {!collapsed ? (
-        <div className="stage-table" role="table" aria-label={`Etapas do setor ${sector.name}`}>
+        <div className="stage-table" role="table" aria-label={`Atividades do setor ${sector.name}`}>
           <div className="stage-row stage-table-head" role="row">
-            <div className="stage-cell" role="columnheader">Etapa</div>
+            <div className="stage-cell" role="columnheader">Atividade</div>
             <div className="stage-cell" role="columnheader">Responsável</div>
             <div className="stage-cell" role="columnheader">Status</div>
             <div className="stage-cell" role="columnheader">Prioridade</div>
@@ -64,7 +64,7 @@ function SectorGroup({
           ) : (
             <button type="button" className="add-stage-button" onClick={() => onAddStart(sector.id)}>
               <Plus size={16} aria-hidden="true" />
-              Adicionar etapa
+              Adicionar atividade
             </button>
           )}
         </div>

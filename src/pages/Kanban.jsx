@@ -20,7 +20,7 @@ function Kanban() {
       setStageTasks(tasks);
       setError('');
     } catch (err) {
-      setError(err.message ?? 'Nao foi possivel carregar as etapas.');
+      setError(err.message ?? 'Nao foi possivel carregar as atividades.');
     } finally {
       setLoading(false);
     }
@@ -42,7 +42,7 @@ function Kanban() {
       const created = await createRemoteKanbanTask(sectorId, values);
       setStageTasks((current) => [...current, created]);
     } catch (err) {
-      setError(err.message ?? 'Nao foi possivel criar a etapa.');
+      setError(err.message ?? 'Nao foi possivel criar a atividade.');
     }
   };
 
@@ -54,7 +54,7 @@ function Kanban() {
       const updated = await updateRemoteKanbanTask(taskId, current.sectorId, { ...current, ...values });
       setStageTasks((prev) => prev.map((task) => (task.id === taskId ? updated : task)));
     } catch (err) {
-      setError(err.message ?? 'Nao foi possivel atualizar a etapa.');
+      setError(err.message ?? 'Nao foi possivel atualizar a atividade.');
     }
   };
 
@@ -63,7 +63,7 @@ function Kanban() {
       await deleteRemoteKanbanTask(taskId);
       setStageTasks((current) => current.filter((task) => task.id !== taskId));
     } catch (err) {
-      setError(err.message ?? 'Nao foi possivel excluir a etapa.');
+      setError(err.message ?? 'Nao foi possivel excluir a atividade.');
     }
   };
 
@@ -71,17 +71,17 @@ function Kanban() {
     <div className="page-stack kanban-page">
       <section className="page-heading">
         <div>
-          <p className="eyebrow">Gestao de etapas</p>
+          <p className="eyebrow">Gestao de atividades</p>
           <h2>Kanban em tabela por setor</h2>
         </div>
         <p>
-          Organize etapas por area, edite status e datas diretamente na linha e mantenha o
+          Organize atividades por area, edite status e datas diretamente na linha e mantenha o
           acompanhamento em uma visao gerencial agrupada.
         </p>
       </section>
 
       {error ? <div className="members-feedback error">{error}</div> : null}
-      {loading ? <div className="members-feedback">Carregando etapas...</div> : null}
+      {loading ? <div className="members-feedback">Carregando atividades...</div> : null}
 
       <KanbanTable
         tasks={stageTasks}

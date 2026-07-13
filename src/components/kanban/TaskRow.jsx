@@ -26,19 +26,19 @@ function TaskRow({ task, onStatusChange, onDateChange, onEdit, onDelete, onCompl
           value={task.date}
           min="2026-01-01"
           onChange={(event) => onDateChange(task.id, event.target.value)}
-          aria-label={`Data da etapa ${task.title}`}
+          aria-label={`Data da atividade ${task.title}`}
         />
       </div>
       <div className="stage-cell stage-actions-cell">
         {task.status !== 'done' ? (
-          <button type="button" className="table-icon-button success" onClick={() => onComplete(task.id)} title="Marcar como concluída">
+          <button type="button" className="table-icon-button success" onClick={() => onComplete(task.id)} title="Marcar como concluida">
             <CheckCircle2 size={16} aria-hidden="true" />
           </button>
         ) : null}
-        <button type="button" className="table-icon-button" onClick={() => onEdit(task)} title="Editar etapa">
+        <button type="button" className="table-icon-button" onClick={() => onEdit(task)} title="Editar atividade">
           <Pencil size={16} aria-hidden="true" />
         </button>
-        <button type="button" className="table-icon-button danger" onClick={() => onDelete(task.id)} title="Excluir etapa">
+        <button type="button" className="table-icon-button danger" onClick={() => onDelete(task.id)} title="Excluir atividade">
           <Trash2 size={16} aria-hidden="true" />
         </button>
       </div>

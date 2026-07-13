@@ -7,9 +7,9 @@ const pageDetails = {
     subtitle: 'Acompanhe fluxos, alertas e indicadores operacionais.',
   },
   kanban: {
-    eyebrow: 'Gestao de etapas',
+    eyebrow: 'Gestao de atividades',
     title: 'Kanban operacional',
-    subtitle: 'Organize etapas por setor com status, prazos e responsaveis.',
+    subtitle: 'Organize atividades por setor com status, prazos e responsaveis.',
   },
   requests: {
     eyebrow: 'Demandas internas',

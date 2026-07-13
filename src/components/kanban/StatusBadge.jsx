@@ -9,7 +9,7 @@ function StatusBadge({ value, onChange, disabled = false }) {
 
   return (
     <label className={`stage-status-select stage-status-${value}`}>
-      <span className="sr-only">Status da etapa</span>
+      <span className="sr-only">Status da atividade</span>
       <select value={value} onChange={(event) => onChange(event.target.value)}>
         {kanbanStatuses.map((status) => (
           <option key={status.id} value={status.id}>
