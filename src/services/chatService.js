@@ -16,6 +16,10 @@ function getLastMessage(messages) {
   return messages[messages.length - 1] ?? null;
 }
 
+function buildDirectConversationId(currentUserId, otherUserId) {
+  return `direct:${[currentUserId, otherUserId].sort().join(':')}`;
+}
+
 export function mapConversationFromDb(conversation, profiles, currentUserId) {
   const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
   const participants = conversation.conversation_participants ?? [];
@@ -45,39 +49,78 @@ export function mapConversationFromDb(conversation, profiles, currentUserId) {
   };
 }
 
+function mapDirectConversationFromProfile(profile, currentUserId) {
+  return {
+    id: buildDirectConversationId(currentUserId, profile.id),
+    type: 'direct',
+    title: profile.name,
+    description: `${profile.sector} - ${profile.role}`,
+    sector: profile.sector,
+    participantIds: [currentUserId, profile.id],
+    unreadCount: 0,
+    lastMessageAt: profile.updatedAt ?? profile.createdAt ?? new Date(0).toISOString(),
+    messages: [],
+    pendingConversation: true,
+  };
+}
+
 export async function fetchConversations(currentUserId, profiles) {
-  const { data, error } = await supabase
-    .from('conversations')
-    .select(`
-      *,
-      conversation_participants(*),
-      messages(*)
-    `)
-    .order('updated_at', { ascending: false });
+  const directConversations = profiles
+    .filter((profile) => profile.id !== currentUserId)
+    .map((profile) => mapDirectConversationFromProfile(profile, currentUserId));
 
-  if (error) throw error;
+  try {
+    const { data, error } = await supabase
+      .from('conversations')
+      .select(`
+        *,
+        conversation_participants(*),
+        messages(*)
+      `)
+      .order('updated_at', { ascending: false });
 
-  return data
-    .filter((conversation) =>
-      conversation.conversation_participants?.some((participant) => participant.profile_id === currentUserId),
-    )
-    .map((conversation) => mapConversationFromDb(conversation, profiles, currentUserId));
+    if (error) throw error;
+
+    const remoteConversations = data
+      .filter((conversation) =>
+        conversation.conversation_participants?.some((participant) => participant.profile_id === currentUserId),
+      )
+      .map((conversation) => mapConversationFromDb(conversation, profiles, currentUserId));
+
+    const directByOtherUser = new Map();
+    remoteConversations
+      .filter((conversation) => conversation.type === 'direct')
+      .forEach((conversation) => {
+        const otherUserId = conversation.participantIds.find((participantId) => participantId !== currentUserId);
+        if (otherUserId) directByOtherUser.set(otherUserId, conversation);
+      });
+
+    const mergedDirectConversations = directConversations.map((conversation) => {
+      const otherUserId = conversation.participantIds.find((participantId) => participantId !== currentUserId);
+      return directByOtherUser.get(otherUserId) ?? conversation;
+    });
+    const groupConversations = remoteConversations.filter((conversation) => conversation.type === 'group');
+
+    return [...mergedDirectConversations, ...groupConversations];
+  } catch (error) {
+    return directConversations;
+  }
 }
 
 export async function ensureDirectConversation(currentUser, otherUser) {
-  const { data, error } = await supabase
-    .from('conversations')
-    .select('*, conversation_participants(*)')
-    .eq('type', 'direct');
+  try {
+    const existingConversations = await fetchConversations(currentUser.id, [currentUser, otherUser]);
+    const existing = existingConversations.find(
+      (conversation) =>
+        conversation.type === 'direct' &&
+        !conversation.pendingConversation &&
+        conversation.participantIds.includes(otherUser.id),
+    );
 
-  if (error) throw error;
-
-  const existing = data.find((conversation) => {
-    const participantIds = conversation.conversation_participants.map((participant) => participant.profile_id);
-    return participantIds.includes(currentUser.id) && participantIds.includes(otherUser.id) && participantIds.length === 2;
-  });
-
-  if (existing) return existing.id;
+    if (existing) return existing.id;
+  } catch {
+    // If RLS prevents lookup, create a conversation on demand.
+  }
 
   const title = `${currentUser.name} / ${otherUser.name}`;
   const { data: conversation, error: conversationError } = await supabase
@@ -151,6 +194,8 @@ export async function sendChatMessage(conversationId, senderId, text) {
 }
 
 export async function markConversationRead(conversationId, profileId) {
+  if (String(conversationId).startsWith('direct:')) return;
+
   await supabase
     .from('conversation_participants')
     .update({ last_read_at: new Date().toISOString() })

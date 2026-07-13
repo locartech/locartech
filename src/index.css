@@ -5250,6 +5250,115 @@ body {
   }
 }
 
+/* Chat polish and member picker */
+.chat-layout {
+  border-radius: 12px;
+  background: #f8fafc;
+  box-shadow: 0 18px 42px rgba(15, 42, 67, 0.06);
+}
+
+.chat-sidebar-panel {
+  padding: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.chat-window {
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.conversation-item {
+  border-radius: 10px;
+}
+
+.conversation-item:hover,
+.conversation-item.active {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.message-bubble {
+  border-radius: 12px;
+}
+
+.participant-picker {
+  display: grid;
+  gap: 10px;
+}
+
+.participant-picker-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 0 14px;
+  border: 1px solid #dbe6f3;
+  border-radius: 10px;
+  color: #0f172a;
+  background: #f8fbff;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.participant-picker-toggle:hover,
+.participant-picker-toggle:focus-visible {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.participant-picker-toggle > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-weight: 850;
+}
+
+.participant-picker-toggle > strong {
+  min-height: 28px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.participant-picker.open .participant-picker-toggle svg:last-child {
+  transform: rotate(180deg);
+}
+
+.participant-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.participant-option {
+  border-color: #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.participant-option:hover {
+  border-color: #bfdbfe;
+  background: #f8fbff;
+}
+
+.participant-option:has(input:checked) {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+@media (max-width: 720px) {
+  .participant-options {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Sidebar logo alignment */
 .sidebar .brand-block {
   position: relative;

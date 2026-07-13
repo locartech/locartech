@@ -39,12 +39,6 @@ function Chat({ onChatUnreadChange }) {
       const activeProfiles = profiles.filter((profile) => profile.status === 'Ativo');
       setUsers(activeProfiles);
 
-      await Promise.all(
-        activeProfiles
-          .filter((profile) => profile.id !== currentUser.id)
-          .map((profile) => ensureDirectConversation(currentUser, profile)),
-      );
-
       const remoteConversations = await fetchConversations(currentUser.id, activeProfiles);
       setConversations(remoteConversations);
       onChatUnreadChange?.(getTotalUnreadCount(remoteConversations));
@@ -70,9 +64,20 @@ function Chat({ onChatUnreadChange }) {
   }, [currentUser?.id]);
 
   const handleSelectConversation = async (conversationId) => {
-    setActiveConversationId(conversationId);
     try {
-      await markConversationRead(conversationId, currentUser.id);
+      const selectedConversation = conversations.find((conversation) => conversation.id === conversationId);
+      let nextConversationId = conversationId;
+
+      if (selectedConversation?.pendingConversation && selectedConversation.type === 'direct') {
+        const otherUserId = selectedConversation.participantIds.find((participantId) => participantId !== currentUser.id);
+        const otherUser = users.find((user) => user.id === otherUserId);
+        if (otherUser) {
+          nextConversationId = await ensureDirectConversation(currentUser, otherUser);
+        }
+      }
+
+      setActiveConversationId(nextConversationId);
+      await markConversationRead(nextConversationId, currentUser.id);
       await loadChat();
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel abrir a conversa.');

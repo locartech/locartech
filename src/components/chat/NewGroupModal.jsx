@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { ChevronDown, UsersRound, X } from 'lucide-react';
 import { useState } from 'react';
 import { chatSectors } from '../../data/chatData';
 
@@ -9,6 +9,7 @@ function NewGroupModal({ users, currentUser, onClose, onCreate }) {
     sector: 'Compras',
     participantIds: [],
   });
+  const [membersOpen, setMembersOpen] = useState(false);
 
   const availableUsers = users.filter((user) => user.id !== currentUser.id);
 
@@ -67,22 +68,37 @@ function NewGroupModal({ users, currentUser, onClose, onCreate }) {
             </select>
           </label>
 
-          <div className="participant-picker">
-            <span>Participantes</span>
-            <div>
-              {availableUsers.map((user) => (
-                <label key={user.id} className="participant-option">
-                  <input
-                    type="checkbox"
-                    checked={draft.participantIds.includes(user.id)}
-                    onChange={() => toggleParticipant(user.id)}
-                  />
-                  <span className="user-avatar">{user.avatarInitials}</span>
-                  <strong>{user.name}</strong>
-                  <small>{user.sector}</small>
-                </label>
-              ))}
-            </div>
+          <div className={`participant-picker ${membersOpen ? 'open' : ''}`}>
+            <button
+              type="button"
+              className="participant-picker-toggle"
+              onClick={() => setMembersOpen((current) => !current)}
+              aria-expanded={membersOpen}
+            >
+              <span>
+                <UsersRound size={18} aria-hidden="true" />
+                Membros
+              </span>
+              <strong>{draft.participantIds.length} selecionado(s)</strong>
+              <ChevronDown size={18} aria-hidden="true" />
+            </button>
+
+            {membersOpen ? (
+              <div className="participant-options">
+                {availableUsers.map((user) => (
+                  <label key={user.id} className="participant-option">
+                    <input
+                      type="checkbox"
+                      checked={draft.participantIds.includes(user.id)}
+                      onChange={() => toggleParticipant(user.id)}
+                    />
+                    <span className="user-avatar">{user.avatarInitials}</span>
+                    <strong>{user.name}</strong>
+                    <small>{user.sector}</small>
+                  </label>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className="modal-actions">
