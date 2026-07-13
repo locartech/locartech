@@ -59,15 +59,20 @@ export async function createRemotePurchaseRequest(values, currentUser) {
 }
 
 export async function updateRemotePurchaseRequestStatus(requestId, status) {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('requests')
     .update({ status, updated_at: new Date().toISOString() })
-    .eq('id', requestId)
-    .select('*')
-    .single();
+    .eq('id', requestId);
 
   if (error) throw error;
-  return normalizePurchaseRequest(data);
+
+  const { data: refreshedRequest } = await supabase
+    .from('requests')
+    .select('*')
+    .eq('id', requestId)
+    .maybeSingle();
+
+  return refreshedRequest ? normalizePurchaseRequest(refreshedRequest) : null;
 }
 
 export function subscribeToPurchaseRequests(onChange) {

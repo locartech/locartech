@@ -154,9 +154,10 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
     try {
       if (usingSupabase) {
         const updated = await updateRemotePurchaseRequestStatus(request.id, status);
-        setRequests((current) => current.map((item) => (item.id === request.id ? updated : item)));
+        const updatedRequest = updated ?? { ...request, status };
+        setRequests((current) => current.map((item) => (item.id === request.id ? updatedRequest : item)));
         setFeedback('Status atualizado com sucesso.');
-        await notifyRequester(updated, status);
+        await notifyRequester(updatedRequest, status);
         return;
       }
 
