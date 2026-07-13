@@ -33,7 +33,11 @@ function mergeLocalSectors(sectors) {
     ),
   ];
 
-  return merged.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  return merged.sort((a, b) => {
+    if (a.slug === 'projetos') return 1;
+    if (b.slug === 'projetos') return -1;
+    return a.name.localeCompare(b.name, 'pt-BR');
+  });
 }
 
 export async function fetchSectors() {

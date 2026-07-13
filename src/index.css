@@ -5155,6 +5155,16 @@ body {
 
 .sector-card-projetos {
   --sector-card-accent: #7c3aed;
+  grid-column: 1 / -1;
+  min-height: 116px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  align-content: center;
+  gap: 18px;
+  padding: 22px 28px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--sector-card-accent) 7%, #ffffff), #ffffff 54%),
+    #ffffff;
 }
 
 .sector-card-recursos-humanos {
@@ -5202,15 +5212,41 @@ body {
   color: var(--sector-card-accent);
 }
 
+.sector-card-projetos .sector-icon {
+  width: 44px;
+  height: 44px;
+}
+
+.sector-card-projetos h3 {
+  font-size: 1.12rem;
+}
+
+.sector-card-projetos .sector-knowledge-link {
+  justify-self: end;
+}
+
 @media (max-width: 1120px) {
   .sectors-grid {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+
+  .sector-card-projetos {
+    grid-column: 1 / -1;
   }
 }
 
 @media (max-width: 720px) {
   .sectors-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sector-card-projetos {
+    grid-template-columns: 1fr;
+    min-height: 156px;
+  }
+
+  .sector-card-projetos .sector-knowledge-link {
+    justify-self: start;
   }
 }
 
