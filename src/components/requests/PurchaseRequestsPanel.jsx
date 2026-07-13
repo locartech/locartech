@@ -14,7 +14,9 @@ import {
   filterPurchaseRequests,
   getPurchaseStats,
   loadPurchaseRequests,
+  removePurchaseStatusOverride,
   savePurchaseRequests,
+  savePurchaseStatusOverride,
   updateLocalPurchaseStatus,
 } from '../../utils/purchaseRequestUtils';
 import { purchaseStatuses } from '../../data/purchaseRequestsData';
@@ -147,6 +149,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const handleStatusChange = async (request, status) => {
     setFeedback('');
     setError('');
+    savePurchaseStatusOverride(request.id, status);
     setRequests((current) =>
       current.map((item) => (item.id === request.id ? { ...item, status } : item)),
     );
@@ -177,6 +180,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
 
       setFeedback('Status atualizado com sucesso.');
     } catch (err) {
+      removePurchaseStatusOverride(request.id);
       setRequests((current) =>
         current.map((item) => (item.id === request.id ? { ...item, status: request.status } : item)),
       );

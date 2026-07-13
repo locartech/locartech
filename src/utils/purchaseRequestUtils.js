@@ -3,6 +3,7 @@ import {
   purchaseRequestSource,
   purchaseRequestTargetSector,
   PURCHASE_REQUESTS_STORAGE_KEY,
+  PURCHASE_STATUS_OVERRIDES_STORAGE_KEY,
 } from '../data/purchaseRequestsData';
 
 const today = '2026-07-10';
@@ -32,6 +33,37 @@ export function encodePurchaseDescription({ description, notes = '', workLocatio
     notes: notes.trim(),
     workLocation: workLocation.trim(),
   });
+}
+
+function canUseLocalStorage() {
+  return typeof localStorage !== 'undefined';
+}
+
+export function loadPurchaseStatusOverrides() {
+  if (!canUseLocalStorage()) return {};
+
+  try {
+    return JSON.parse(localStorage.getItem(PURCHASE_STATUS_OVERRIDES_STORAGE_KEY) || '{}');
+  } catch {
+    localStorage.removeItem(PURCHASE_STATUS_OVERRIDES_STORAGE_KEY);
+    return {};
+  }
+}
+
+export function savePurchaseStatusOverride(requestId, status) {
+  if (!canUseLocalStorage() || !requestId) return;
+
+  const overrides = loadPurchaseStatusOverrides();
+  overrides[requestId] = status;
+  localStorage.setItem(PURCHASE_STATUS_OVERRIDES_STORAGE_KEY, JSON.stringify(overrides));
+}
+
+export function removePurchaseStatusOverride(requestId) {
+  if (!canUseLocalStorage() || !requestId) return;
+
+  const overrides = loadPurchaseStatusOverrides();
+  delete overrides[requestId];
+  localStorage.setItem(PURCHASE_STATUS_OVERRIDES_STORAGE_KEY, JSON.stringify(overrides));
 }
 
 export function decodePurchaseDescription(value = '') {
@@ -64,9 +96,11 @@ export function getPurchaseRequestTitle(values) {
 
 export function normalizePurchaseRequest(request) {
   const decoded = decodePurchaseDescription(request.description);
+  const id = request.id ?? `purchase-${crypto.randomUUID()}`;
+  const statusOverride = loadPurchaseStatusOverrides()[id];
 
   return {
-    id: request.id ?? `purchase-${crypto.randomUUID()}`,
+    id,
     item: request.item ?? request.title ?? '',
     title: request.title ?? request.item ?? '',
     description: decoded.description,
@@ -76,7 +110,7 @@ export function normalizePurchaseRequest(request) {
     requesterName: request.requesterName ?? request.requester_name ?? '',
     sourceSector: request.sourceSector ?? request.from_sector ?? purchaseRequestSource,
     targetSector: request.targetSector ?? request.to_sector ?? purchaseRequestTargetSector,
-    status: request.status === 'nova' ? 'pending_approval' : request.status ?? 'pending_approval',
+    status: statusOverride ?? (request.status === 'nova' ? 'pending_approval' : request.status ?? 'pending_approval'),
     priority: normalizePriority(request.priority),
     dueDate: request.dueDate ?? request.due_date ?? '',
     createdAt: request.createdAt ?? request.created_at?.slice?.(0, 10) ?? today,

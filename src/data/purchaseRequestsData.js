@@ -1,4 +1,5 @@
 export const PURCHASE_REQUESTS_STORAGE_KEY = 'locartech.purchase-requests.v1';
+export const PURCHASE_STATUS_OVERRIDES_STORAGE_KEY = 'locartech.purchase-status-overrides.v1';
 
 export const purchaseRequestSource = 'Gestao da obra';
 export const purchaseRequestTargetSector = 'Compras';
