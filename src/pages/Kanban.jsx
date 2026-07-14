@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import {
   archiveKanbanTask,
   createRemoteKanbanTask,
+  deleteKanbanTasksByIds,
   deleteRemoteKanbanTask,
   fetchKanbanTasks,
   restoreKanbanTask,
@@ -92,6 +93,11 @@ function Kanban() {
     }
   };
 
+  const handleCleanupTasks = async (taskIds) => {
+    await deleteKanbanTasksByIds(taskIds);
+    setStageTasks((current) => current.filter((task) => !taskIds.includes(task.id)));
+  };
+
   const activeTasks = stageTasks.filter((task) => !task.archived);
   const archivedTasks = stageTasks.filter((task) => task.archived);
 
@@ -145,7 +151,7 @@ function Kanban() {
           onArchiveTask={handleArchiveTask}
         />
       ) : (
-        <ArchivedActivitiesPanel tasks={archivedTasks} onRestoreTask={handleRestoreTask} />
+        <ArchivedActivitiesPanel tasks={archivedTasks} onRestoreTask={handleRestoreTask} onCleanupTasks={handleCleanupTasks} />
       )}
     </div>
   );
