@@ -1,8 +1,8 @@
-import { CheckCircle2, Pencil, Trash2 } from 'lucide-react';
+import { Archive, Pencil, Trash2 } from 'lucide-react';
 import RequestPriorityBadge from '../requests/RequestPriorityBadge';
 import StatusBadge from './StatusBadge';
 
-function TaskRow({ task, onStatusChange, onDateChange, onEdit, onDelete, onComplete }) {
+function TaskRow({ task, onStatusChange, onDateChange, onEdit, onDelete, onArchive }) {
   return (
     <div className="stage-row">
       <div className="stage-cell stage-title-cell">
@@ -30,11 +30,9 @@ function TaskRow({ task, onStatusChange, onDateChange, onEdit, onDelete, onCompl
         />
       </div>
       <div className="stage-cell stage-actions-cell">
-        {task.status !== 'done' ? (
-          <button type="button" className="table-icon-button success" onClick={() => onComplete(task.id)} title="Marcar como concluida">
-            <CheckCircle2 size={16} aria-hidden="true" />
-          </button>
-        ) : null}
+        <button type="button" className="table-icon-button archive" onClick={() => onArchive(task)} title="Arquivar atividade">
+          <Archive size={16} aria-hidden="true" />
+        </button>
         <button type="button" className="table-icon-button" onClick={() => onEdit(task)} title="Editar atividade">
           <Pencil size={16} aria-hidden="true" />
         </button>

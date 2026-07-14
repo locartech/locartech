@@ -5839,3 +5839,87 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Kanban archived activities */
+.table-icon-button.archive {
+  color: #92400e;
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+
+.table-icon-button.archive:hover {
+  background: #fde68a;
+}
+
+.kanban-view-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.kanban-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--lt-border);
+  border-radius: 999px;
+  color: #475569;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 750;
+  font-size: 0.88rem;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.kanban-view-tab:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.kanban-view-tab.active {
+  border-color: var(--lt-blue-2);
+  color: var(--lt-blue);
+  background: var(--lt-blue-faint);
+}
+
+.kanban-view-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  color: inherit;
+  background: rgba(15, 23, 42, 0.06);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.kanban-view-tab.active .kanban-view-tab-count {
+  background: rgba(37, 99, 235, 0.14);
+}
+
+.archived-filters {
+  grid-template-columns: repeat(7, minmax(130px, 1fr)) auto;
+}
+
+.archived-row {
+  grid-template-columns:
+    minmax(220px, 1.5fr) minmax(120px, 0.7fr) minmax(140px, 0.8fr) minmax(120px, 0.7fr)
+    minmax(110px, 0.6fr) minmax(112px, 0.6fr) minmax(160px, 0.9fr) minmax(160px, 0.9fr)
+    minmax(90px, 0.55fr);
+}
+
+@media (max-width: 1320px) {
+  .archived-filters {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .archived-filters {
+    grid-template-columns: 1fr;
+  }
+}

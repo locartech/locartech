@@ -1,18 +1,25 @@
 import { useEffect, useState } from 'react';
+import { Archive, LayoutGrid } from 'lucide-react';
+import ArchivedActivitiesPanel from '../components/kanban/ArchivedActivitiesPanel';
 import KanbanTable from '../components/kanban/KanbanTable';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import {
+  archiveKanbanTask,
   createRemoteKanbanTask,
   deleteRemoteKanbanTask,
   fetchKanbanTasks,
+  restoreKanbanTask,
   subscribeToKanban,
   updateRemoteKanbanTask,
 } from '../services/kanbanService';
-import { supabase } from '../lib/supabase';
 
 function Kanban() {
+  const { currentUser } = useAuth();
   const [stageTasks, setStageTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [view, setView] = useState('open');
 
   const loadTasks = async () => {
     try {
@@ -67,6 +74,27 @@ function Kanban() {
     }
   };
 
+  const handleArchiveTask = async (taskId) => {
+    try {
+      const updated = await archiveKanbanTask(taskId, currentUser?.id, currentUser?.name);
+      setStageTasks((current) => current.map((task) => (task.id === taskId ? updated : task)));
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel arquivar a atividade.');
+    }
+  };
+
+  const handleRestoreTask = async (taskId) => {
+    try {
+      const updated = await restoreKanbanTask(taskId);
+      setStageTasks((current) => current.map((task) => (task.id === taskId ? updated : task)));
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel restaurar a atividade.');
+    }
+  };
+
+  const activeTasks = stageTasks.filter((task) => !task.archived);
+  const archivedTasks = stageTasks.filter((task) => task.archived);
+
   return (
     <div className="page-stack kanban-page">
       <section className="page-heading">
@@ -80,15 +108,45 @@ function Kanban() {
         </p>
       </section>
 
+      <div className="kanban-view-tabs" role="tablist" aria-label="Visao do Kanban">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'open'}
+          className={`kanban-view-tab ${view === 'open' ? 'active' : ''}`}
+          onClick={() => setView('open')}
+        >
+          <LayoutGrid size={16} aria-hidden="true" />
+          Atividades em aberto
+          <span className="kanban-view-tab-count">{activeTasks.length}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'archived'}
+          className={`kanban-view-tab ${view === 'archived' ? 'active' : ''}`}
+          onClick={() => setView('archived')}
+        >
+          <Archive size={16} aria-hidden="true" />
+          Atividades arquivadas
+          <span className="kanban-view-tab-count">{archivedTasks.length}</span>
+        </button>
+      </div>
+
       {error ? <div className="members-feedback error">{error}</div> : null}
       {loading ? <div className="members-feedback">Carregando atividades...</div> : null}
 
-      <KanbanTable
-        tasks={stageTasks}
-        onAddTask={handleAddTask}
-        onUpdateTask={handleUpdateTask}
-        onDeleteTask={handleDeleteTask}
-      />
+      {view === 'open' ? (
+        <KanbanTable
+          tasks={activeTasks}
+          onAddTask={handleAddTask}
+          onUpdateTask={handleUpdateTask}
+          onDeleteTask={handleDeleteTask}
+          onArchiveTask={handleArchiveTask}
+        />
+      ) : (
+        <ArchivedActivitiesPanel tasks={archivedTasks} onRestoreTask={handleRestoreTask} />
+      )}
     </div>
   );
 }

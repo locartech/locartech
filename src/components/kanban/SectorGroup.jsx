@@ -15,7 +15,7 @@ function SectorGroup({
   onDateChange,
   onEdit,
   onDelete,
-  onComplete,
+  onArchive,
 }) {
   const finishedCount = tasks.filter((task) => task.status === 'done').length;
   const activeCount = tasks.filter((task) => task.status !== 'done' && task.status !== 'canceled').length;
@@ -55,7 +55,7 @@ function SectorGroup({
               onDateChange={onDateChange}
               onEdit={onEdit}
               onDelete={onDelete}
-              onComplete={onComplete}
+              onArchive={onArchive}
             />
           ))}
 

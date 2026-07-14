@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { kanbanSectors } from '../../data/kanbanData';
 import { getSortedSectors, groupTasksBySector } from '../../utils/kanbanUtils';
+import ConfirmModal from '../common/ConfirmModal';
 import EditTaskModal from './EditTaskModal';
 import SectorGroup from './SectorGroup';
 
@@ -9,10 +10,12 @@ function KanbanTable({
   onAddTask,
   onUpdateTask,
   onDeleteTask,
+  onArchiveTask,
 }) {
   const [collapsedSectors, setCollapsedSectors] = useState({});
   const [addingSectorId, setAddingSectorId] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
+  const [archivingTask, setArchivingTask] = useState(null);
 
   const sortedSectors = useMemo(() => getSortedSectors(kanbanSectors), []);
   const tasksBySector = useMemo(() => groupTasksBySector(tasks), [tasks]);
@@ -41,6 +44,11 @@ function KanbanTable({
     setEditingTask(null);
   };
 
+  const handleConfirmArchive = () => {
+    if (archivingTask) onArchiveTask(archivingTask.id);
+    setArchivingTask(null);
+  };
+
   return (
     <>
       <div className="kanban-table-shell">
@@ -59,12 +67,22 @@ function KanbanTable({
             onDateChange={(taskId, date) => onUpdateTask(taskId, { date })}
             onEdit={setEditingTask}
             onDelete={handleDeleteTask}
-            onComplete={(taskId) => onUpdateTask(taskId, { status: 'done' })}
+            onArchive={setArchivingTask}
           />
         ))}
       </div>
 
       <EditTaskModal task={editingTask} onClose={() => setEditingTask(null)} onSave={handleEditSave} />
+
+      <ConfirmModal
+        open={Boolean(archivingTask)}
+        title="Arquivar atividade"
+        message="Você realmente deseja arquivar essa atividade?"
+        cancelLabel="Não"
+        confirmLabel="Sim, arquivar"
+        onCancel={() => setArchivingTask(null)}
+        onConfirm={handleConfirmArchive}
+      />
     </>
   );
 }
