@@ -271,7 +271,7 @@ export function buildPurchaseRequestsCsv(requests) {
     request.createdAt || '',
   ]);
 
-  return [headers, ...rows].map((row) => row.map(escapePurchaseCsvValue).join(',')).join('\r\n');
+  return [headers, ...rows].map((row) => row.map(escapePurchaseCsvValue).join(';')).join('\r\n');
 }
 
 export function buildPurchaseRequestsReportFileName(date = new Date()) {

@@ -74,8 +74,10 @@ function App() {
       .filter((notification) => notification.userId === profile?.id)
       .map((notification) => notification.id);
 
-    await clearNotifications(ownNotificationIds);
-    setNotifications((current) => current.filter((notification) => !ownNotificationIds.includes(notification.id)));
+    if (!ownNotificationIds.length) return;
+
+    const deletedIds = await clearNotifications(ownNotificationIds);
+    setNotifications((current) => current.filter((notification) => !deletedIds.includes(notification.id)));
   };
 
   const ActivePage = pages[activePage] ?? Dashboard;

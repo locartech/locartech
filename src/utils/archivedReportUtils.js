@@ -33,6 +33,8 @@ function escapeCsvValue(value) {
   return text;
 }
 
+// pt-BR Excel opens CSVs with ";" as the field separator (its decimal separator is ","),
+// so a comma-separated file renders as a single jumbled column.
 export function buildArchivedActivitiesCsv(tasks) {
   const rows = tasks.map((task) => [
     task.id,
@@ -50,7 +52,7 @@ export function buildArchivedActivitiesCsv(tasks) {
     task.archivedAt ? new Date(task.archivedAt).toISOString() : '',
   ]);
 
-  const lines = [CSV_HEADERS, ...rows].map((row) => row.map(escapeCsvValue).join(','));
+  const lines = [CSV_HEADERS, ...rows].map((row) => row.map(escapeCsvValue).join(';'));
   return lines.join('\r\n');
 }
 

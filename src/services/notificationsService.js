@@ -56,9 +56,10 @@ export async function markNotificationRead(notificationId) {
 }
 
 export async function clearNotifications(notificationIds) {
-  if (!notificationIds.length) return;
-  const { error } = await supabase.from('notifications').delete().in('id', notificationIds);
+  if (!notificationIds.length) return [];
+  const { data, error } = await supabase.from('notifications').delete().in('id', notificationIds).select('id');
   if (error) throw error;
+  return (data ?? []).map((row) => row.id);
 }
 
 export function subscribeToNotifications(onChange) {

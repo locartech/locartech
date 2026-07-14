@@ -289,6 +289,7 @@ function Requests() {
         message="Deseja restaurar esta solicitação para a lista de ativas?"
         cancelLabel="Cancelar"
         confirmLabel="Sim, restaurar"
+        tone="primary"
         onCancel={() => setRestoringRequest(null)}
         onConfirm={handleConfirmRestore}
       />

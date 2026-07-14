@@ -88,7 +88,16 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
   };
 
   const handleGenerateReport = async () => {
-    if (tasks.length === 0 || generating) return;
+    if (generating) return;
+
+    // A pending report already covers the current export - reopen it instead of
+    // creating an orphaned duplicate that would never get a Drive link registered.
+    if (pendingReport) {
+      setRegisteringReport(pendingReport);
+      return;
+    }
+
+    if (tasks.length === 0) return;
     setGenerating(true);
     setFeedback('');
 
@@ -113,16 +122,13 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
       );
 
       setReports((current) => [created, ...current]);
-      setFeedback('Relatório gerado. Salve o arquivo no Drive da empresa e registre o link abaixo antes de limpar os dados exportados.');
+      setRegisteringReport(created);
+      setFeedback('Relatório gerado e baixado. Salve o arquivo no Drive da empresa e registre o link para concluir.');
     } catch (err) {
       setReportsError(err.message ?? 'Nao foi possivel gerar o relatorio.');
     } finally {
       setGenerating(false);
     }
-  };
-
-  const handleOpenRegisterDriveLink = () => {
-    if (pendingReport) setRegisteringReport(pendingReport);
   };
 
   const handleSubmitDriveLink = async (reportId, values) => {
@@ -161,7 +167,6 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
         hasSavedReports={hasSavedReports}
         generating={generating}
         onGenerateReport={handleGenerateReport}
-        onRegisterDriveLink={handleOpenRegisterDriveLink}
         onCleanup={() => setCleanupOpen(true)}
       />
 
@@ -178,6 +183,7 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
         message="Deseja restaurar esta atividade para o Kanban?"
         cancelLabel="Cancelar"
         confirmLabel="Sim, restaurar"
+        tone="primary"
         onCancel={() => setRestoringTask(null)}
         onConfirm={handleConfirmRestore}
       />

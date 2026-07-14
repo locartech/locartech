@@ -1,4 +1,4 @@
-import { AlertTriangle, FileDown, Link2, Trash2 } from 'lucide-react';
+import { AlertTriangle, FileDown, Trash2 } from 'lucide-react';
 
 const formatDate = (value) =>
   value ? new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(value) : '-';
@@ -9,7 +9,6 @@ function ArchivedReportWidget({
   hasSavedReports,
   generating,
   onGenerateReport,
-  onRegisterDriveLink,
   onCleanup,
 }) {
   const { level, message, total, oldestDate } = volumeStatus;
@@ -45,13 +44,14 @@ function ArchivedReportWidget({
       ) : null}
 
       <div className="archived-report-actions">
-        <button type="button" className="primary-button" onClick={onGenerateReport} disabled={generating || total === 0}>
+        <button
+          type="button"
+          className="primary-button"
+          onClick={onGenerateReport}
+          disabled={generating || (total === 0 && !hasPendingReport)}
+        >
           <FileDown size={16} aria-hidden="true" />
-          Gerar relatório
-        </button>
-        <button type="button" className="ghost-button" onClick={onRegisterDriveLink} disabled={!hasPendingReport}>
-          <Link2 size={16} aria-hidden="true" />
-          Registrar link do Drive
+          {generating ? 'Gerando...' : 'Gerar relatório'}
         </button>
         {hasSavedReports ? (
           <button type="button" className="ghost-button archived-cleanup-button" onClick={onCleanup}>

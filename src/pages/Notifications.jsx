@@ -7,12 +7,28 @@ import { useAuth } from '../contexts/AuthContext';
 function Notifications({ notifications, onMarkRead, onClearNotifications }) {
   const { currentUser } = useAuth();
   const [clearOpen, setClearOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [clearError, setClearError] = useState('');
   const unreadCount = notifications.filter((notification) => !notification.read).length;
   const clearableCount = notifications.filter((notification) => notification.userId === currentUser?.id).length;
 
-  const handleConfirmClear = () => {
-    setClearOpen(false);
-    onClearNotifications();
+  const handleOpenClear = () => {
+    setClearError('');
+    setClearOpen(true);
+  };
+
+  const handleConfirmClear = async () => {
+    setClearing(true);
+    setClearError('');
+
+    try {
+      await onClearNotifications();
+      setClearOpen(false);
+    } catch (err) {
+      setClearError(err.message ?? 'Nao foi possivel limpar as notificacoes.');
+    } finally {
+      setClearing(false);
+    }
   };
 
   return (
@@ -26,7 +42,7 @@ function Notifications({ notifications, onMarkRead, onClearNotifications }) {
         <button
           type="button"
           className="ghost-button"
-          onClick={() => setClearOpen(true)}
+          onClick={handleOpenClear}
           disabled={clearableCount === 0}
         >
           <Trash2 size={16} aria-hidden="true" />
@@ -42,7 +58,9 @@ function Notifications({ notifications, onMarkRead, onClearNotifications }) {
         message="Tem certeza que deseja limpar suas notificações pessoais? Avisos gerais do seu setor não serão removidos."
         cancelLabel="Cancelar"
         confirmLabel="Sim, limpar"
-        onCancel={() => setClearOpen(false)}
+        busy={clearing}
+        error={clearError}
+        onCancel={() => (clearing ? null : setClearOpen(false))}
         onConfirm={handleConfirmClear}
       />
     </div>

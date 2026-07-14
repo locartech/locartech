@@ -10,6 +10,12 @@ import {
   subscribeToPurchaseRequests,
   updateRemotePurchaseRequestStatus,
 } from '../../services/purchaseRequestsService';
+import {
+  createPurchaseReport,
+  fetchPurchaseReports,
+  registerPurchaseReportDriveLink,
+  subscribeToPurchaseReports,
+} from '../../services/purchaseReportsService';
 import { fetchProfiles } from '../../services/profilesService';
 import {
   archiveLocalPurchaseRequest,
@@ -28,6 +34,7 @@ import {
 import { downloadCsvFile } from '../../utils/archivedReportUtils';
 import { purchaseStatuses } from '../../data/purchaseRequestsData';
 import ConfirmModal from '../common/ConfirmModal';
+import RegisterDriveLinkModal from '../kanban/RegisterDriveLinkModal';
 import PurchaseRequestFilters from './PurchaseRequestFilters';
 import PurchaseRequestFormModal from './PurchaseRequestFormModal';
 import PurchaseRequestStats from './PurchaseRequestStats';
@@ -88,6 +95,35 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const [error, setError] = useState('');
   const [archivingRequest, setArchivingRequest] = useState(null);
   const [restoringRequest, setRestoringRequest] = useState(null);
+  const [reports, setReports] = useState([]);
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [registeringReport, setRegisteringReport] = useState(null);
+
+  const loadReports = async () => {
+    if (!isSupabaseConfigured) return;
+
+    try {
+      const remoteReports = await fetchPurchaseReports();
+      setReports(remoteReports);
+    } catch {
+      // Reports stay at their last known value if the fetch fails.
+    }
+  };
+
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return undefined;
+
+    const channel = subscribeToPurchaseReports(loadReports);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const pendingReport = useMemo(() => reports.find((report) => report.status === 'Pendente de Drive'), [reports]);
 
   const loadRemote = async () => {
     if (!isSupabaseConfigured) return;
@@ -243,11 +279,66 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
     }
   };
 
-  const handleGenerateReport = () => {
+  const handleGenerateReport = async () => {
+    if (generatingReport) return;
+
+    // A pending report already covers the last export - reopen it instead of creating
+    // an orphaned duplicate that would never get its Drive link registered.
+    if (pendingReport) {
+      setRegisteringReport(pendingReport);
+      return;
+    }
+
     if (visibleRequests.length === 0) return;
-    const csv = buildPurchaseRequestsCsv(visibleRequests);
-    downloadCsvFile(csv, buildPurchaseRequestsReportFileName());
-    setFeedback('Relatorio gerado e baixado com sucesso.');
+
+    if (!usingSupabase) {
+      const csv = buildPurchaseRequestsCsv(visibleRequests);
+      downloadCsvFile(csv, buildPurchaseRequestsReportFileName());
+      setFeedback('Relatorio gerado e baixado com sucesso.');
+      return;
+    }
+
+    setGeneratingReport(true);
+    setFeedback('');
+    setError('');
+
+    try {
+      const csv = buildPurchaseRequestsCsv(visibleRequests);
+      downloadCsvFile(csv, buildPurchaseRequestsReportFileName());
+
+      const todayLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(new Date());
+      const today = new Date().toISOString().slice(0, 10);
+
+      const created = await createPurchaseReport(
+        {
+          name: `Relatório de compras solicitadas - ${todayLabel}`,
+          periodStart: today,
+          periodEnd: today,
+          totalExported: visibleRequests.length,
+          exportedRequestIds: visibleRequests.map((request) => request.id),
+        },
+        currentUser,
+      );
+
+      setReports((current) => [created, ...current]);
+      setRegisteringReport(created);
+      setFeedback('Relatório gerado e baixado. Salve o arquivo no Drive da empresa e registre o link para concluir.');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel gerar o relatorio.');
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  const handleSubmitDriveLink = async (reportId, values) => {
+    try {
+      const updated = await registerPurchaseReportDriveLink(reportId, values);
+      setReports((current) => current.map((report) => (report.id === updated.id ? updated : report)));
+      setRegisteringReport(null);
+      setFeedback('Link do Drive registrado com sucesso.');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel registrar o link do Drive.');
+    }
   };
 
   return (
@@ -259,9 +350,14 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
           <p>Centralize itens solicitados pela operacao e acompanhe prioridade, prazo e status de compra.</p>
         </div>
         <div className="purchase-hero-actions">
-          <button type="button" className="ghost-button" onClick={handleGenerateReport} disabled={visibleRequests.length === 0}>
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={handleGenerateReport}
+            disabled={generatingReport || (visibleRequests.length === 0 && !pendingReport)}
+          >
             <FileDown size={16} aria-hidden="true" />
-            Gerar relatorio
+            {generatingReport ? 'Gerando...' : 'Gerar relatorio'}
           </button>
           <button
             type="button"
@@ -349,8 +445,15 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
         message="Deseja restaurar esta solicitação para a lista de ativas?"
         cancelLabel="Cancelar"
         confirmLabel="Sim, restaurar"
+        tone="primary"
         onCancel={() => setRestoringRequest(null)}
         onConfirm={handleConfirmRestore}
+      />
+
+      <RegisterDriveLinkModal
+        report={registeringReport}
+        onClose={() => setRegisteringReport(null)}
+        onSubmit={handleSubmitDriveLink}
       />
     </div>
   );
