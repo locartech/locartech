@@ -63,6 +63,8 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
     };
   }, []);
 
+  const simplified = sector?.slug === 'projetos';
+
   const filteredRecords = useMemo(
     () => (sector ? filterKnowledgeRecords(records, sector.name, filters) : []),
     [records, sector, filters],
@@ -120,7 +122,9 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
             Voltar para setores
           </button>
           <p>
-            Organize manuais do setor, POPs, documentos e outros arquivos internos em um unico lugar.
+            {simplified
+              ? 'Centralize os documentos dos projetos com nome, descricao e link do Drive.'
+              : 'Organize manuais do setor, POPs, documentos e outros arquivos internos em um unico lugar.'}
           </p>
         </div>
         <button
@@ -138,10 +142,10 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
 
       {error ? <div className="members-feedback error">{error}</div> : null}
 
-      {stats ? <KnowledgeStats stats={stats} /> : null}
+      {stats ? <KnowledgeStats stats={stats} simplified={simplified} /> : null}
 
       <section className="panel knowledge-toolbar">
-        <KnowledgeFilters filters={filters} onChange={setFilters} />
+        <KnowledgeFilters filters={filters} onChange={setFilters} simplified={simplified} />
       </section>
 
       <section className="knowledge-grid" aria-label={`Documentos do setor ${sector.name}`}>
@@ -156,6 +160,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
                 setFormOpen(true);
               }}
               onDelete={handleDelete}
+              simplified={simplified}
             />
           ))
         ) : (
@@ -172,6 +177,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
             setEditingRecord(null);
           }}
           onSubmit={handleSubmit}
+          simplified={simplified}
         />
       ) : null}
 
@@ -184,6 +190,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
             setEditingRecord(record);
             setFormOpen(true);
           }}
+          simplified={simplified}
         />
       ) : null}
     </div>

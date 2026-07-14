@@ -75,6 +75,18 @@ export async function updateRemotePurchaseRequestStatus(requestId, status) {
   return refreshedRequest ? normalizePurchaseRequest(refreshedRequest) : null;
 }
 
+export async function archiveRemotePurchaseRequest(requestId) {
+  const { data, error } = await supabase.rpc('archive_request', { p_request_id: requestId });
+  if (error) throw error;
+  return normalizePurchaseRequest(data);
+}
+
+export async function restoreRemotePurchaseRequest(requestId) {
+  const { data, error } = await supabase.rpc('restore_request', { p_request_id: requestId });
+  if (error) throw error;
+  return normalizePurchaseRequest(data);
+}
+
 export function subscribeToPurchaseRequests(onChange) {
   return supabase
     .channel('purchase-requests:compras')

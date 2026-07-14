@@ -1,7 +1,9 @@
 import {
   initialPurchaseRequests,
+  purchasePriorities,
   purchaseRequestSource,
   purchaseRequestTargetSector,
+  purchaseStatuses,
   PURCHASE_REQUESTS_STORAGE_KEY,
   PURCHASE_STATUS_OVERRIDES_STORAGE_KEY,
 } from '../data/purchaseRequestsData';
@@ -115,6 +117,9 @@ export function normalizePurchaseRequest(request) {
     dueDate: request.dueDate ?? request.due_date ?? '',
     createdAt: request.createdAt ?? request.created_at?.slice?.(0, 10) ?? today,
     updatedAt: request.updatedAt ?? request.updated_at?.slice?.(0, 10) ?? null,
+    archived: request.archived ?? false,
+    archivedAt: request.archivedAt ?? request.archived_at ?? null,
+    archivedByName: request.archivedByName ?? request.archived_by_name ?? null,
   };
 }
 
@@ -151,6 +156,32 @@ export function createLocalPurchaseRequest(values, currentUser) {
     createdAt: today,
     updatedAt: null,
   };
+}
+
+export function archiveLocalPurchaseRequest(requests, requestId, currentUser) {
+  return requests.map((request) =>
+    request.id === requestId
+      ? {
+          ...request,
+          archived: true,
+          archivedAt: new Date().toISOString(),
+          archivedByName: currentUser?.name ?? null,
+        }
+      : request,
+  );
+}
+
+export function restoreLocalPurchaseRequest(requests, requestId) {
+  return requests.map((request) =>
+    request.id === requestId
+      ? {
+          ...request,
+          archived: false,
+          archivedAt: null,
+          archivedByName: null,
+        }
+      : request,
+  );
 }
 
 export function updateLocalPurchaseStatus(requests, requestId, status) {
@@ -197,4 +228,53 @@ export function validatePurchaseRequest(values) {
   if (!values.priority) return 'Informe a prioridade.';
   if (!values.dueDate) return 'Informe o prazo desejado.';
   return '';
+}
+
+function statusLabel(statusId) {
+  return purchaseStatuses.find((status) => status.id === statusId)?.label ?? statusId ?? '';
+}
+
+function priorityLabel(priorityId) {
+  return purchasePriorities.find((priority) => priority.id === priorityId)?.label ?? priorityId ?? '';
+}
+
+function escapePurchaseCsvValue(value) {
+  const text = value === null || value === undefined ? '' : String(value);
+  if (/[",\n;]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
+
+export function buildPurchaseRequestsCsv(requests) {
+  const headers = [
+    'ID',
+    'Descricao',
+    'Observacao',
+    'Solicitante',
+    'Obra/local',
+    'Prioridade',
+    'Prazo',
+    'Status',
+    'Criada em',
+  ];
+
+  const rows = requests.map((request) => [
+    request.id,
+    request.description,
+    request.notes || '',
+    request.requesterName,
+    request.workLocation || '',
+    priorityLabel(request.priority),
+    request.dueDate || '',
+    statusLabel(request.status),
+    request.createdAt || '',
+  ]);
+
+  return [headers, ...rows].map((row) => row.map(escapePurchaseCsvValue).join(',')).join('\r\n');
+}
+
+export function buildPurchaseRequestsReportFileName(date = new Date()) {
+  const isoDate = date.toISOString().slice(0, 10);
+  return `relatorio-compras-solicitadas-${isoDate}.csv`;
 }

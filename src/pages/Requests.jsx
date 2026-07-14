@@ -1,5 +1,6 @@
-import { Plus } from 'lucide-react';
+import { Archive, LayoutGrid, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import ConfirmModal from '../components/common/ConfirmModal';
 import RequestFilters from '../components/requests/RequestFilters';
 import RequestForm from '../components/requests/RequestForm';
 import RequestModal from '../components/requests/RequestModal';
@@ -12,10 +13,12 @@ import { supabase } from '../lib/supabase';
 import { requestStatusIds } from '../data/requestsData';
 import {
   approveRequestRpc,
+  archiveRequestRpc,
   cancelRemoteRequest,
   createRemoteRequest,
   fetchRemoteRequests,
   rejectRequestRpc,
+  restoreRequestRpc,
   subscribeToRequests,
   updateRemoteRequest,
 } from '../services/requestsService';
@@ -32,6 +35,7 @@ function Requests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [view, setView] = useState('active');
   const [activeTab, setActiveTab] = useState('received');
   const [filters, setFilters] = useState({
     status: 'all',
@@ -44,6 +48,8 @@ function Requests() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [detailRequest, setDetailRequest] = useState(null);
   const [rejectingRequest, setRejectingRequest] = useState(null);
+  const [archivingRequest, setArchivingRequest] = useState(null);
+  const [restoringRequest, setRestoringRequest] = useState(null);
 
   const loadRequests = async () => {
     try {
@@ -68,32 +74,36 @@ function Requests() {
     };
   }, []);
 
-  const receivedRequests = useMemo(() => getReceivedRequests(requests, currentUser), [requests, currentUser]);
-  const sentRequests = useMemo(() => getSentRequests(requests, currentUser), [requests, currentUser]);
+  const activeRequests = useMemo(() => requests.filter((request) => !request.archived), [requests]);
+  const archivedRequests = useMemo(() => requests.filter((request) => request.archived), [requests]);
+
+  const receivedRequests = useMemo(() => getReceivedRequests(activeRequests, currentUser), [activeRequests, currentUser]);
+  const sentRequests = useMemo(() => getSentRequests(activeRequests, currentUser), [activeRequests, currentUser]);
 
   const tabRequests = useMemo(() => {
+    if (view === 'archived') return archivedRequests;
     if (activeTab === 'received') return receivedRequests;
     if (activeTab === 'sent') return sentRequests;
-    return requests;
-  }, [activeTab, receivedRequests, requests, sentRequests]);
+    return activeRequests;
+  }, [view, activeTab, receivedRequests, activeRequests, sentRequests, archivedRequests]);
 
   const visibleRequests = useMemo(() => filterRequests(tabRequests, filters), [filters, tabRequests]);
 
   const stats = useMemo(
     () => ({
-      receivedToday: getTodayReceivedRequests(requests, currentUser).length,
-      pendingApproval: getPendingApprovalRequests(requests, currentUser).length,
+      receivedToday: getTodayReceivedRequests(activeRequests, currentUser).length,
+      pendingApproval: getPendingApprovalRequests(activeRequests, currentUser).length,
       approved: receivedRequests.filter((request) => request.requestStatus === requestStatusIds.approved).length,
       rejected: receivedRequests.filter((request) => request.requestStatus === requestStatusIds.rejected).length,
       sentByMe: sentRequests.length,
     }),
-    [receivedRequests, requests, sentRequests, currentUser],
+    [receivedRequests, activeRequests, sentRequests, currentUser],
   );
 
   const counts = {
     received: receivedRequests.length,
     sent: sentRequests.length,
-    all: requests.length,
+    all: activeRequests.length,
   };
 
   const handleCreateRequest = async (values) => {
@@ -150,6 +160,30 @@ function Requests() {
     }
   };
 
+  const handleConfirmArchive = async () => {
+    if (!archivingRequest) return;
+    try {
+      const updated = await archiveRequestRpc(archivingRequest.id);
+      setRequests((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel arquivar a solicitacao.');
+    } finally {
+      setArchivingRequest(null);
+    }
+  };
+
+  const handleConfirmRestore = async () => {
+    if (!restoringRequest) return;
+    try {
+      const updated = await restoreRequestRpc(restoringRequest.id);
+      setRequests((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel restaurar a solicitacao.');
+    } finally {
+      setRestoringRequest(null);
+    }
+  };
+
   return (
     <div className="page-stack">
       <section className="page-heading requests-heading">
@@ -166,20 +200,46 @@ function Requests() {
         </button>
       </section>
 
+      <div className="kanban-view-tabs" role="tablist" aria-label="Visao das solicitacoes">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'active'}
+          className={`kanban-view-tab ${view === 'active' ? 'active' : ''}`}
+          onClick={() => setView('active')}
+        >
+          <LayoutGrid size={16} aria-hidden="true" />
+          Solicitacoes ativas
+          <span className="kanban-view-tab-count">{activeRequests.length}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'archived'}
+          className={`kanban-view-tab ${view === 'archived' ? 'active' : ''}`}
+          onClick={() => setView('archived')}
+        >
+          <Archive size={16} aria-hidden="true" />
+          Solicitacoes arquivadas
+          <span className="kanban-view-tab-count">{archivedRequests.length}</span>
+        </button>
+      </div>
+
       {error ? <div className="members-feedback error">{error}</div> : null}
       {loading ? <div className="members-feedback">Carregando solicitacoes...</div> : null}
 
       <section className="requests-panel">
         <div className="requests-toolbar">
-          <RequestTabs activeTab={activeTab} onTabChange={setActiveTab} counts={counts} />
+          {view === 'active' ? <RequestTabs activeTab={activeTab} onTabChange={setActiveTab} counts={counts} /> : null}
           <RequestFilters filters={filters} onChange={setFilters} />
         </div>
 
-        <RequestStats stats={stats} />
+        {view === 'active' ? <RequestStats stats={stats} /> : null}
         <RequestTable
           requests={visibleRequests}
           currentUser={currentUser}
           activeTab={activeTab}
+          view={view}
           onView={setDetailRequest}
           onEdit={(request) => {
             setFormRequest(request);
@@ -188,6 +248,8 @@ function Requests() {
           onApprove={handleApproveRequest}
           onReject={setRejectingRequest}
           onCancel={handleCancelRequest}
+          onArchive={setArchivingRequest}
+          onRestore={setRestoringRequest}
         />
       </section>
 
@@ -210,6 +272,26 @@ function Requests() {
       />
 
       <RequestModal request={detailRequest} onClose={() => setDetailRequest(null)} />
+
+      <ConfirmModal
+        open={Boolean(archivingRequest)}
+        title="Arquivar solicitacao"
+        message="Você realmente deseja arquivar essa solicitação?"
+        cancelLabel="Não"
+        confirmLabel="Sim, arquivar"
+        onCancel={() => setArchivingRequest(null)}
+        onConfirm={handleConfirmArchive}
+      />
+
+      <ConfirmModal
+        open={Boolean(restoringRequest)}
+        title="Restaurar solicitacao"
+        message="Deseja restaurar esta solicitação para a lista de ativas?"
+        cancelLabel="Cancelar"
+        confirmLabel="Sim, restaurar"
+        onCancel={() => setRestoringRequest(null)}
+        onConfirm={handleConfirmRestore}
+      />
     </div>
   );
 }

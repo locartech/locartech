@@ -1,4 +1,4 @@
-import { Eye, Pencil } from 'lucide-react';
+import { Archive, Eye, Pencil, RotateCcw } from 'lucide-react';
 import EmptyState from '../common/EmptyState';
 import RequestApprovalActions from './RequestApprovalActions';
 import RequestPriorityBadge from './RequestPriorityBadge';
@@ -13,17 +13,24 @@ function RequestTable({
   requests,
   currentUser,
   activeTab,
+  view = 'active',
   onView,
   onEdit,
   onApprove,
   onReject,
   onCancel,
+  onArchive,
+  onRestore,
 }) {
   if (requests.length === 0) {
     return (
       <EmptyState
-        title="Nenhuma solicitacao encontrada"
-        description="Ajuste os filtros ou crie uma nova solicitacao para iniciar o fluxo."
+        title={view === 'archived' ? 'Nenhuma solicitacao arquivada' : 'Nenhuma solicitacao encontrada'}
+        description={
+          view === 'archived'
+            ? 'As solicitacoes arquivadas aparecerao nesta lista.'
+            : 'Ajuste os filtros ou crie uma nova solicitacao para iniciar o fluxo.'
+        }
       />
     );
   }
@@ -45,6 +52,7 @@ function RequestTable({
 
         {requests.map((request) => {
           const canEdit =
+            view === 'active' &&
             request.requestStatus === 'pending_approval' &&
             (request.requesterUserId === currentUser.id ||
               request.requesterName === currentUser.name ||
@@ -84,14 +92,25 @@ function RequestTable({
                     <Pencil size={16} aria-hidden="true" />
                   </button>
                 ) : null}
-                <RequestApprovalActions
-                  request={request}
-                  currentUser={currentUser}
-                  activeTab={activeTab}
-                  onApprove={onApprove}
-                  onReject={onReject}
-                  onCancel={onCancel}
-                />
+                {view === 'archived' ? (
+                  <button type="button" className="table-icon-button success" onClick={() => onRestore(request)} title="Restaurar solicitacao">
+                    <RotateCcw size={16} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <>
+                    <RequestApprovalActions
+                      request={request}
+                      currentUser={currentUser}
+                      activeTab={activeTab}
+                      onApprove={onApprove}
+                      onReject={onReject}
+                      onCancel={onCancel}
+                    />
+                    <button type="button" className="table-icon-button archive" onClick={() => onArchive(request)} title="Arquivar solicitacao">
+                      <Archive size={16} aria-hidden="true" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           );

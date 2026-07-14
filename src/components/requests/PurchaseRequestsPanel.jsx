@@ -1,25 +1,33 @@
-import { Plus } from 'lucide-react';
+import { Archive, FileDown, LayoutGrid, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import { createNotification } from '../../services/notificationsService';
 import {
+  archiveRemotePurchaseRequest,
   createRemotePurchaseRequest,
   fetchRemotePurchaseRequests,
+  restoreRemotePurchaseRequest,
   subscribeToPurchaseRequests,
   updateRemotePurchaseRequestStatus,
 } from '../../services/purchaseRequestsService';
 import { fetchProfiles } from '../../services/profilesService';
 import {
+  archiveLocalPurchaseRequest,
+  buildPurchaseRequestsCsv,
+  buildPurchaseRequestsReportFileName,
   createLocalPurchaseRequest,
   filterPurchaseRequests,
   getPurchaseStats,
   loadPurchaseRequests,
   removePurchaseStatusOverride,
+  restoreLocalPurchaseRequest,
   savePurchaseRequests,
   savePurchaseStatusOverride,
   updateLocalPurchaseStatus,
 } from '../../utils/purchaseRequestUtils';
+import { downloadCsvFile } from '../../utils/archivedReportUtils';
 import { purchaseStatuses } from '../../data/purchaseRequestsData';
+import ConfirmModal from '../common/ConfirmModal';
 import PurchaseRequestFilters from './PurchaseRequestFilters';
 import PurchaseRequestFormModal from './PurchaseRequestFormModal';
 import PurchaseRequestStats from './PurchaseRequestStats';
@@ -74,9 +82,12 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const [requests, setRequests] = useState(loadPurchaseRequests);
   const [usingSupabase, setUsingSupabase] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
+  const [view, setView] = useState('active');
   const [filters, setFilters] = useState({ query: '', status: 'all', priority: 'all' });
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
+  const [archivingRequest, setArchivingRequest] = useState(null);
+  const [restoringRequest, setRestoringRequest] = useState(null);
 
   const loadRemote = async () => {
     if (!isSupabaseConfigured) return;
@@ -85,7 +96,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
       const remoteRequests = await fetchRemotePurchaseRequests();
       setRequests(remoteRequests);
       setUsingSupabase(true);
-      onCountChange?.(remoteRequests.length);
+      onCountChange?.(remoteRequests.filter((request) => !request.archived).length);
     } catch {
       setUsingSupabase(false);
     }
@@ -96,7 +107,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   }, []);
 
   useEffect(() => {
-    onCountChange?.(requests.length);
+    onCountChange?.(requests.filter((request) => !request.archived).length);
 
     if (!usingSupabase) {
       savePurchaseRequests(requests);
@@ -109,8 +120,12 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
     };
   }, [requests, usingSupabase]);
 
-  const visibleRequests = useMemo(() => filterPurchaseRequests(requests, filters), [requests, filters]);
-  const stats = useMemo(() => getPurchaseStats(requests), [requests]);
+  const activeRequests = useMemo(() => requests.filter((request) => !request.archived), [requests]);
+  const archivedRequests = useMemo(() => requests.filter((request) => request.archived), [requests]);
+  const baseRequests = view === 'archived' ? archivedRequests : activeRequests;
+
+  const visibleRequests = useMemo(() => filterPurchaseRequests(baseRequests, filters), [baseRequests, filters]);
+  const stats = useMemo(() => getPurchaseStats(activeRequests), [activeRequests]);
   const canManage = currentUser?.sector === 'Compras' || currentUser?.accountType === 'admin';
 
   const handleCreate = async (values) => {
@@ -188,6 +203,53 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
     }
   };
 
+  const handleConfirmArchive = async () => {
+    if (!archivingRequest) return;
+    setFeedback('');
+    setError('');
+
+    try {
+      if (usingSupabase) {
+        const updated = await archiveRemotePurchaseRequest(archivingRequest.id);
+        setRequests((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      } else {
+        setRequests((current) => archiveLocalPurchaseRequest(current, archivingRequest.id, currentUser));
+      }
+      setFeedback('Solicitacao arquivada com sucesso.');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel arquivar a solicitacao.');
+    } finally {
+      setArchivingRequest(null);
+    }
+  };
+
+  const handleConfirmRestore = async () => {
+    if (!restoringRequest) return;
+    setFeedback('');
+    setError('');
+
+    try {
+      if (usingSupabase) {
+        const updated = await restoreRemotePurchaseRequest(restoringRequest.id);
+        setRequests((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      } else {
+        setRequests((current) => restoreLocalPurchaseRequest(current, restoringRequest.id));
+      }
+      setFeedback('Solicitacao restaurada com sucesso.');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel restaurar a solicitacao.');
+    } finally {
+      setRestoringRequest(null);
+    }
+  };
+
+  const handleGenerateReport = () => {
+    if (visibleRequests.length === 0) return;
+    const csv = buildPurchaseRequestsCsv(visibleRequests);
+    downloadCsvFile(csv, buildPurchaseRequestsReportFileName());
+    setFeedback('Relatorio gerado e baixado com sucesso.');
+  };
+
   return (
     <div className="purchase-panel-stack">
       <section className="purchase-hero">
@@ -196,18 +258,49 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
           <h2>Pedidos da obra para Compras</h2>
           <p>Centralize itens solicitados pela operacao e acompanhe prioridade, prazo e status de compra.</p>
         </div>
+        <div className="purchase-hero-actions">
+          <button type="button" className="ghost-button" onClick={handleGenerateReport} disabled={visibleRequests.length === 0}>
+            <FileDown size={16} aria-hidden="true" />
+            Gerar relatorio
+          </button>
+          <button
+            type="button"
+            className="primary-button large"
+            onClick={() => {
+              setError('');
+              setFormOpen(true);
+            }}
+          >
+            <Plus size={18} aria-hidden="true" />
+            Nova compra solicitada
+          </button>
+        </div>
+      </section>
+
+      <div className="kanban-view-tabs" role="tablist" aria-label="Visao das compras solicitadas">
         <button
           type="button"
-          className="primary-button large"
-          onClick={() => {
-            setError('');
-            setFormOpen(true);
-          }}
+          role="tab"
+          aria-selected={view === 'active'}
+          className={`kanban-view-tab ${view === 'active' ? 'active' : ''}`}
+          onClick={() => setView('active')}
         >
-          <Plus size={18} aria-hidden="true" />
-          Nova compra solicitada
+          <LayoutGrid size={16} aria-hidden="true" />
+          Ativas
+          <span className="kanban-view-tab-count">{activeRequests.length}</span>
         </button>
-      </section>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === 'archived'}
+          className={`kanban-view-tab ${view === 'archived' ? 'active' : ''}`}
+          onClick={() => setView('archived')}
+        >
+          <Archive size={16} aria-hidden="true" />
+          Arquivadas
+          <span className="kanban-view-tab-count">{archivedRequests.length}</span>
+        </button>
+      </div>
 
       {feedback ? <div className="members-feedback">{feedback}</div> : null}
       {error ? <div className="members-feedback error">{error}</div> : null}
@@ -215,7 +308,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
         <div className="members-feedback">Usando dados locais ate a conexao Supabase estar disponivel.</div>
       ) : null}
 
-      <PurchaseRequestStats stats={stats} />
+      {view === 'active' ? <PurchaseRequestStats stats={stats} /> : null}
 
       <section className="requests-panel">
         <div className="requests-toolbar">
@@ -224,7 +317,10 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
         <PurchaseRequestTable
           requests={visibleRequests}
           canManage={canManage}
+          view={view}
           onStatusChange={handleStatusChange}
+          onArchive={setArchivingRequest}
+          onRestore={setRestoringRequest}
         />
       </section>
 
@@ -236,6 +332,26 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
           onSubmit={handleCreate}
         />
       ) : null}
+
+      <ConfirmModal
+        open={Boolean(archivingRequest)}
+        title="Arquivar solicitacao"
+        message="Você realmente deseja arquivar essa solicitação?"
+        cancelLabel="Não"
+        confirmLabel="Sim, arquivar"
+        onCancel={() => setArchivingRequest(null)}
+        onConfirm={handleConfirmArchive}
+      />
+
+      <ConfirmModal
+        open={Boolean(restoringRequest)}
+        title="Restaurar solicitacao"
+        message="Deseja restaurar esta solicitação para a lista de ativas?"
+        cancelLabel="Cancelar"
+        confirmLabel="Sim, restaurar"
+        onCancel={() => setRestoringRequest(null)}
+        onConfirm={handleConfirmRestore}
+      />
     </div>
   );
 }

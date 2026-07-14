@@ -6039,3 +6039,23 @@ body {
     gap: 16px;
   }
 }
+
+/* Purchase requests: actions column for archive/restore */
+.purchase-table {
+  min-width: 1260px;
+}
+
+.purchase-row {
+  grid-template-columns: 1.6fr 1.2fr 0.9fr 0.9fr 130px 130px 160px 100px;
+}
+
+.purchase-actions-cell {
+  align-items: center;
+  justify-content: center;
+}
+
+.purchase-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}

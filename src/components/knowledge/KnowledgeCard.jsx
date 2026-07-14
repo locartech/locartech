@@ -6,23 +6,27 @@ const formatDate = (value) =>
     new Date(`${value}T12:00:00`),
   );
 
-function KnowledgeCard({ record, onView, onEdit, onDelete }) {
+function KnowledgeCard({ record, onView, onEdit, onDelete, simplified = false }) {
   return (
     <article className="knowledge-card">
       <div className="knowledge-card-icon">
         <FileText size={18} aria-hidden="true" />
       </div>
       <div className="knowledge-card-content">
-        <div className="knowledge-card-heading">
-          <span className="knowledge-type-badge">{normalizeKnowledgeType(record.type)}</span>
-          <time>{formatDate(record.publishedAt)}</time>
-        </div>
+        {!simplified ? (
+          <div className="knowledge-card-heading">
+            <span className="knowledge-type-badge">{normalizeKnowledgeType(record.type)}</span>
+            <time>{formatDate(record.publishedAt)}</time>
+          </div>
+        ) : null}
         <h3>{record.title}</h3>
         <p>{record.description}</p>
-        <div className="knowledge-meta">
-          <span>Responsável: {record.responsible}</span>
-          {record.updatedAt ? <span>Atualizado em {formatDate(record.updatedAt)}</span> : null}
-        </div>
+        {!simplified ? (
+          <div className="knowledge-meta">
+            <span>Responsável: {record.responsible}</span>
+            {record.updatedAt ? <span>Atualizado em {formatDate(record.updatedAt)}</span> : null}
+          </div>
+        ) : null}
         <div className="knowledge-actions">
           <button type="button" className="ghost-button" onClick={() => onView(record)}>
             Abrir detalhes

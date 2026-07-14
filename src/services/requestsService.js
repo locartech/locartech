@@ -23,6 +23,9 @@ function mapRequestFromDb(request) {
     cancelledAt: request.cancelled_at?.slice(0, 10) ?? null,
     rejectionReason: request.rejection_reason ?? null,
     generatedTaskId: request.generated_task_id ?? null,
+    archived: request.archived ?? false,
+    archivedAt: request.archived_at ?? null,
+    archivedByName: request.archived_by_name ?? null,
   };
 }
 
@@ -120,6 +123,18 @@ export async function approveRequestRpc(requestId) {
 
 export async function rejectRequestRpc(requestId, reason) {
   const { data, error } = await supabase.rpc('reject_request', { p_request_id: requestId, p_reason: reason });
+  if (error) throw error;
+  return mapRequestFromDb(data);
+}
+
+export async function archiveRequestRpc(requestId) {
+  const { data, error } = await supabase.rpc('archive_request', { p_request_id: requestId });
+  if (error) throw error;
+  return mapRequestFromDb(data);
+}
+
+export async function restoreRequestRpc(requestId) {
+  const { data, error } = await supabase.rpc('restore_request', { p_request_id: requestId });
   if (error) throw error;
   return mapRequestFromDb(data);
 }

@@ -55,6 +55,12 @@ export async function markNotificationRead(notificationId) {
   return mapNotificationFromDb(data);
 }
 
+export async function clearNotifications(notificationIds) {
+  if (!notificationIds.length) return;
+  const { error } = await supabase.from('notifications').delete().in('id', notificationIds);
+  if (error) throw error;
+}
+
 export function subscribeToNotifications(onChange) {
   return supabase
     .channel('notifications:all')

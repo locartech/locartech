@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { knowledgeTypes } from '../../data/knowledgeData';
 import { normalizeKnowledgeType, validateKnowledgeRecord } from '../../utils/knowledgeUtils';
 
@@ -12,7 +13,8 @@ const emptyRecord = {
   driveLink: '',
 };
 
-function KnowledgeFormModal({ sectorName, record, onClose, onSubmit }) {
+function KnowledgeFormModal({ sectorName, record, onClose, onSubmit, simplified = false }) {
+  const { currentUser } = useAuth();
   const [draft, setDraft] = useState(emptyRecord);
   const [error, setError] = useState('');
 
@@ -38,13 +40,23 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit }) {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    const validationError = validateKnowledgeRecord(draft);
+
+    const submission = simplified
+      ? {
+          ...draft,
+          type: draft.type || 'Outros',
+          responsible: draft.responsible || currentUser?.name || sectorName,
+          publishedAt: draft.publishedAt || new Date().toISOString().slice(0, 10),
+        }
+      : draft;
+
+    const validationError = validateKnowledgeRecord(submission);
     if (validationError) {
       setError(validationError);
       return;
     }
 
-    onSubmit(draft);
+    onSubmit(submission);
   };
 
   return (
@@ -64,7 +76,7 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit }) {
           {error ? <div className="auth-alert error">{error}</div> : null}
 
           <label>
-            <span>Nome do arquivo/material</span>
+            <span>Nome do documento</span>
             <input value={draft.title} onChange={(event) => updateDraft('title', event.target.value)} />
           </label>
 
@@ -73,33 +85,36 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit }) {
             <textarea value={draft.description} onChange={(event) => updateDraft('description', event.target.value)} />
           </label>
 
-          <div className="form-grid-two">
-            <label>
-              <span>Tipo</span>
-              <select value={draft.type} onChange={(event) => updateDraft('type', event.target.value)}>
-                {knowledgeTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Responsavel</span>
-              <input value={draft.responsible} onChange={(event) => updateDraft('responsible', event.target.value)} />
-            </label>
-          </div>
+          {!simplified ? (
+            <>
+              <div className="form-grid-two">
+                <label>
+                  <span>Tipo</span>
+                  <select value={draft.type} onChange={(event) => updateDraft('type', event.target.value)}>
+                    {knowledgeTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Responsavel</span>
+                  <input value={draft.responsible} onChange={(event) => updateDraft('responsible', event.target.value)} />
+                </label>
+              </div>
 
-          <div className="form-grid-two">
-            <label>
-              <span>Data de publicacao</span>
-              <input type="date" value={draft.publishedAt} onChange={(event) => updateDraft('publishedAt', event.target.value)} />
-            </label>
-            <label>
-              <span>Link do Drive</span>
-              <input value={draft.driveLink} onChange={(event) => updateDraft('driveLink', event.target.value)} placeholder="https://..." />
-            </label>
-          </div>
+              <label>
+                <span>Data de publicacao</span>
+                <input type="date" value={draft.publishedAt} onChange={(event) => updateDraft('publishedAt', event.target.value)} />
+              </label>
+            </>
+          ) : null}
+
+          <label>
+            <span>Link do Drive</span>
+            <input value={draft.driveLink} onChange={(event) => updateDraft('driveLink', event.target.value)} placeholder="https://..." />
+          </label>
 
           <div className="modal-actions">
             <button type="button" className="ghost-button" onClick={onClose}>

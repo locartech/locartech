@@ -12,7 +12,7 @@ import Members from './pages/Members';
 import Sectors from './pages/Sectors';
 import SectorKnowledge from './pages/SectorKnowledge';
 import { supabase } from './lib/supabase';
-import { fetchNotifications, markNotificationRead, subscribeToNotifications } from './services/notificationsService';
+import { clearNotifications, fetchNotifications, markNotificationRead, subscribeToNotifications } from './services/notificationsService';
 import { useAuth } from './contexts/AuthContext';
 
 const pages = {
@@ -69,6 +69,15 @@ function App() {
     );
   };
 
+  const handleClearNotifications = async () => {
+    const ownNotificationIds = notifications
+      .filter((notification) => notification.userId === profile?.id)
+      .map((notification) => notification.id);
+
+    await clearNotifications(ownNotificationIds);
+    setNotifications((current) => current.filter((notification) => !ownNotificationIds.includes(notification.id)));
+  };
+
   const ActivePage = pages[activePage] ?? Dashboard;
 
   if (loading) return null;
@@ -87,6 +96,7 @@ function App() {
       <ActivePage
         notifications={notifications}
         onMarkRead={handleMarkRead}
+        onClearNotifications={handleClearNotifications}
         onChatUnreadChange={setChatUnreadCount}
         onNavigate={setActivePage}
         knowledgeSectorId={knowledgeSectorId}

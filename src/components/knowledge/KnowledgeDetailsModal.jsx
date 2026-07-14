@@ -6,7 +6,7 @@ const formatDate = (value) =>
     new Date(`${value}T12:00:00`),
   );
 
-function KnowledgeDetailsModal({ record, onClose }) {
+function KnowledgeDetailsModal({ record, onClose, simplified = false }) {
   if (!record) return null;
 
   return (
@@ -23,26 +23,28 @@ function KnowledgeDetailsModal({ record, onClose }) {
         </div>
 
         <div className="knowledge-detail-body">
-          <span className="knowledge-type-badge">{normalizeKnowledgeType(record.type)}</span>
+          {!simplified ? <span className="knowledge-type-badge">{normalizeKnowledgeType(record.type)}</span> : null}
           <p>{record.description}</p>
-          <dl className="profile-detail-grid">
-            <div>
-              <dt>Setor</dt>
-              <dd>{record.sector}</dd>
-            </div>
-            <div>
-              <dt>Responsável</dt>
-              <dd>{record.responsible}</dd>
-            </div>
-            <div>
-              <dt>Publicação</dt>
-              <dd>{formatDate(record.publishedAt)}</dd>
-            </div>
-            <div>
-              <dt>Criado em</dt>
-              <dd>{formatDate(record.createdAt)}</dd>
-            </div>
-          </dl>
+          {!simplified ? (
+            <dl className="profile-detail-grid">
+              <div>
+                <dt>Setor</dt>
+                <dd>{record.sector}</dd>
+              </div>
+              <div>
+                <dt>Responsável</dt>
+                <dd>{record.responsible}</dd>
+              </div>
+              <div>
+                <dt>Publicação</dt>
+                <dd>{formatDate(record.publishedAt)}</dd>
+              </div>
+              <div>
+                <dt>Criado em</dt>
+                <dd>{formatDate(record.createdAt)}</dd>
+              </div>
+            </dl>
+          ) : null}
           <a className="primary-button" href={record.driveLink} target="_blank" rel="noopener noreferrer">
             <ExternalLink size={15} aria-hidden="true" />
             Abrir no Drive

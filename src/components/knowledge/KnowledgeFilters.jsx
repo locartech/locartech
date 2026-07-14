@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react';
 import { knowledgeTypes } from '../../data/knowledgeData';
 
-function KnowledgeFilters({ filters, onChange }) {
+function KnowledgeFilters({ filters, onChange, simplified = false }) {
   const updateFilter = (field, value) => {
     onChange({ ...filters, [field]: value });
   };
@@ -13,20 +13,22 @@ function KnowledgeFilters({ filters, onChange }) {
         <input
           value={filters.query}
           onChange={(event) => updateFilter('query', event.target.value)}
-          placeholder="Buscar por titulo, descricao ou tipo"
+          placeholder={simplified ? 'Buscar por nome ou descricao' : 'Buscar por titulo, descricao ou tipo'}
         />
       </label>
-      <label>
-        <span>Tipo</span>
-        <select value={filters.type} onChange={(event) => updateFilter('type', event.target.value)}>
-          <option value="Todos">Todos</option>
-          {knowledgeTypes.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
-      </label>
+      {!simplified ? (
+        <label>
+          <span>Tipo</span>
+          <select value={filters.type} onChange={(event) => updateFilter('type', event.target.value)}>
+            <option value="Todos">Todos</option>
+            {knowledgeTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
     </div>
   );
 }

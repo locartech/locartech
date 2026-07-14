@@ -1,6 +1,15 @@
 import StatCard from '../dashboard/StatCard';
 
-function KnowledgeStats({ stats }) {
+function KnowledgeStats({ stats, simplified = false }) {
+  if (simplified) {
+    const total = stats.sectorManual + stats.pops + stats.documents + stats.others;
+    return (
+      <section className="stats-grid knowledge-stats knowledge-stats-simplified">
+        <StatCard label="Documentos" value={total} detail="Total de arquivos do projeto" tone="blue" />
+      </section>
+    );
+  }
+
   return (
     <section className="stats-grid knowledge-stats">
       <StatCard label="Manuais do setor" value={stats.sectorManual} detail="Guias internos da area" tone="blue" />

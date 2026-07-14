@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react';
+import { Archive, ChevronDown, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import EmptyState from '../common/EmptyState';
 import RequestPriorityBadge from './RequestPriorityBadge';
@@ -52,12 +52,16 @@ function PurchaseStatusMenu({ request, onStatusChange }) {
   );
 }
 
-function PurchaseRequestTable({ requests, canManage, onStatusChange }) {
+function PurchaseRequestTable({ requests, canManage, view = 'active', onStatusChange, onArchive, onRestore }) {
   if (requests.length === 0) {
     return (
       <EmptyState
-        title="Nenhuma compra solicitada"
-        description="As solicitacoes de compra feitas pela obra aparecerao nesta lista."
+        title={view === 'archived' ? 'Nenhuma compra arquivada' : 'Nenhuma compra solicitada'}
+        description={
+          view === 'archived'
+            ? 'As solicitacoes de compra arquivadas aparecerao nesta lista.'
+            : 'As solicitacoes de compra feitas pela obra aparecerao nesta lista.'
+        }
       />
     );
   }
@@ -73,6 +77,7 @@ function PurchaseRequestTable({ requests, canManage, onStatusChange }) {
           <div>Prioridade</div>
           <div>Prazo</div>
           <div>Status</div>
+          <div>Acoes</div>
         </div>
 
         {requests.map((request) => (
@@ -86,10 +91,21 @@ function PurchaseRequestTable({ requests, canManage, onStatusChange }) {
             </div>
             <div>{formatDate(request.dueDate)}</div>
             <div>
-              {canManage ? (
+              {canManage && view === 'active' ? (
                 <PurchaseStatusMenu request={request} onStatusChange={onStatusChange} />
               ) : (
                 <PurchaseRequestStatusBadge value={request.status} />
+              )}
+            </div>
+            <div className="purchase-actions-cell">
+              {view === 'archived' ? (
+                <button type="button" className="table-icon-button success" onClick={() => onRestore(request)} title="Restaurar solicitacao">
+                  <RotateCcw size={16} aria-hidden="true" />
+                </button>
+              ) : (
+                <button type="button" className="table-icon-button archive" onClick={() => onArchive(request)} title="Arquivar solicitacao">
+                  <Archive size={16} aria-hidden="true" />
+                </button>
               )}
             </div>
           </div>
