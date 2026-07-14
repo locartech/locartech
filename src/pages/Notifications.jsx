@@ -9,11 +9,19 @@ function Notifications({ notifications, onMarkRead, onClearNotifications }) {
   const [clearOpen, setClearOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [clearError, setClearError] = useState('');
+  const [clearNotice, setClearNotice] = useState('');
   const unreadCount = notifications.filter((notification) => !notification.read).length;
   const clearableCount = notifications.filter((notification) => notification.userId === currentUser?.id).length;
 
   const handleOpenClear = () => {
     setClearError('');
+
+    if (clearableCount === 0) {
+      setClearNotice('Você não possui notificações pessoais para limpar no momento. Avisos gerais do seu setor não são removidos individualmente.');
+      return;
+    }
+
+    setClearNotice('');
     setClearOpen(true);
   };
 
@@ -39,16 +47,13 @@ function Notifications({ notifications, onMarkRead, onClearNotifications }) {
           <h2>Notificações</h2>
           <p>{unreadCount} aviso(s) pendente(s) de leitura.</p>
         </div>
-        <button
-          type="button"
-          className="ghost-button"
-          onClick={handleOpenClear}
-          disabled={clearableCount === 0}
-        >
+        <button type="button" className="ghost-button" onClick={handleOpenClear}>
           <Trash2 size={16} aria-hidden="true" />
           Limpar notificações
         </button>
       </section>
+
+      {clearNotice ? <div className="members-feedback">{clearNotice}</div> : null}
 
       <NotificationPanel notifications={notifications} onMarkRead={onMarkRead} />
 
