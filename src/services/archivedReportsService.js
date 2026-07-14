@@ -69,18 +69,6 @@ export async function registerReportDriveLink(reportId, values) {
   return mapReportFromDb(data);
 }
 
-export async function markReportSaved(reportId) {
-  const { data, error } = await supabase
-    .from('archived_activity_reports')
-    .update({ status: 'Salvo no Drive', updated_at: new Date().toISOString() })
-    .eq('id', reportId)
-    .select('*')
-    .single();
-
-  if (error) throw error;
-  return mapReportFromDb(data);
-}
-
 export async function markReportsCleaned(reportIds) {
   const { data, error } = await supabase
     .from('archived_activity_reports')

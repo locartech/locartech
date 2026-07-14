@@ -6028,42 +6028,6 @@ body {
   background: #fde68a;
 }
 
-/* Reports history table */
-.reports-row {
-  grid-template-columns:
-    minmax(220px, 1.6fr) minmax(180px, 1fr) minmax(120px, 0.6fr) minmax(150px, 0.85fr)
-    minmax(120px, 0.65fr) minmax(150px, 0.8fr) minmax(140px, 0.8fr);
-}
-
-.report-status-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  font-size: 0.74rem;
-  font-weight: 800;
-}
-
-.report-status-pending {
-  color: #92400e;
-  background: #fef3c7;
-  border-color: #fde68a;
-}
-
-.report-status-saved {
-  color: #1d4ed8;
-  background: #eff6ff;
-  border-color: #bfdbfe;
-}
-
-.report-status-cleaned {
-  color: #166534;
-  background: #dcfce7;
-  border-color: #bbf7d0;
-}
-
 @media (max-width: 720px) {
   .archived-report-widget-header {
     flex-direction: column;

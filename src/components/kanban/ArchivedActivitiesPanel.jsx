@@ -4,7 +4,6 @@ import { supabase } from '../../lib/supabase';
 import {
   createArchivedReport,
   fetchArchivedReports,
-  markReportSaved,
   markReportsCleaned,
   registerReportDriveLink,
   subscribeToArchivedReports,
@@ -15,8 +14,6 @@ import ArchivedActivitiesFilters, { emptyArchivedFilters } from './ArchivedActiv
 import ArchivedActivitiesTable from './ArchivedActivitiesTable';
 import ArchivedReportWidget from './ArchivedReportWidget';
 import RegisterDriveLinkModal from './RegisterDriveLinkModal';
-import ReportDetailsModal from './ReportDetailsModal';
-import ReportsHistoryTable from './ReportsHistoryTable';
 
 function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
   const { currentUser } = useAuth();
@@ -28,7 +25,6 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
   const [feedback, setFeedback] = useState('');
   const [generating, setGenerating] = useState(false);
   const [registeringReport, setRegisteringReport] = useState(null);
-  const [viewingReport, setViewingReport] = useState(null);
   const [cleanupOpen, setCleanupOpen] = useState(false);
 
   const loadReports = async () => {
@@ -140,15 +136,6 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
     }
   };
 
-  const handleMarkSaved = async (reportId) => {
-    try {
-      const updated = await markReportSaved(reportId);
-      setReports((current) => current.map((report) => (report.id === updated.id ? updated : report)));
-    } catch (err) {
-      setReportsError(err.message ?? 'Nao foi possivel atualizar o relatorio.');
-    }
-  };
-
   const handleConfirmCleanup = async () => {
     setCleanupOpen(false);
     const savedReports = reports.filter((report) => report.status === 'Salvo no Drive');
@@ -185,20 +172,6 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
 
       <ArchivedActivitiesTable tasks={filteredTasks} onRestore={setRestoringTask} />
 
-      <section className="page-heading">
-        <div>
-          <p className="eyebrow">Controle de exportações</p>
-          <h2>Histórico de relatórios gerados</h2>
-        </div>
-      </section>
-
-      <ReportsHistoryTable
-        reports={reports}
-        onEditLink={setRegisteringReport}
-        onMarkSaved={handleMarkSaved}
-        onViewDetails={setViewingReport}
-      />
-
       <ConfirmModal
         open={Boolean(restoringTask)}
         title="Restaurar atividade"
@@ -224,8 +197,6 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
         onClose={() => setRegisteringReport(null)}
         onSubmit={handleSubmitDriveLink}
       />
-
-      <ReportDetailsModal report={viewingReport} onClose={() => setViewingReport(null)} />
     </div>
   );
 }
