@@ -1,5 +1,5 @@
 import { Hash, UserRound } from 'lucide-react';
-import { getConversationSubtitle, getLastMessage } from '../../utils/chatUtils';
+import { getConversationOtherUser, getConversationSubtitle, getLastMessage } from '../../utils/chatUtils';
 import UnreadBadge from './UnreadBadge';
 
 const formatTime = (value) =>
@@ -8,6 +8,7 @@ const formatTime = (value) =>
 function ConversationItem({ conversation, users, currentUser, active, onSelect }) {
   const lastMessage = getLastMessage(conversation);
   const subtitle = getConversationSubtitle(conversation, users, currentUser);
+  const otherUser = getConversationOtherUser(conversation, users, currentUser);
   const Icon = conversation.type === 'group' ? Hash : UserRound;
 
   return (
@@ -17,7 +18,7 @@ function ConversationItem({ conversation, users, currentUser, active, onSelect }
       onClick={() => onSelect(conversation.id)}
     >
       <div className={`conversation-avatar ${conversation.type === 'group' ? 'group' : ''}`}>
-        <Icon size={18} aria-hidden="true" />
+        {otherUser?.photoUrl ? <img src={otherUser.photoUrl} alt="" /> : <Icon size={18} aria-hidden="true" />}
       </div>
       <div className="conversation-info">
         <div className="conversation-line">

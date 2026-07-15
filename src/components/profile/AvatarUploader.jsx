@@ -1,10 +1,12 @@
-import { ImagePlus, Trash2 } from 'lucide-react';
+import { Crop, ImagePlus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { validateProfileImage } from '../../utils/profileUtils';
+import AvatarEditorModal from './AvatarEditorModal';
 
 function AvatarUploader({ user, onUpload, onRemove }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const handleFile = async (event) => {
     const file = event.target.files?.[0];
@@ -49,12 +51,29 @@ function AvatarUploader({ user, onUpload, onRemove }) {
           Trocar foto
           <input type="file" accept="image/png,image/jpeg,image/jpg" onChange={handleFile} disabled={busy} />
         </label>
+        <button
+          type="button"
+          className="ghost-button"
+          onClick={() => setEditorOpen(true)}
+          disabled={busy || !user.photoUrl}
+        >
+          <Crop size={15} aria-hidden="true" />
+          Editar foto
+        </button>
         <button type="button" className="ghost-button" onClick={handleRemove} disabled={busy || !user.photoUrl}>
           <Trash2 size={15} aria-hidden="true" />
           Remover foto
         </button>
       </div>
       {error ? <p className="profile-photo-error">{error}</p> : null}
+
+      {editorOpen ? (
+        <AvatarEditorModal
+          photoUrl={user.photoUrl}
+          onClose={() => setEditorOpen(false)}
+          onSave={onUpload}
+        />
+      ) : null}
     </div>
   );
 }

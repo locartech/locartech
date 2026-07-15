@@ -14,11 +14,16 @@ export function getLastMessage(conversation) {
   return conversation.messages[conversation.messages.length - 1] ?? null;
 }
 
+export function getConversationOtherUser(conversation, users, currentUser) {
+  if (conversation.type === 'group') return null;
+  return users.find((user) => conversation.participantIds.includes(user.id) && user.id !== currentUser.id) ?? null;
+}
+
 export function getConversationSubtitle(conversation, users, currentUser) {
   if (conversation.type === 'group') {
     return `${conversation.participantIds.length} participantes`;
   }
 
-  const otherUser = users.find((user) => conversation.participantIds.includes(user.id) && user.id !== currentUser.id);
+  const otherUser = getConversationOtherUser(conversation, users, currentUser);
   return otherUser ? `${otherUser.sector} · ${otherUser.role}` : conversation.description;
 }
