@@ -158,6 +158,24 @@ export async function createGroupConversation(groupData, currentUser) {
   return conversation.id;
 }
 
+export async function updateGroupConversation(conversationId, groupData) {
+  const { data, error } = await supabase
+    .from('conversations')
+    .update({
+      title: groupData.name.trim(),
+      description: groupData.description.trim(),
+      sector: groupData.sector,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', conversationId)
+    .eq('type', 'group')
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data.id;
+}
+
 export async function sendChatMessage(conversationId, senderId, text) {
   const messageText = text.trim();
   const { error } = await supabase.from('messages').insert({

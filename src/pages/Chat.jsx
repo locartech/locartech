@@ -12,6 +12,7 @@ import {
   markConversationRead,
   sendChatMessage,
   subscribeToChat,
+  updateGroupConversation,
 } from '../services/chatService';
 import { fetchProfiles } from '../services/profilesService';
 import { getConversationById, getTotalUnreadCount, sortConversationsByLastMessage } from '../utils/chatUtils';
@@ -23,6 +24,7 @@ function Chat({ onChatUnreadChange }) {
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [isNewContactOpen, setIsNewContactOpen] = useState(false);
   const [isNewGroupOpen, setIsNewGroupOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -122,6 +124,19 @@ function Chat({ onChatUnreadChange }) {
     }
   };
 
+  const handleUpdateGroup = async (groupData) => {
+    if (!editingGroup) return;
+
+    try {
+      const conversationId = await updateGroupConversation(editingGroup.id, groupData);
+      setActiveConversationId(conversationId);
+      setEditingGroup(null);
+      await loadChat();
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel editar o grupo.');
+    }
+  };
+
   return (
     <div className="page-stack chat-page">
       {error ? <div className="members-feedback error">{error}</div> : null}
@@ -137,6 +152,7 @@ function Chat({ onChatUnreadChange }) {
         onSendMessage={handleSendMessage}
         onNewContact={() => setIsNewContactOpen(true)}
         onNewGroup={() => setIsNewGroupOpen(true)}
+        onEditGroup={setEditingGroup}
         onOpenProfile={() => setIsProfileOpen(true)}
       />
 
@@ -155,6 +171,16 @@ function Chat({ onChatUnreadChange }) {
           currentUser={currentUser}
           onClose={() => setIsNewGroupOpen(false)}
           onCreate={handleCreateGroup}
+        />
+      ) : null}
+
+      {editingGroup ? (
+        <NewGroupModal
+          users={users}
+          currentUser={currentUser}
+          group={editingGroup}
+          onClose={() => setEditingGroup(null)}
+          onCreate={handleUpdateGroup}
         />
       ) : null}
 

@@ -1,6 +1,6 @@
-import { Info } from 'lucide-react';
+import { Info, Pencil } from 'lucide-react';
 
-function ChatHeader({ conversation, participants, onOpenProfile }) {
+function ChatHeader({ conversation, participants, onEditGroup, onOpenProfile }) {
   if (!conversation) return null;
 
   const participantSummary =
@@ -14,9 +14,16 @@ function ChatHeader({ conversation, participants, onOpenProfile }) {
         <h2>{conversation.title}</h2>
         <p>{participantSummary}</p>
       </div>
-      <button type="button" className="icon-button" onClick={onOpenProfile} title="Ver detalhes">
-        <Info size={18} aria-hidden="true" />
-      </button>
+      <div className="chat-header-actions">
+        {conversation.type === 'group' ? (
+          <button type="button" className="icon-button" onClick={() => onEditGroup?.(conversation)} title="Editar grupo">
+            <Pencil size={18} aria-hidden="true" />
+          </button>
+        ) : null}
+        <button type="button" className="icon-button" onClick={onOpenProfile} title="Ver detalhes">
+          <Info size={18} aria-hidden="true" />
+        </button>
+      </div>
     </header>
   );
 }

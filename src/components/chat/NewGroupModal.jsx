@@ -2,12 +2,13 @@ import { ChevronDown, UsersRound, X } from 'lucide-react';
 import { useState } from 'react';
 import { chatSectors } from '../../data/chatData';
 
-function NewGroupModal({ users, currentUser, onClose, onCreate }) {
+function NewGroupModal({ users, currentUser, group, onClose, onCreate }) {
+  const isEditing = Boolean(group);
   const [draft, setDraft] = useState({
-    name: '',
-    description: '',
-    sector: 'Compras',
-    participantIds: [],
+    name: group?.title ?? '',
+    description: group?.description ?? '',
+    sector: group?.sector ?? 'Compras',
+    participantIds: group?.participantIds?.filter((participantId) => participantId !== currentUser.id) ?? [],
   });
   const [membersOpen, setMembersOpen] = useState(false);
 
@@ -31,7 +32,8 @@ function NewGroupModal({ users, currentUser, onClose, onCreate }) {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!draft.name.trim() || draft.participantIds.length === 0) return;
+    if (!draft.name.trim()) return;
+    if (!isEditing && draft.participantIds.length === 0) return;
     onCreate(draft);
   };
 
@@ -40,8 +42,8 @@ function NewGroupModal({ users, currentUser, onClose, onCreate }) {
       <section className="edit-modal chat-group-modal" role="dialog" aria-modal="true" aria-labelledby="new-group-title">
         <div className="edit-modal-header">
           <div>
-            <p className="eyebrow">Novo grupo</p>
-            <h2 id="new-group-title">Criar grupo de conversa</h2>
+            <p className="eyebrow">{isEditing ? 'Editar grupo' : 'Novo grupo'}</p>
+            <h2 id="new-group-title">{isEditing ? 'Editar conversa em grupo' : 'Criar grupo de conversa'}</h2>
           </div>
           <button type="button" className="icon-button" onClick={onClose} title="Fechar modal">
             <X size={18} aria-hidden="true" />
@@ -54,7 +56,7 @@ function NewGroupModal({ users, currentUser, onClose, onCreate }) {
             <input type="text" value={draft.name} onChange={(event) => updateDraft('name', event.target.value)} />
           </label>
           <label>
-            <span>Descrição</span>
+            <span>Descricao</span>
             <textarea value={draft.description} onChange={(event) => updateDraft('description', event.target.value)} />
           </label>
           <label>
@@ -68,45 +70,47 @@ function NewGroupModal({ users, currentUser, onClose, onCreate }) {
             </select>
           </label>
 
-          <div className={`participant-picker ${membersOpen ? 'open' : ''}`}>
-            <button
-              type="button"
-              className="participant-picker-toggle"
-              onClick={() => setMembersOpen((current) => !current)}
-              aria-expanded={membersOpen}
-            >
-              <span>
-                <UsersRound size={18} aria-hidden="true" />
-                Membros
-              </span>
-              <strong>{draft.participantIds.length} selecionado(s)</strong>
-              <ChevronDown size={18} aria-hidden="true" />
-            </button>
+          {!isEditing ? (
+            <div className={`participant-picker ${membersOpen ? 'open' : ''}`}>
+              <button
+                type="button"
+                className="participant-picker-toggle"
+                onClick={() => setMembersOpen((current) => !current)}
+                aria-expanded={membersOpen}
+              >
+                <span>
+                  <UsersRound size={18} aria-hidden="true" />
+                  Membros
+                </span>
+                <strong>{draft.participantIds.length} selecionado(s)</strong>
+                <ChevronDown size={18} aria-hidden="true" />
+              </button>
 
-            {membersOpen ? (
-              <div className="participant-options">
-                {availableUsers.map((user) => (
-                  <label key={user.id} className="participant-option">
-                    <input
-                      type="checkbox"
-                      checked={draft.participantIds.includes(user.id)}
-                      onChange={() => toggleParticipant(user.id)}
-                    />
-                    <span className="user-avatar">{user.avatarInitials}</span>
-                    <strong>{user.name}</strong>
-                    <small>{user.sector}</small>
-                  </label>
-                ))}
-              </div>
-            ) : null}
-          </div>
+              {membersOpen ? (
+                <div className="participant-options">
+                  {availableUsers.map((user) => (
+                    <label key={user.id} className="participant-option">
+                      <input
+                        type="checkbox"
+                        checked={draft.participantIds.includes(user.id)}
+                        onChange={() => toggleParticipant(user.id)}
+                      />
+                      <span className="user-avatar">{user.avatarInitials}</span>
+                      <strong>{user.name}</strong>
+                      <small>{user.sector}</small>
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="modal-actions">
             <button type="button" className="ghost-button" onClick={onClose}>
               Cancelar
             </button>
             <button type="submit" className="primary-button">
-              Criar grupo
+              {isEditing ? 'Salvar grupo' : 'Criar grupo'}
             </button>
           </div>
         </form>

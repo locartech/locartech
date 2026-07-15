@@ -11,6 +11,7 @@ function ChatLayout({
   onSendMessage,
   onNewContact,
   onNewGroup,
+  onEditGroup,
   onOpenProfile,
 }) {
   return (
@@ -29,6 +30,7 @@ function ChatLayout({
         users={users}
         currentUser={currentUser}
         onSendMessage={onSendMessage}
+        onEditGroup={onEditGroup}
         onOpenProfile={onOpenProfile}
       />
     </section>

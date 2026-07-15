@@ -3,7 +3,7 @@ import ChatHeader from './ChatHeader';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 
-function ChatWindow({ conversation, users, currentUser, onSendMessage, onOpenProfile }) {
+function ChatWindow({ conversation, users, currentUser, onSendMessage, onEditGroup, onOpenProfile }) {
   if (!conversation) {
     return (
       <section className="chat-window empty-chat-window">
@@ -22,7 +22,12 @@ function ChatWindow({ conversation, users, currentUser, onSendMessage, onOpenPro
 
   return (
     <section className="chat-window">
-      <ChatHeader conversation={conversation} participants={participants} onOpenProfile={onOpenProfile} />
+      <ChatHeader
+        conversation={conversation}
+        participants={participants}
+        onEditGroup={onEditGroup}
+        onOpenProfile={onOpenProfile}
+      />
 
       <div className="messages-list">
         {conversation.messages.map((message) => {
