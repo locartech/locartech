@@ -1,5 +1,6 @@
 import { Archive, ChevronDown, RotateCcw } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import EmptyState from '../common/EmptyState';
 import RequestPriorityBadge from './RequestPriorityBadge';
 import { purchaseStatuses } from '../../data/purchaseRequestsData';
@@ -12,9 +13,29 @@ const formatDate = (value) =>
       )
     : 'Sem prazo';
 
+// Rendered through a portal into document.body, positioned from the trigger's
+// actual screen coordinates - the table's horizontal-scroll wrapper otherwise
+// clips this dropdown vertically (overflow-x: auto forces overflow-y non-
+// visible in some browsers regardless of an explicit overflow-y: visible).
 function PurchaseStatusMenu({ request, onStatusChange }) {
   const [open, setOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
   const currentStatus = purchaseStatuses.find((status) => status.id === request.status) ?? purchaseStatuses[0];
+
+  const handleToggle = () => {
+    if (!open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setMenuStyle({
+        position: 'fixed',
+        top: rect.bottom + 6,
+        right: window.innerWidth - rect.right,
+        minWidth: rect.width,
+      });
+    }
+    setOpen((current) => !current);
+  };
 
   const handleStatusSelect = (statusId) => {
     setOpen(false);
@@ -23,31 +44,55 @@ function PurchaseStatusMenu({ request, onStatusChange }) {
     }
   };
 
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const handleOutsideClick = (event) => {
+      if (triggerRef.current?.contains(event.target) || menuRef.current?.contains(event.target)) return;
+      setOpen(false);
+    };
+    const handleClose = () => setOpen(false);
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    window.addEventListener('scroll', handleClose, true);
+    window.addEventListener('resize', handleClose);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('scroll', handleClose, true);
+      window.removeEventListener('resize', handleClose);
+    };
+  }, [open]);
+
   return (
     <div className="purchase-status-menu">
       <button
+        ref={triggerRef}
         type="button"
         className={`purchase-status-trigger purchase-status-${request.status}`}
-        onClick={() => setOpen((current) => !current)}
+        onClick={handleToggle}
       >
         <span>{currentStatus.label}</span>
         <ChevronDown size={15} aria-hidden="true" />
       </button>
 
-      {open ? (
-        <div className="purchase-status-options">
-          {purchaseStatuses.map((status) => (
-            <button
-              key={status.id}
-              type="button"
-              className={`purchase-status-option purchase-status-${status.id}`}
-              onClick={() => handleStatusSelect(status.id)}
-            >
-              {status.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
+      {open && menuStyle
+        ? createPortal(
+            <div ref={menuRef} className="purchase-status-options" style={menuStyle}>
+              {purchaseStatuses.map((status) => (
+                <button
+                  key={status.id}
+                  type="button"
+                  className={`purchase-status-option purchase-status-${status.id}`}
+                  onClick={() => handleStatusSelect(status.id)}
+                >
+                  {status.label}
+                </button>
+              ))}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
