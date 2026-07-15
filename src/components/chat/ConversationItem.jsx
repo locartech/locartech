@@ -16,7 +16,7 @@ function ConversationItem({ conversation, users, currentUser, active, onSelect }
       className={`conversation-item ${active ? 'active' : ''} ${conversation.unreadCount ? 'unread' : ''}`}
       onClick={() => onSelect(conversation.id)}
     >
-      <div className="conversation-avatar">
+      <div className={`conversation-avatar ${conversation.type === 'group' ? 'group' : ''}`}>
         <Icon size={18} aria-hidden="true" />
       </div>
       <div className="conversation-info">
