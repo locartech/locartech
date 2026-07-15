@@ -7193,6 +7193,25 @@ textarea:focus-visible {
   background: #f8fafc;
 }
 
+/* Contact/group card: just photo, name, sector - no time, no message
+   preview line (the wrapper that held those was removed from the markup). */
+.chat-page .conversation-item {
+  min-height: 40px;
+  padding: 6px 8px;
+}
+
+.chat-page .conversation-info {
+  gap: 1px;
+}
+
+.chat-page .conversation-info strong {
+  overflow: hidden;
+  color: #101828;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.84rem;
+}
+
 /* --- Dashboard: give the summary and metric groups more presence ------- */
 
 .dashboard-score {

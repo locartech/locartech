@@ -25,5 +25,5 @@ export function getConversationSubtitle(conversation, users, currentUser) {
   }
 
   const otherUser = getConversationOtherUser(conversation, users, currentUser);
-  return otherUser ? `${otherUser.sector} · ${otherUser.role}` : conversation.description;
+  return otherUser ? otherUser.sector : conversation.description;
 }
