@@ -124,16 +124,6 @@ function Chat({ onChatUnreadChange }) {
 
   return (
     <div className="page-stack chat-page">
-      <section className="page-heading chat-page-heading">
-        <div>
-          <p className="eyebrow">Chat</p>
-          <h2>Comunicacao interna entre pessoas e setores</h2>
-          <span className="current-user-chip">
-            Usuario atual: {currentUser.name} - {currentUser.sector}
-          </span>
-        </div>
-      </section>
-
       {error ? <div className="members-feedback error">{error}</div> : null}
       {loading ? <div className="members-feedback">Carregando conversas...</div> : null}
 

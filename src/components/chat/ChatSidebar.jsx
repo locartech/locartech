@@ -1,4 +1,4 @@
-import { MessageCirclePlus, Plus, Search, UsersRound } from 'lucide-react';
+import { MessageCirclePlus, Search, UsersRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { sortConversationsByLastMessage } from '../../utils/chatUtils';
 import ConversationList from './ConversationList';
@@ -13,6 +13,7 @@ function ChatSidebar({
   onNewGroup,
 }) {
   const [query, setQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('direct');
 
   const filteredConversations = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -34,17 +35,15 @@ function ChatSidebar({
 
   const directConversations = filteredConversations.filter((conversation) => conversation.type === 'direct');
   const groupConversations = filteredConversations.filter((conversation) => conversation.type === 'group');
+  const visibleConversations = activeTab === 'direct' ? directConversations : groupConversations;
 
   return (
     <aside className="chat-sidebar-panel">
       <div className="chat-sidebar-header">
         <div>
-          <p className="eyebrow">Comunicacao interna</p>
           <h2>Chat</h2>
+          <p>Conversas iniciadas</p>
         </div>
-        <button type="button" className="table-icon-button primary" onClick={onNewGroup} title="Novo grupo">
-          <Plus size={17} aria-hidden="true" />
-        </button>
       </div>
 
       <label className="chat-search">
@@ -52,28 +51,40 @@ function ChatSidebar({
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar conversa" />
       </label>
 
-      <button type="button" className="new-contact-button" onClick={onNewContact}>
-        <MessageCirclePlus size={16} aria-hidden="true" />
-        Novo contato
-      </button>
+      <div className="chat-action-row">
+        <button type="button" className="new-contact-button" onClick={onNewContact}>
+          <MessageCirclePlus size={16} aria-hidden="true" />
+          Novo contato
+        </button>
 
-      <button type="button" className="new-group-button" onClick={onNewGroup}>
-        <UsersRound size={16} aria-hidden="true" />
-        Novo grupo
-      </button>
+        <button type="button" className="new-group-button" onClick={onNewGroup}>
+          <UsersRound size={16} aria-hidden="true" />
+          Grupo
+        </button>
+      </div>
+
+      <div className="chat-segmented-control" role="tablist" aria-label="Tipo de conversa">
+        <button
+          type="button"
+          className={activeTab === 'direct' ? 'active' : ''}
+          onClick={() => setActiveTab('direct')}
+        >
+          Contatos
+          <span>{directConversations.length}</span>
+        </button>
+        <button
+          type="button"
+          className={activeTab === 'group' ? 'active' : ''}
+          onClick={() => setActiveTab('group')}
+        >
+          Grupos
+          <span>{groupConversations.length}</span>
+        </button>
+      </div>
 
       <ConversationList
-        title="Conversas individuais"
-        conversations={directConversations}
-        users={users}
-        currentUser={currentUser}
-        activeConversationId={activeConversationId}
-        onSelect={onSelectConversation}
-      />
-
-      <ConversationList
-        title="Grupos"
-        conversations={groupConversations}
+        title={activeTab === 'direct' ? 'Contatos pessoais' : 'Grupos'}
+        conversations={visibleConversations}
         users={users}
         currentUser={currentUser}
         activeConversationId={activeConversationId}
