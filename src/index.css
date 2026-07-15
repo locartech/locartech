@@ -6922,21 +6922,22 @@ body {
 
 .permission-notice {
   position: fixed;
-  right: 22px;
-  bottom: 22px;
   z-index: 1200;
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  max-width: min(340px, calc(100vw - 32px));
-  padding: 8px 11px;
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
-  background: #ffffff;
-  color: #475569;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
-  font-size: 0.76rem;
-  font-weight: 600;
+  max-width: min(290px, calc(100vw - 24px));
+  padding: 7px 10px;
+  border: 1px solid #1e3a5f;
+  border-radius: 6px;
+  background: #0f2a43;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 42, 67, 0.24);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.25;
+  pointer-events: none;
+  animation: permission-notice-in 140ms ease-out;
 }
 
 .stage-status-readonly {
@@ -6958,10 +6959,14 @@ body {
   cursor: pointer;
 }
 
-@media (max-width: 640px) {
-  .permission-notice {
-    right: 16px;
-    bottom: 16px;
+@keyframes permission-notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -7479,4 +7484,23 @@ textarea:focus-visible {
 
 .requests-panel .empty-state {
   min-height: 200px;
+}
+
+/* Optical centering: the collapse control makes the logo look slightly right-heavy. */
+.sidebar:not(.collapsed) .brand-copy {
+  transform: translateX(-6px);
+}
+
+.chat-segmented-control {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.chat-segmented-control button {
+  gap: 4px;
+  padding-inline: 5px;
+  font-size: 0.74rem;
+}
+
+.chat-segmented-control button svg {
+  flex: 0 0 auto;
 }

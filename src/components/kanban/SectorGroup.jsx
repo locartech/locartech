@@ -69,7 +69,7 @@ function SectorGroup({
             <button
               type="button"
               className="add-stage-button"
-              onClick={() => (canEdit ? onAddStart(sector.id) : onBlockedAction())}
+              onClick={(event) => (canEdit ? onAddStart(sector.id) : onBlockedAction(event))}
             >
               <Plus size={16} aria-hidden="true" />
               Adicionar atividade

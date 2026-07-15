@@ -3,7 +3,16 @@ import ChatHeader from './ChatHeader';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 
-function ChatWindow({ conversation, users, currentUser, onSendMessage, onEditGroup, onOpenProfile }) {
+function ChatWindow({
+  conversation,
+  users,
+  currentUser,
+  onSendMessage,
+  onEditGroup,
+  onOpenProfile,
+  onArchiveConversation,
+  onRestoreConversation,
+}) {
   if (!conversation) {
     return (
       <section className="chat-window empty-chat-window">
@@ -27,6 +36,8 @@ function ChatWindow({ conversation, users, currentUser, onSendMessage, onEditGro
         participants={participants}
         onEditGroup={onEditGroup}
         onOpenProfile={onOpenProfile}
+        onArchiveConversation={onArchiveConversation}
+        onRestoreConversation={onRestoreConversation}
       />
 
       <div className="messages-list">

@@ -24,7 +24,7 @@ function Kanban() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [view, setView] = useState('open');
-  const { permissionMessage, showPermissionNotice } = usePermissionNotice();
+  const { permissionNotice, showPermissionNotice } = usePermissionNotice();
 
   const canManageTaskSector = (sector) => canManageSector(currentUser, sector);
 
@@ -155,7 +155,7 @@ function Kanban() {
 
       {error ? <div className="members-feedback error">{error}</div> : null}
       {loading ? <div className="members-feedback">Carregando atividades...</div> : null}
-      <PermissionNotice message={permissionMessage} />
+      <PermissionNotice notice={permissionNotice} />
 
       {view === 'open' ? (
         <KanbanTable

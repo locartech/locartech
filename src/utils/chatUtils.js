@@ -1,5 +1,8 @@
 export function getTotalUnreadCount(conversations) {
-  return conversations.reduce((total, conversation) => total + Number(conversation.unreadCount || 0), 0);
+  return conversations.reduce(
+    (total, conversation) => total + (conversation.archivedAt ? 0 : Number(conversation.unreadCount || 0)),
+    0,
+  );
 }
 
 export function sortConversationsByLastMessage(conversations) {

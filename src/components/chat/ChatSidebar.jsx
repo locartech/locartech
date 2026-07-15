@@ -1,4 +1,4 @@
-import { MessageCirclePlus, Search, UsersRound } from 'lucide-react';
+import { Archive, MessageCirclePlus, Search, UsersRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { sortConversationsByLastMessage } from '../../utils/chatUtils';
 import ConversationList from './ConversationList';
@@ -33,9 +33,16 @@ function ChatSidebar({
     });
   }, [conversations, query, users]);
 
-  const directConversations = filteredConversations.filter((conversation) => conversation.type === 'direct');
-  const groupConversations = filteredConversations.filter((conversation) => conversation.type === 'group');
-  const visibleConversations = activeTab === 'direct' ? directConversations : groupConversations;
+  const activeConversations = filteredConversations.filter((conversation) => !conversation.archivedAt);
+  const archivedConversations = filteredConversations.filter((conversation) => conversation.archivedAt);
+  const directConversations = activeConversations.filter((conversation) => conversation.type === 'direct');
+  const groupConversations = activeConversations.filter((conversation) => conversation.type === 'group');
+  const visibleConversations =
+    activeTab === 'direct'
+      ? directConversations
+      : activeTab === 'group'
+        ? groupConversations
+        : archivedConversations;
 
   return (
     <aside className="chat-sidebar-panel">
@@ -80,10 +87,19 @@ function ChatSidebar({
           Grupos
           <span>{groupConversations.length}</span>
         </button>
+        <button
+          type="button"
+          className={activeTab === 'archived' ? 'active' : ''}
+          onClick={() => setActiveTab('archived')}
+        >
+          <Archive size={13} aria-hidden="true" />
+          Arquivadas
+          <span>{archivedConversations.length}</span>
+        </button>
       </div>
 
       <ConversationList
-        title={activeTab === 'direct' ? 'Contatos' : 'Grupos'}
+        title={activeTab === 'direct' ? 'Contatos' : activeTab === 'group' ? 'Grupos' : 'Arquivadas'}
         conversations={visibleConversations}
         users={users}
         currentUser={currentUser}

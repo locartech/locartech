@@ -49,6 +49,7 @@ export function mapConversationFromDb(conversation, profiles, currentUserId) {
     sector: conversation.sector,
     participantIds,
     unreadCount,
+    archivedAt: currentParticipant?.archived_at ?? null,
     lastMessageAt: lastMessage?.createdAt ?? conversation.updated_at ?? conversation.created_at,
     messages,
   };
@@ -96,6 +97,7 @@ export async function ensureDirectConversation(currentUser, otherUser) {
         .from('conversations')
         .update({ description: 'Conversa iniciada', updated_at: new Date().toISOString() })
         .eq('id', existing.id);
+      await restoreConversationForUser(existing.id, currentUser.id);
       return existing.id;
     }
   } catch {
@@ -220,6 +222,26 @@ export async function markConversationRead(conversationId, profileId) {
     .update({ last_read_at: new Date().toISOString() })
     .eq('conversation_id', conversationId)
     .eq('profile_id', profileId);
+}
+
+export async function archiveConversationForUser(conversationId, profileId) {
+  const { error } = await supabase
+    .from('conversation_participants')
+    .update({ archived_at: new Date().toISOString() })
+    .eq('conversation_id', conversationId)
+    .eq('profile_id', profileId);
+
+  if (error) throw error;
+}
+
+export async function restoreConversationForUser(conversationId, profileId) {
+  const { error } = await supabase
+    .from('conversation_participants')
+    .update({ archived_at: null })
+    .eq('conversation_id', conversationId)
+    .eq('profile_id', profileId);
+
+  if (error) throw error;
 }
 
 export function subscribeToChat(profileId, onChange) {

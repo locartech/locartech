@@ -18,6 +18,8 @@ export function canManageSector(user, sector) {
   const targetId = typeof sector === 'object' ? sector.id : null;
   const targetName = typeof sector === 'object' ? sector.name || sector.slug : sector;
 
+  if (normalizeSectorKey(targetName) === 'projetos') return true;
+
   if (targetId && user.sectorId && targetId === user.sectorId) return true;
   return normalizeSectorKey(targetName) === normalizeSectorKey(user.sector);
 }

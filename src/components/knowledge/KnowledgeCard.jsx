@@ -34,10 +34,10 @@ function KnowledgeCard({ record, onView, onEdit, onDelete, simplified = false, c
           <a className="table-icon-button" href={record.driveLink} target="_blank" rel="noopener noreferrer" title="Abrir no Drive">
             <ExternalLink size={15} aria-hidden="true" />
           </a>
-          <button type="button" className="table-icon-button" onClick={() => (canEdit ? onEdit(record) : onBlockedAction())} title="Editar registro">
+          <button type="button" className="table-icon-button" onClick={(event) => (canEdit ? onEdit(record) : onBlockedAction(event))} title="Editar registro">
             <Pencil size={15} aria-hidden="true" />
           </button>
-          <button type="button" className="table-icon-button danger" onClick={() => (canEdit ? onDelete(record) : onBlockedAction())} title="Excluir registro">
+          <button type="button" className="table-icon-button danger" onClick={(event) => (canEdit ? onDelete(record) : onBlockedAction(event))} title="Excluir registro">
             <Trash2 size={15} aria-hidden="true" />
           </button>
         </div>

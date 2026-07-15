@@ -35,19 +35,19 @@ function TaskRow({ task, onStatusChange, onDateChange, onEdit, onDelete, onArchi
             aria-label={`Data da atividade ${task.title}`}
           />
         ) : (
-          <button type="button" className="stage-readonly-date" onClick={onBlockedAction}>
+          <button type="button" className="stage-readonly-date" onClick={(event) => onBlockedAction(event)}>
             {task.date ? new Date(`${task.date}T12:00:00`).toLocaleDateString('pt-BR') : 'Sem data'}
           </button>
         )}
       </div>
       <div className="stage-cell stage-actions-cell">
-        <button type="button" className="table-icon-button archive" onClick={() => (canEdit ? onArchive(task) : onBlockedAction())} title="Arquivar atividade">
+        <button type="button" className="table-icon-button archive" onClick={(event) => (canEdit ? onArchive(task) : onBlockedAction(event))} title="Arquivar atividade">
           <Archive size={16} aria-hidden="true" />
         </button>
-        <button type="button" className="table-icon-button" onClick={() => (canEdit ? onEdit(task) : onBlockedAction())} title="Editar atividade">
+        <button type="button" className="table-icon-button" onClick={(event) => (canEdit ? onEdit(task) : onBlockedAction(event))} title="Editar atividade">
           <Pencil size={16} aria-hidden="true" />
         </button>
-        <button type="button" className="table-icon-button danger" onClick={() => (canEdit ? onDelete(task.id) : onBlockedAction())} title="Excluir atividade">
+        <button type="button" className="table-icon-button danger" onClick={(event) => (canEdit ? onDelete(task.id) : onBlockedAction(event))} title="Excluir atividade">
           <Trash2 size={16} aria-hidden="true" />
         </button>
       </div>

@@ -31,7 +31,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [detailRecord, setDetailRecord] = useState(null);
-  const { permissionMessage, showPermissionNotice } = usePermissionNotice();
+  const { permissionNotice, showPermissionNotice } = usePermissionNotice();
 
   const loadRecords = async () => {
     try {
@@ -139,8 +139,8 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
         <button
           type="button"
           className="primary-button"
-          onClick={() => {
-            if (!canEditSector) return showPermissionNotice();
+          onClick={(event) => {
+            if (!canEditSector) return showPermissionNotice(event);
             setEditingRecord(null);
             setFormOpen(true);
           }}
@@ -151,7 +151,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
       </section>
 
       {error ? <div className="members-feedback error">{error}</div> : null}
-      <PermissionNotice message={permissionMessage} />
+      <PermissionNotice notice={permissionNotice} />
 
       {stats ? <KnowledgeStats stats={stats} simplified={simplified} /> : null}
 

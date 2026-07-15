@@ -5,7 +5,7 @@ function StatusBadge({ value, onChange, disabled = false, onBlockedAction }) {
 
   if (disabled) {
     return onBlockedAction ? (
-      <button type="button" className={`stage-status stage-status-readonly stage-status-${value}`} onClick={onBlockedAction}>
+      <button type="button" className={`stage-status stage-status-readonly stage-status-${value}`} onClick={(event) => onBlockedAction(event)}>
         {label}
       </button>
     ) : (

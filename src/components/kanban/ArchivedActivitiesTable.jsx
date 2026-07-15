@@ -85,7 +85,7 @@ function ArchivedActivitiesTable({ tasks, onRestore, canManageTask, onBlockedAct
               <button
                 type="button"
                 className="table-icon-button success"
-                onClick={() => (canManageTask(task.sectorId) ? onRestore(task) : onBlockedAction())}
+                onClick={(event) => (canManageTask(task.sectorId) ? onRestore(task) : onBlockedAction(event))}
                 title="Restaurar atividade"
               >
                 <RotateCcw size={16} aria-hidden="true" />

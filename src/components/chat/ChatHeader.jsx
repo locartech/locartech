@@ -1,6 +1,13 @@
-import { Hash, Info, Pencil, UserRound } from 'lucide-react';
+import { Archive, ArchiveRestore, Hash, Info, Pencil, UserRound } from 'lucide-react';
 
-function ChatHeader({ conversation, participants, onEditGroup, onOpenProfile }) {
+function ChatHeader({
+  conversation,
+  participants,
+  onEditGroup,
+  onOpenProfile,
+  onArchiveConversation,
+  onRestoreConversation,
+}) {
   if (!conversation) return null;
 
   const participantSummary =
@@ -23,6 +30,22 @@ function ChatHeader({ conversation, participants, onEditGroup, onOpenProfile }) 
         </div>
       </div>
       <div className="chat-header-actions">
+        <button
+          type="button"
+          className="icon-button"
+          onClick={() =>
+            conversation.archivedAt
+              ? onRestoreConversation(conversation.id)
+              : onArchiveConversation(conversation.id)
+          }
+          title={conversation.archivedAt ? 'Restaurar conversa' : 'Arquivar conversa'}
+        >
+          {conversation.archivedAt ? (
+            <ArchiveRestore size={18} aria-hidden="true" />
+          ) : (
+            <Archive size={18} aria-hidden="true" />
+          )}
+        </button>
         {conversation.type === 'group' ? (
           <button type="button" className="icon-button" onClick={() => onEditGroup?.(conversation)} title="Editar grupo">
             <Pencil size={18} aria-hidden="true" />

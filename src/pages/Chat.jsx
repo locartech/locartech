@@ -6,10 +6,12 @@ import UserProfileModal from '../components/chat/UserProfileModal';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import {
+  archiveConversationForUser,
   createGroupConversation,
   ensureDirectConversation,
   fetchConversations,
   markConversationRead,
+  restoreConversationForUser,
   sendChatMessage,
   subscribeToChat,
   updateGroupConversation,
@@ -140,6 +142,25 @@ function Chat({ onChatUnreadChange }) {
     }
   };
 
+  const handleArchiveConversation = async (conversationId) => {
+    try {
+      await archiveConversationForUser(conversationId, currentUser.id);
+      setActiveConversationId(null);
+      await loadChat();
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel arquivar a conversa.');
+    }
+  };
+
+  const handleRestoreConversation = async (conversationId) => {
+    try {
+      await restoreConversationForUser(conversationId, currentUser.id);
+      await loadChat();
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel restaurar a conversa.');
+    }
+  };
+
   return (
     <div className="page-stack chat-page">
       {error ? <div className="members-feedback error">{error}</div> : null}
@@ -156,6 +177,8 @@ function Chat({ onChatUnreadChange }) {
         onNewContact={() => setIsNewContactOpen(true)}
         onNewGroup={() => setIsNewGroupOpen(true)}
         onEditGroup={setEditingGroup}
+        onArchiveConversation={handleArchiveConversation}
+        onRestoreConversation={handleRestoreConversation}
         onOpenProfile={() => setIsProfileOpen(true)}
       />
 
