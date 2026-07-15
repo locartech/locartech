@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Archive, LayoutGrid } from 'lucide-react';
 import ArchivedActivitiesPanel from '../components/kanban/ArchivedActivitiesPanel';
 import KanbanTable from '../components/kanban/KanbanTable';
+import PermissionNotice from '../components/common/PermissionNotice';
 import { useAuth } from '../contexts/AuthContext';
+import usePermissionNotice from '../hooks/usePermissionNotice';
 import { supabase } from '../lib/supabase';
 import {
   archiveKanbanTask,
@@ -14,6 +16,7 @@ import {
   subscribeToKanban,
   updateRemoteKanbanTask,
 } from '../services/kanbanService';
+import { canManageSector } from '../utils/permissions';
 
 function Kanban() {
   const { currentUser } = useAuth();
@@ -21,6 +24,9 @@ function Kanban() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [view, setView] = useState('open');
+  const { permissionMessage, showPermissionNotice } = usePermissionNotice();
+
+  const canManageTaskSector = (sector) => canManageSector(currentUser, sector);
 
   const loadTasks = async () => {
     try {
@@ -46,6 +52,7 @@ function Kanban() {
   }, []);
 
   const handleAddTask = async (sectorId, values) => {
+    if (!canManageTaskSector(sectorId)) return showPermissionNotice();
     try {
       const created = await createRemoteKanbanTask(sectorId, values);
       setStageTasks((current) => [...current, created]);
@@ -57,6 +64,7 @@ function Kanban() {
   const handleUpdateTask = async (taskId, values) => {
     const current = stageTasks.find((task) => task.id === taskId);
     if (!current) return;
+    if (!canManageTaskSector(current.sectorId)) return showPermissionNotice();
 
     try {
       const updated = await updateRemoteKanbanTask(taskId, current.sectorId, { ...current, ...values });
@@ -67,6 +75,8 @@ function Kanban() {
   };
 
   const handleDeleteTask = async (taskId) => {
+    const current = stageTasks.find((task) => task.id === taskId);
+    if (!current || !canManageTaskSector(current.sectorId)) return showPermissionNotice();
     try {
       await deleteRemoteKanbanTask(taskId);
       setStageTasks((current) => current.filter((task) => task.id !== taskId));
@@ -76,6 +86,8 @@ function Kanban() {
   };
 
   const handleArchiveTask = async (taskId) => {
+    const current = stageTasks.find((task) => task.id === taskId);
+    if (!current || !canManageTaskSector(current.sectorId)) return showPermissionNotice();
     try {
       const updated = await archiveKanbanTask(taskId, currentUser?.id, currentUser?.name);
       setStageTasks((current) => current.map((task) => (task.id === taskId ? updated : task)));
@@ -85,6 +97,8 @@ function Kanban() {
   };
 
   const handleRestoreTask = async (taskId) => {
+    const current = stageTasks.find((task) => task.id === taskId);
+    if (!current || !canManageTaskSector(current.sectorId)) return showPermissionNotice();
     try {
       const updated = await restoreKanbanTask(taskId);
       setStageTasks((current) => current.map((task) => (task.id === taskId ? updated : task)));
@@ -141,6 +155,7 @@ function Kanban() {
 
       {error ? <div className="members-feedback error">{error}</div> : null}
       {loading ? <div className="members-feedback">Carregando atividades...</div> : null}
+      <PermissionNotice message={permissionMessage} />
 
       {view === 'open' ? (
         <KanbanTable
@@ -149,9 +164,17 @@ function Kanban() {
           onUpdateTask={handleUpdateTask}
           onDeleteTask={handleDeleteTask}
           onArchiveTask={handleArchiveTask}
+          canManageSector={canManageTaskSector}
+          onBlockedAction={showPermissionNotice}
         />
       ) : (
-        <ArchivedActivitiesPanel tasks={archivedTasks} onRestoreTask={handleRestoreTask} onCleanupTasks={handleCleanupTasks} />
+        <ArchivedActivitiesPanel
+          tasks={archivedTasks}
+          onRestoreTask={handleRestoreTask}
+          onCleanupTasks={handleCleanupTasks}
+          canManageTask={canManageTaskSector}
+          onBlockedAction={showPermissionNotice}
+        />
       )}
     </div>
   );

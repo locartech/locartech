@@ -6,6 +6,9 @@ import KnowledgeEmptyState from '../components/knowledge/KnowledgeEmptyState';
 import KnowledgeFilters from '../components/knowledge/KnowledgeFilters';
 import KnowledgeFormModal from '../components/knowledge/KnowledgeFormModal';
 import KnowledgeStats from '../components/knowledge/KnowledgeStats';
+import PermissionNotice from '../components/common/PermissionNotice';
+import { useAuth } from '../contexts/AuthContext';
+import usePermissionNotice from '../hooks/usePermissionNotice';
 import { supabase } from '../lib/supabase';
 import {
   createRemoteKnowledgeRecord,
@@ -16,8 +19,10 @@ import {
 } from '../services/knowledgeService';
 import { fetchSectors } from '../services/sectorsService';
 import { filterKnowledgeRecords, getKnowledgeStats } from '../utils/knowledgeUtils';
+import { canManageSector } from '../utils/permissions';
 
 function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
+  const { currentUser } = useAuth();
   const [sector, setSector] = useState(null);
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +31,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [detailRecord, setDetailRecord] = useState(null);
+  const { permissionMessage, showPermissionNotice } = usePermissionNotice();
 
   const loadRecords = async () => {
     try {
@@ -64,6 +70,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
   }, []);
 
   const simplified = sector?.slug === 'projetos';
+  const canEditSector = canManageSector(currentUser, sector);
 
   const filteredRecords = useMemo(
     () => (sector ? filterKnowledgeRecords(records, sector.name, filters) : []),
@@ -74,6 +81,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
 
   const handleSubmit = async (values) => {
     if (!sector) return;
+    if (!canEditSector) return showPermissionNotice();
 
     try {
       const saved = editingRecord
@@ -93,6 +101,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
   };
 
   const handleDelete = async (record) => {
+    if (!canEditSector) return showPermissionNotice();
     const shouldDelete = window.confirm('Deseja excluir este documento?');
     if (!shouldDelete) return;
 
@@ -131,6 +140,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
           type="button"
           className="primary-button"
           onClick={() => {
+            if (!canEditSector) return showPermissionNotice();
             setEditingRecord(null);
             setFormOpen(true);
           }}
@@ -141,6 +151,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
       </section>
 
       {error ? <div className="members-feedback error">{error}</div> : null}
+      <PermissionNotice message={permissionMessage} />
 
       {stats ? <KnowledgeStats stats={stats} simplified={simplified} /> : null}
 
@@ -156,10 +167,13 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
               record={record}
               onView={setDetailRecord}
               onEdit={(item) => {
+                if (!canEditSector) return showPermissionNotice();
                 setEditingRecord(item);
                 setFormOpen(true);
               }}
               onDelete={handleDelete}
+              canEdit={canEditSector}
+              onBlockedAction={showPermissionNotice}
               simplified={simplified}
             />
           ))
@@ -186,6 +200,7 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
           record={detailRecord}
           onClose={() => setDetailRecord(null)}
           onEdit={(record) => {
+            if (!canEditSector) return showPermissionNotice();
             setDetailRecord(null);
             setEditingRecord(record);
             setFormOpen(true);

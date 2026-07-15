@@ -1,11 +1,10 @@
 import { CheckCircle2, XCircle } from 'lucide-react';
+import { canManageIncomingRequest, isAdminUser, isRequestOwner } from '../../utils/permissions';
 
 function RequestApprovalActions({ request, currentUser, onApprove, onReject, onCancel }) {
   const isPending = request.requestStatus === 'pending_approval';
-  const canManage = request.targetSector === currentUser.sector;
-  const canCancel =
-    isPending &&
-    (request.requesterUserId === currentUser.id || request.requesterName === currentUser.name);
+  const canManage = canManageIncomingRequest(currentUser, request);
+  const canCancel = isPending && (isAdminUser(currentUser) || isRequestOwner(currentUser, request));
 
   return (
     <>

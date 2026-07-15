@@ -1,10 +1,16 @@
 import { kanbanStatuses } from '../../data/kanbanData';
 
-function StatusBadge({ value, onChange, disabled = false }) {
+function StatusBadge({ value, onChange, disabled = false, onBlockedAction }) {
   const label = kanbanStatuses.find((status) => status.id === value)?.label ?? value;
 
   if (disabled) {
-    return <span className={`stage-status stage-status-${value}`}>{label}</span>;
+    return onBlockedAction ? (
+      <button type="button" className={`stage-status stage-status-readonly stage-status-${value}`} onClick={onBlockedAction}>
+        {label}
+      </button>
+    ) : (
+      <span className={`stage-status stage-status-${value}`}>{label}</span>
+    );
   }
 
   return (

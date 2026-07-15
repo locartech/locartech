@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { fetchSectorIdByName } from './sectorsService';
 
 function mapRecordFromDb(record) {
   return {
@@ -15,9 +16,10 @@ function mapRecordFromDb(record) {
   };
 }
 
-function mapRecordToDb(sector, values) {
+async function mapRecordToDb(sector, values) {
   return {
     sector,
+    sector_ref_id: await fetchSectorIdByName(sector).catch(() => null),
     title: values.title.trim(),
     description: values.description.trim(),
     type: values.type,
@@ -39,9 +41,10 @@ export async function fetchKnowledgeRecords() {
 }
 
 export async function createRemoteKnowledgeRecord(sector, values) {
+  const payload = await mapRecordToDb(sector, values);
   const { data, error } = await supabase
     .from('knowledge_records')
-    .insert(mapRecordToDb(sector, values))
+    .insert(payload)
     .select('*')
     .single();
 
@@ -50,9 +53,10 @@ export async function createRemoteKnowledgeRecord(sector, values) {
 }
 
 export async function updateRemoteKnowledgeRecord(recordId, sector, values) {
+  const payload = await mapRecordToDb(sector, values);
   const { data, error } = await supabase
     .from('knowledge_records')
-    .update(mapRecordToDb(sector, values))
+    .update(payload)
     .eq('id', recordId)
     .select('*')
     .single();

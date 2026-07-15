@@ -11,6 +11,8 @@ function KanbanTable({
   onUpdateTask,
   onDeleteTask,
   onArchiveTask,
+  canManageSector,
+  onBlockedAction,
 }) {
   const [collapsedSectors, setCollapsedSectors] = useState({});
   const [addingSectorId, setAddingSectorId] = useState(null);
@@ -68,6 +70,8 @@ function KanbanTable({
             onEdit={setEditingTask}
             onDelete={handleDeleteTask}
             onArchive={setArchivingTask}
+            canEdit={canManageSector(sector)}
+            onBlockedAction={onBlockedAction}
           />
         ))}
       </div>

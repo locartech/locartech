@@ -15,7 +15,7 @@ import ArchivedActivitiesTable from './ArchivedActivitiesTable';
 import ArchivedReportWidget from './ArchivedReportWidget';
 import RegisterDriveLinkModal from './RegisterDriveLinkModal';
 
-function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
+function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks, canManageTask, onBlockedAction }) {
   const { currentUser } = useAuth();
   const [filters, setFilters] = useState(emptyArchivedFilters);
   const [restoringTask, setRestoringTask] = useState(null);
@@ -78,9 +78,21 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
     });
   }, [tasks, filters]);
 
-  const volumeStatus = useMemo(() => getArchiveVolumeStatus(tasks), [tasks]);
-  const pendingReport = useMemo(() => reports.find((report) => report.status === 'Pendente de Drive'), [reports]);
-  const hasSavedReports = useMemo(() => reports.some((report) => report.status === 'Salvo no Drive'), [reports]);
+  const manageableTasks = useMemo(() => tasks.filter((task) => canManageTask(task.sectorId)), [tasks, canManageTask]);
+  const manageableSectorId = currentUser?.accountType === 'admin' ? null : currentUser?.sectorId;
+  const manageableReports = useMemo(
+    () => reports.filter((report) => currentUser?.accountType === 'admin' || report.sectorId === manageableSectorId),
+    [reports, currentUser?.accountType, manageableSectorId],
+  );
+  const volumeStatus = useMemo(() => getArchiveVolumeStatus(manageableTasks), [manageableTasks]);
+  const pendingReport = useMemo(
+    () => manageableReports.find((report) => report.status === 'Pendente de Drive'),
+    [manageableReports],
+  );
+  const hasSavedReports = useMemo(
+    () => manageableReports.some((report) => report.status === 'Salvo no Drive'),
+    [manageableReports],
+  );
 
   const handleConfirmRestore = () => {
     if (restoringTask) onRestoreTask(restoringTask.id);
@@ -97,15 +109,15 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
       return;
     }
 
-    if (tasks.length === 0) return;
+    if (manageableTasks.length === 0) return;
     setGenerating(true);
     setFeedback('');
 
     try {
-      const csv = buildArchivedActivitiesCsv(tasks);
+      const csv = buildArchivedActivitiesCsv(manageableTasks);
       downloadCsvFile(csv, buildArchivedReportFileName());
 
-      const archivedDates = tasks.map((task) => task.archivedAt).filter(Boolean).sort();
+      const archivedDates = manageableTasks.map((task) => task.archivedAt).filter(Boolean).sort();
       const periodStart = archivedDates[0]?.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
       const periodEnd = archivedDates[archivedDates.length - 1]?.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
       const todayLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(new Date());
@@ -115,8 +127,9 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
           name: `Relatório de atividades arquivadas - ${todayLabel}`,
           periodStart,
           periodEnd,
-          totalExported: tasks.length,
-          exportedTaskIds: tasks.map((task) => task.id),
+          totalExported: manageableTasks.length,
+          exportedTaskIds: manageableTasks.map((task) => task.id),
+          sectorId: manageableSectorId,
         },
         currentUser,
       );
@@ -144,7 +157,7 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
 
   const handleConfirmCleanup = async () => {
     setCleanupOpen(false);
-    const savedReports = reports.filter((report) => report.status === 'Salvo no Drive');
+    const savedReports = manageableReports.filter((report) => report.status === 'Salvo no Drive');
     if (savedReports.length === 0) return;
 
     const taskIds = Array.from(new Set(savedReports.flatMap((report) => report.exportedTaskIds)));
@@ -175,7 +188,12 @@ function ArchivedActivitiesPanel({ tasks, onRestoreTask, onCleanupTasks }) {
 
       <ArchivedActivitiesFilters filters={filters} onChange={setFilters} responsibleOptions={responsibleOptions} />
 
-      <ArchivedActivitiesTable tasks={filteredTasks} onRestore={setRestoringTask} />
+      <ArchivedActivitiesTable
+        tasks={filteredTasks}
+        onRestore={setRestoringTask}
+        canManageTask={canManageTask}
+        onBlockedAction={onBlockedAction}
+      />
 
       <ConfirmModal
         open={Boolean(restoringTask)}

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { sectors } from '../data/mockData';
+import { fetchSectorIdByName } from './sectorsService';
 
 const TASK_SELECT = '*, requester_sector:sectors!requester_sector_id(name), requester_profile:profiles!requester_profile_id(name)';
 
@@ -27,11 +28,12 @@ function mapTaskFromDb(task) {
   };
 }
 
-function mapTaskToDb(sectorId, values) {
+async function mapTaskToDb(sectorId, values) {
   const sector = sectors.find((item) => item.id === sectorId);
   return {
     sector_id: sectorId,
     sector_name: sector?.name ?? sectorId,
+    sector_ref_id: await fetchSectorIdByName(sector?.name ?? sectorId).catch(() => null),
     title: values.title?.trim(),
     description: values.description?.trim() || '',
     responsible_name: values.assignee?.trim() || null,
@@ -53,9 +55,10 @@ export async function fetchKanbanTasks() {
 }
 
 export async function createRemoteKanbanTask(sectorId, values) {
+  const payload = await mapTaskToDb(sectorId, values);
   const { data, error } = await supabase
     .from('kanban_tasks')
-    .insert(mapTaskToDb(sectorId, values))
+    .insert(payload)
     .select(TASK_SELECT)
     .single();
 
@@ -64,9 +67,10 @@ export async function createRemoteKanbanTask(sectorId, values) {
 }
 
 export async function updateRemoteKanbanTask(taskId, sectorId, values) {
+  const payload = await mapTaskToDb(sectorId, values);
   const { data, error } = await supabase
     .from('kanban_tasks')
-    .update(mapTaskToDb(sectorId, values))
+    .update(payload)
     .eq('id', taskId)
     .select(TASK_SELECT)
     .single();

@@ -16,6 +16,8 @@ function SectorGroup({
   onEdit,
   onDelete,
   onArchive,
+  canEdit,
+  onBlockedAction,
 }) {
   const finishedCount = tasks.filter((task) => task.status === 'done').length;
   const activeCount = tasks.filter((task) => task.status !== 'done' && task.status !== 'canceled').length;
@@ -56,13 +58,19 @@ function SectorGroup({
               onEdit={onEdit}
               onDelete={onDelete}
               onArchive={onArchive}
+              canEdit={canEdit}
+              onBlockedAction={onBlockedAction}
             />
           ))}
 
           {adding ? (
             <AddTaskRow onAdd={(values) => onAddTask(sector.id, values)} onCancel={onAddCancel} />
           ) : (
-            <button type="button" className="add-stage-button" onClick={() => onAddStart(sector.id)}>
+            <button
+              type="button"
+              className="add-stage-button"
+              onClick={() => (canEdit ? onAddStart(sector.id) : onBlockedAction())}
+            >
               <Plus size={16} aria-hidden="true" />
               Adicionar atividade
             </button>

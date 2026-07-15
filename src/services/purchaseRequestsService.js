@@ -59,20 +59,13 @@ export async function createRemotePurchaseRequest(values, currentUser) {
 }
 
 export async function updateRemotePurchaseRequestStatus(requestId, status) {
-  const { error } = await supabase
-    .from('requests')
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq('id', requestId);
+  const { data, error } = await supabase.rpc('update_purchase_request_status', {
+    p_request_id: requestId,
+    p_status: status,
+  });
 
   if (error) throw error;
-
-  const { data: refreshedRequest } = await supabase
-    .from('requests')
-    .select('*')
-    .eq('id', requestId)
-    .maybeSingle();
-
-  return refreshedRequest ? normalizePurchaseRequest(refreshedRequest) : null;
+  return data ? normalizePurchaseRequest(data) : null;
 }
 
 export async function archiveRemotePurchaseRequest(requestId) {

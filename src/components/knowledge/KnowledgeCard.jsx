@@ -6,7 +6,7 @@ const formatDate = (value) =>
     new Date(`${value}T12:00:00`),
   );
 
-function KnowledgeCard({ record, onView, onEdit, onDelete, simplified = false }) {
+function KnowledgeCard({ record, onView, onEdit, onDelete, simplified = false, canEdit = true, onBlockedAction }) {
   return (
     <article className="knowledge-card">
       <div className="knowledge-card-icon">
@@ -34,10 +34,10 @@ function KnowledgeCard({ record, onView, onEdit, onDelete, simplified = false })
           <a className="table-icon-button" href={record.driveLink} target="_blank" rel="noopener noreferrer" title="Abrir no Drive">
             <ExternalLink size={15} aria-hidden="true" />
           </a>
-          <button type="button" className="table-icon-button" onClick={() => onEdit(record)} title="Editar registro">
+          <button type="button" className="table-icon-button" onClick={() => (canEdit ? onEdit(record) : onBlockedAction())} title="Editar registro">
             <Pencil size={15} aria-hidden="true" />
           </button>
-          <button type="button" className="table-icon-button danger" onClick={() => onDelete(record)} title="Excluir registro">
+          <button type="button" className="table-icon-button danger" onClick={() => (canEdit ? onDelete(record) : onBlockedAction())} title="Excluir registro">
             <Trash2 size={15} aria-hidden="true" />
           </button>
         </div>

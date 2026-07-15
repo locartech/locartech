@@ -21,7 +21,7 @@ const formatDateTime = (value) =>
       }).format(new Date(value))
     : '-';
 
-function ArchivedActivitiesTable({ tasks, onRestore }) {
+function ArchivedActivitiesTable({ tasks, onRestore, canManageTask, onBlockedAction }) {
   if (tasks.length === 0) {
     return (
       <EmptyState
@@ -85,7 +85,7 @@ function ArchivedActivitiesTable({ tasks, onRestore }) {
               <button
                 type="button"
                 className="table-icon-button success"
-                onClick={() => onRestore(task)}
+                onClick={() => (canManageTask(task.sectorId) ? onRestore(task) : onBlockedAction())}
                 title="Restaurar atividade"
               >
                 <RotateCcw size={16} aria-hidden="true" />

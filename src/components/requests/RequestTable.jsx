@@ -3,6 +3,7 @@ import EmptyState from '../common/EmptyState';
 import RequestApprovalActions from './RequestApprovalActions';
 import RequestPriorityBadge from './RequestPriorityBadge';
 import RequestStatusBadge from './RequestStatusBadge';
+import { canArchiveRequest, canEditPendingRequest } from '../../utils/permissions';
 
 const formatDate = (value) =>
   new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(
@@ -51,12 +52,8 @@ function RequestTable({
         </div>
 
         {requests.map((request) => {
-          const canEdit =
-            view === 'active' &&
-            request.requestStatus === 'pending_approval' &&
-            (request.requesterUserId === currentUser.id ||
-              request.requesterName === currentUser.name ||
-              request.requesterSector === currentUser.sector);
+          const canEdit = view === 'active' && canEditPendingRequest(currentUser, request);
+          const canArchive = canArchiveRequest(currentUser, request);
 
           return (
             <div className="request-row" key={request.id}>
@@ -92,7 +89,7 @@ function RequestTable({
                     <Pencil size={16} aria-hidden="true" />
                   </button>
                 ) : null}
-                {view === 'archived' ? (
+                {view === 'archived' && canArchive ? (
                   <button type="button" className="table-icon-button success" onClick={() => onRestore(request)} title="Restaurar solicitacao">
                     <RotateCcw size={16} aria-hidden="true" />
                   </button>
@@ -106,9 +103,11 @@ function RequestTable({
                       onReject={onReject}
                       onCancel={onCancel}
                     />
-                    <button type="button" className="table-icon-button archive" onClick={() => onArchive(request)} title="Arquivar solicitacao">
-                      <Archive size={16} aria-hidden="true" />
-                    </button>
+                    {canArchive ? (
+                      <button type="button" className="table-icon-button archive" onClick={() => onArchive(request)} title="Arquivar solicitacao">
+                        <Archive size={16} aria-hidden="true" />
+                      </button>
+                    ) : null}
                   </>
                 )}
               </div>

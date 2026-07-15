@@ -33,6 +33,7 @@ import {
 } from '../../utils/purchaseRequestUtils';
 import { downloadCsvFile } from '../../utils/archivedReportUtils';
 import { purchaseStatuses } from '../../data/purchaseRequestsData';
+import { canManageSector } from '../../utils/permissions';
 import ConfirmModal from '../common/ConfirmModal';
 import RegisterDriveLinkModal from '../kanban/RegisterDriveLinkModal';
 import PurchaseRequestFilters from './PurchaseRequestFilters';
@@ -100,10 +101,6 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const [registeringReport, setRegisteringReport] = useState(null);
   const [permissionNotice, setPermissionNotice] = useState('');
   const permissionNoticeTimeout = useRef(null);
-
-  // Self-registration can't set accountType, so also gate on the Operacoes sector -
-  // see the matching comment in AuthContext.jsx's isOperacao.
-  const isOperacao = currentUser?.accountType === 'operacao' || currentUser?.sector === 'Operações';
 
   const notifyNoPermission = () => {
     setPermissionNotice('Você não tem permissão para isso.');
@@ -174,7 +171,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
 
   const visibleRequests = useMemo(() => filterPurchaseRequests(baseRequests, filters), [baseRequests, filters]);
   const stats = useMemo(() => getPurchaseStats(activeRequests), [activeRequests]);
-  const canManage = !isOperacao && (currentUser?.sector === 'Compras' || currentUser?.accountType === 'admin');
+  const canManage = canManageSector(currentUser, 'Compras');
 
   const handleCreate = async (values) => {
     setFeedback('');
@@ -210,6 +207,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   };
 
   const handleStatusChange = async (request, status) => {
+    if (!canManage) return notifyNoPermission();
     setFeedback('');
     setError('');
     savePurchaseStatusOverride(request.id, status);
@@ -253,6 +251,10 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
 
   const handleConfirmArchive = async () => {
     if (!archivingRequest) return;
+    if (!canManage) {
+      setArchivingRequest(null);
+      return notifyNoPermission();
+    }
     setFeedback('');
     setError('');
 
@@ -273,6 +275,10 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
 
   const handleConfirmRestore = async () => {
     if (!restoringRequest) return;
+    if (!canManage) {
+      setRestoringRequest(null);
+      return notifyNoPermission();
+    }
     setFeedback('');
     setError('');
 
@@ -292,7 +298,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   };
 
   const handleGenerateReport = async () => {
-    if (isOperacao) return notifyNoPermission();
+    if (!canManage) return notifyNoPermission();
     if (generatingReport) return;
 
     // A pending report already covers the last export - reopen it instead of creating
@@ -344,6 +350,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   };
 
   const handleSubmitDriveLink = async (reportId, values) => {
+    if (!canManage) return notifyNoPermission();
     try {
       const updated = await registerPurchaseReportDriveLink(reportId, values);
       setReports((current) => current.map((report) => (report.id === updated.id ? updated : report)));
@@ -387,7 +394,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
             type="button"
             className="ghost-button compact"
             onClick={handleGenerateReport}
-            disabled={!isOperacao && (generatingReport || (visibleRequests.length === 0 && !pendingReport))}
+            disabled={canManage && (generatingReport || (visibleRequests.length === 0 && !pendingReport))}
           >
             <FileDown size={14} aria-hidden="true" />
             {generatingReport ? 'Gerando...' : 'Gerar relatorio'}
@@ -424,7 +431,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
           requests={visibleRequests}
           canManage={canManage}
           view={view}
-          restricted={isOperacao}
+          restricted={!canManage}
           onBlockedAction={notifyNoPermission}
           onStatusChange={handleStatusChange}
           onArchive={setArchivingRequest}

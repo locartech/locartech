@@ -15,6 +15,7 @@ function mapReportFromDb(report) {
     generatedAt: report.generated_at,
     cleanedAt: report.cleaned_at,
     notes: report.notes ?? '',
+    sectorId: report.sector_ref_id,
   };
 }
 
@@ -40,6 +41,7 @@ export async function createArchivedReport(values, currentUser) {
     generated_by: currentUser.id,
     generated_by_name: currentUser.name,
     generated_at: new Date().toISOString(),
+    sector_ref_id: values.sectorId || null,
   };
 
   const { data, error } = await supabase.from('archived_activity_reports').insert(payload).select('*').single();
