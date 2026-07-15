@@ -7224,6 +7224,109 @@ textarea:focus-visible {
   align-content: start;
 }
 
+/* --- Group edit: member list with a remove pill + an add-member picker - */
+
+.participant-option-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  text-align: left;
+  font: inherit;
+}
+
+.participant-option-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.group-members-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group-members-label {
+  color: var(--lt-muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.group-members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.group-member-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--lt-border-soft);
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.group-member-identity {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.group-member-identity strong {
+  overflow: hidden;
+  color: var(--lt-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.86rem;
+}
+
+.group-member-identity small {
+  color: var(--lt-muted);
+  font-size: 0.74rem;
+}
+
+.group-member-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid #fecaca;
+  border-radius: 999px;
+  color: #b42318;
+  background: #fff5f5;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.group-member-remove:hover:not(:disabled) {
+  border-color: #fca5a5;
+  background: #fee2e2;
+}
+
+.group-member-remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.group-members-empty {
+  margin: 0;
+  padding: 10px;
+  color: var(--lt-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
 /* --- Dashboard: give the summary and metric groups more presence ------- */
 
 .dashboard-score {
@@ -7232,4 +7335,24 @@ textarea:focus-visible {
 
 .section-heading.compact {
   margin-bottom: 2px;
+}
+
+/* dashboard-summary's h2 had its own color/size that drifted from every
+   other page's title - match .page-heading h2 exactly. */
+.dashboard-summary h2 {
+  color: #0b1220;
+  font-size: 1.28rem;
+  font-weight: 800;
+}
+
+/* --- Sidebar logo: smaller and precisely centered ----------------------- */
+
+.sidebar .brand-copy {
+  width: 128px;
+  height: 76px;
+}
+
+.sidebar .brand-copy svg {
+  width: 92px !important;
+  max-width: 92px;
 }

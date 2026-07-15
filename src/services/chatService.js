@@ -176,6 +176,24 @@ export async function updateGroupConversation(conversationId, groupData) {
   return data.id;
 }
 
+export async function addGroupParticipant(conversationId, profileId) {
+  const { error } = await supabase
+    .from('conversation_participants')
+    .insert({ conversation_id: conversationId, profile_id: profileId });
+
+  if (error) throw error;
+}
+
+export async function removeGroupParticipant(conversationId, profileId) {
+  const { error } = await supabase
+    .from('conversation_participants')
+    .delete()
+    .eq('conversation_id', conversationId)
+    .eq('profile_id', profileId);
+
+  if (error) throw error;
+}
+
 export async function sendChatMessage(conversationId, senderId, text) {
   const messageText = text.trim();
   const { error } = await supabase.from('messages').insert({

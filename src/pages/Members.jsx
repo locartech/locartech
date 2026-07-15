@@ -152,9 +152,6 @@ function Members() {
         <div>
           <p className="eyebrow">Contas e permissoes</p>
           <h2>Gerenciamento de membros</h2>
-          <p>
-            Controle contas, setores, cargos, status e tipo de acesso dos membros da Locartech.
-          </p>
         </div>
         <button type="button" className="primary-button large" onClick={() => setIsTransferOpen(true)}>
           <ShieldCheck size={16} aria-hidden="true" />

@@ -78,7 +78,6 @@ function Dashboard() {
         <div>
           <p className="eyebrow">Indicadores executivos</p>
           <h2>Resumo operacional</h2>
-          <p>Visao consolidada de tarefas, solicitacoes e pendencias da operacao.</p>
         </div>
         <div className="dashboard-score">
           <span>{completionRate}%</span>
