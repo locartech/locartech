@@ -8,16 +8,12 @@ function mapMessage(message, profilesById) {
     senderName: sender?.name ?? 'Usuario',
     text: message.text,
     createdAt: message.created_at,
-    readBy: [],
+    readBy: message.readBy ?? [],
   };
 }
 
 function getLastMessage(messages) {
   return messages[messages.length - 1] ?? null;
-}
-
-function buildDirectConversationId(currentUserId, otherUserId) {
-  return `direct:${[currentUserId, otherUserId].sort().join(':')}`;
 }
 
 export function mapConversationFromDb(conversation, profiles, currentUserId) {
@@ -26,7 +22,16 @@ export function mapConversationFromDb(conversation, profiles, currentUserId) {
   const messages = (conversation.messages ?? [])
     .slice()
     .sort((first, second) => new Date(first.created_at) - new Date(second.created_at))
-    .map((message) => mapMessage(message, profilesById));
+    .map((message) => {
+      const readBy = participants
+        .filter((participant) => {
+          if (participant.profile_id === message.sender_id || !participant.last_read_at) return false;
+          return new Date(participant.last_read_at) >= new Date(message.created_at);
+        })
+        .map((participant) => participant.profile_id);
+
+      return mapMessage({ ...message, readBy }, profilesById);
+    });
   const participantIds = participants.map((participant) => participant.profile_id);
   const currentParticipant = participants.find((participant) => participant.profile_id === currentUserId);
   const lastReadAt = currentParticipant?.last_read_at ? new Date(currentParticipant.last_read_at) : null;
@@ -49,26 +54,7 @@ export function mapConversationFromDb(conversation, profiles, currentUserId) {
   };
 }
 
-function mapDirectConversationFromProfile(profile, currentUserId) {
-  return {
-    id: buildDirectConversationId(currentUserId, profile.id),
-    type: 'direct',
-    title: profile.name,
-    description: `${profile.sector} - ${profile.role}`,
-    sector: profile.sector,
-    participantIds: [currentUserId, profile.id],
-    unreadCount: 0,
-    lastMessageAt: profile.updatedAt ?? profile.createdAt ?? new Date(0).toISOString(),
-    messages: [],
-    pendingConversation: true,
-  };
-}
-
 export async function fetchConversations(currentUserId, profiles) {
-  const directConversations = profiles
-    .filter((profile) => profile.id !== currentUserId)
-    .map((profile) => mapDirectConversationFromProfile(profile, currentUserId));
-
   try {
     const { data, error } = await supabase
       .from('conversations')
@@ -81,29 +67,13 @@ export async function fetchConversations(currentUserId, profiles) {
 
     if (error) throw error;
 
-    const remoteConversations = data
+    return data
       .filter((conversation) =>
         conversation.conversation_participants?.some((participant) => participant.profile_id === currentUserId),
       )
       .map((conversation) => mapConversationFromDb(conversation, profiles, currentUserId));
-
-    const directByOtherUser = new Map();
-    remoteConversations
-      .filter((conversation) => conversation.type === 'direct')
-      .forEach((conversation) => {
-        const otherUserId = conversation.participantIds.find((participantId) => participantId !== currentUserId);
-        if (otherUserId) directByOtherUser.set(otherUserId, conversation);
-      });
-
-    const mergedDirectConversations = directConversations.map((conversation) => {
-      const otherUserId = conversation.participantIds.find((participantId) => participantId !== currentUserId);
-      return directByOtherUser.get(otherUserId) ?? conversation;
-    });
-    const groupConversations = remoteConversations.filter((conversation) => conversation.type === 'group');
-
-    return [...mergedDirectConversations, ...groupConversations];
   } catch (error) {
-    return directConversations;
+    return [];
   }
 }
 
@@ -179,10 +149,11 @@ export async function createGroupConversation(groupData, currentUser) {
 }
 
 export async function sendChatMessage(conversationId, senderId, text) {
+  const messageText = text.trim();
   const { error } = await supabase.from('messages').insert({
     conversation_id: conversationId,
     sender_id: senderId,
-    text: text.trim(),
+    text: messageText,
   });
 
   if (error) throw error;
@@ -191,6 +162,8 @@ export async function sendChatMessage(conversationId, senderId, text) {
     .from('conversations')
     .update({ updated_at: new Date().toISOString() })
     .eq('id', conversationId);
+
+  await notifyMessageRecipients(conversationId, senderId, messageText);
 }
 
 export async function markConversationRead(conversationId, profileId) {
@@ -209,5 +182,35 @@ export function subscribeToChat(profileId, onChange) {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, onChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, onChange)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'conversation_participants' }, onChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, onChange)
     .subscribe();
+}
+
+async function notifyMessageRecipients(conversationId, senderId, messageText) {
+  const [{ data: conversation }, { data: sender }] = await Promise.all([
+    supabase.from('conversations').select('id, title, type').eq('id', conversationId).maybeSingle(),
+    supabase.from('profiles').select('id, name').eq('id', senderId).maybeSingle(),
+  ]);
+
+  const { data: participants, error } = await supabase
+    .from('conversation_participants')
+    .select('profile_id')
+    .eq('conversation_id', conversationId);
+
+  if (error || !participants?.length) return;
+
+  const notifications = participants
+    .filter((participant) => participant.profile_id !== senderId)
+    .map((participant) => ({
+      user_id: participant.profile_id,
+      title: conversation?.type === 'group' ? `Nova mensagem em ${conversation.title}` : 'Nova mensagem no chat',
+      message: `${sender?.name ?? 'Um membro'}: ${messageText.slice(0, 120)}`,
+      category: 'Chat',
+      type: 'chat_message',
+      target_user_name: sender?.name ?? null,
+    }));
+
+  if (notifications.length > 0) {
+    await supabase.from('notifications').insert(notifications);
+  }
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import ChatLayout from '../components/chat/ChatLayout';
+import NewContactModal from '../components/chat/NewContactModal';
 import NewGroupModal from '../components/chat/NewGroupModal';
 import UserProfileModal from '../components/chat/UserProfileModal';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,6 +21,7 @@ function Chat({ onChatUnreadChange }) {
   const [conversations, setConversations] = useState([]);
   const [users, setUsers] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
+  const [isNewContactOpen, setIsNewContactOpen] = useState(false);
   const [isNewGroupOpen, setIsNewGroupOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -63,24 +65,40 @@ function Chat({ onChatUnreadChange }) {
     };
   }, [currentUser?.id]);
 
+  useEffect(() => {
+    if (!activeConversation?.id || !currentUser?.id || !activeConversation.unreadCount) return;
+
+    let canceled = false;
+    markConversationRead(activeConversation.id, currentUser.id)
+      .then(() => {
+        if (!canceled) loadChat();
+      })
+      .catch(() => {});
+
+    return () => {
+      canceled = true;
+    };
+  }, [activeConversation?.id, activeConversation?.unreadCount, currentUser?.id]);
+
   const handleSelectConversation = async (conversationId) => {
     try {
-      const selectedConversation = conversations.find((conversation) => conversation.id === conversationId);
-      let nextConversationId = conversationId;
-
-      if (selectedConversation?.pendingConversation && selectedConversation.type === 'direct') {
-        const otherUserId = selectedConversation.participantIds.find((participantId) => participantId !== currentUser.id);
-        const otherUser = users.find((user) => user.id === otherUserId);
-        if (otherUser) {
-          nextConversationId = await ensureDirectConversation(currentUser, otherUser);
-        }
-      }
-
-      setActiveConversationId(nextConversationId);
-      await markConversationRead(nextConversationId, currentUser.id);
+      setActiveConversationId(conversationId);
+      await markConversationRead(conversationId, currentUser.id);
       await loadChat();
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel abrir a conversa.');
+    }
+  };
+
+  const handleStartContact = async (contact) => {
+    try {
+      const conversationId = await ensureDirectConversation(currentUser, contact);
+      setActiveConversationId(conversationId);
+      setIsNewContactOpen(false);
+      await markConversationRead(conversationId, currentUser.id);
+      await loadChat();
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel iniciar a conversa.');
     }
   };
 
@@ -105,7 +123,7 @@ function Chat({ onChatUnreadChange }) {
   };
 
   return (
-    <div className="page-stack">
+    <div className="page-stack chat-page">
       <section className="page-heading chat-page-heading">
         <div>
           <p className="eyebrow">Chat</p>
@@ -127,9 +145,19 @@ function Chat({ onChatUnreadChange }) {
         activeConversationId={activeConversationId}
         onSelectConversation={handleSelectConversation}
         onSendMessage={handleSendMessage}
+        onNewContact={() => setIsNewContactOpen(true)}
         onNewGroup={() => setIsNewGroupOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
       />
+
+      {isNewContactOpen ? (
+        <NewContactModal
+          users={users}
+          currentUser={currentUser}
+          onClose={() => setIsNewContactOpen(false)}
+          onSelect={handleStartContact}
+        />
+      ) : null}
 
       {isNewGroupOpen ? (
         <NewGroupModal

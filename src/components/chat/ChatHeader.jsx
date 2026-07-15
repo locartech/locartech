@@ -5,8 +5,8 @@ function ChatHeader({ conversation, participants, onOpenProfile }) {
 
   const participantSummary =
     conversation.type === 'group'
-      ? `${participants.length} participantes · ${conversation.sector}`
-      : `${participants[0]?.sector ?? ''} · ${participants[0]?.role ?? ''}`;
+      ? `${participants.length} participantes - ${conversation.sector}`
+      : `${participants[0]?.sector ?? ''} - ${participants[0]?.role ?? ''}`;
 
   return (
     <header className="chat-window-header">

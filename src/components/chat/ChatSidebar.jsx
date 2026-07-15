@@ -1,9 +1,17 @@
-import { Plus, Search } from 'lucide-react';
+import { MessageCirclePlus, Plus, Search, UsersRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { sortConversationsByLastMessage } from '../../utils/chatUtils';
 import ConversationList from './ConversationList';
 
-function ChatSidebar({ conversations, users, currentUser, activeConversationId, onSelectConversation, onNewGroup }) {
+function ChatSidebar({
+  conversations,
+  users,
+  currentUser,
+  activeConversationId,
+  onSelectConversation,
+  onNewContact,
+  onNewGroup,
+}) {
   const [query, setQuery] = useState('');
 
   const filteredConversations = useMemo(() => {
@@ -31,7 +39,7 @@ function ChatSidebar({ conversations, users, currentUser, activeConversationId, 
     <aside className="chat-sidebar-panel">
       <div className="chat-sidebar-header">
         <div>
-          <p className="eyebrow">Comunicação interna</p>
+          <p className="eyebrow">Comunicacao interna</p>
           <h2>Chat</h2>
         </div>
         <button type="button" className="table-icon-button primary" onClick={onNewGroup} title="Novo grupo">
@@ -44,8 +52,13 @@ function ChatSidebar({ conversations, users, currentUser, activeConversationId, 
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar conversa" />
       </label>
 
+      <button type="button" className="new-contact-button" onClick={onNewContact}>
+        <MessageCirclePlus size={16} aria-hidden="true" />
+        Novo contato
+      </button>
+
       <button type="button" className="new-group-button" onClick={onNewGroup}>
-        <Plus size={16} aria-hidden="true" />
+        <UsersRound size={16} aria-hidden="true" />
         Novo grupo
       </button>
 

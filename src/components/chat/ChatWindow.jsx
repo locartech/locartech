@@ -18,15 +18,26 @@ function ChatWindow({ conversation, users, currentUser, onSendMessage, onOpenPro
   const participants = users.filter(
     (user) => conversation.participantIds.includes(user.id) && user.id !== currentUser.id,
   );
+  const readTargetCount = participants.length;
 
   return (
     <section className="chat-window">
       <ChatHeader conversation={conversation} participants={participants} onOpenProfile={onOpenProfile} />
 
       <div className="messages-list">
-        {conversation.messages.map((message) => (
-          <MessageBubble key={message.id} message={message} own={message.senderId === currentUser.id} />
-        ))}
+        {conversation.messages.map((message) => {
+          const own = message.senderId === currentUser.id;
+          const readCount = message.readBy?.length ?? 0;
+          const readLabel = own
+            ? readTargetCount > 1
+              ? `${readCount}/${readTargetCount} visualizaram`
+              : readCount > 0
+                ? 'Visualizada'
+                : 'Enviada'
+            : '';
+
+          return <MessageBubble key={message.id} message={message} own={own} readLabel={readLabel} />;
+        })}
       </div>
 
       <MessageInput disabled={!conversation} onSend={(message) => onSendMessage(conversation.id, message)} />

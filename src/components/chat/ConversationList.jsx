@@ -18,6 +18,9 @@ function ConversationList({ title, conversations, users, currentUser, activeConv
             onSelect={onSelect}
           />
         ))}
+        {conversations.length === 0 ? (
+          <div className="conversation-empty">Nenhuma conversa iniciada.</div>
+        ) : null}
       </div>
     </section>
   );

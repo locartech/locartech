@@ -9,6 +9,7 @@ function ChatLayout({
   activeConversationId,
   onSelectConversation,
   onSendMessage,
+  onNewContact,
   onNewGroup,
   onOpenProfile,
 }) {
@@ -20,6 +21,7 @@ function ChatLayout({
         currentUser={currentUser}
         activeConversationId={activeConversationId}
         onSelectConversation={onSelectConversation}
+        onNewContact={onNewContact}
         onNewGroup={onNewGroup}
       />
       <ChatWindow
