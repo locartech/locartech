@@ -92,6 +92,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const [formOpen, setFormOpen] = useState(false);
   const [view, setView] = useState('active');
   const [filters, setFilters] = useState({ query: '', status: 'all', priority: 'all' });
+  const [dueDateSort, setDueDateSort] = useState(null);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [archivingRequest, setArchivingRequest] = useState(null);
@@ -169,7 +170,30 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const archivedRequests = useMemo(() => requests.filter((request) => request.archived), [requests]);
   const baseRequests = view === 'archived' ? archivedRequests : activeRequests;
 
-  const visibleRequests = useMemo(() => filterPurchaseRequests(baseRequests, filters), [baseRequests, filters]);
+  const filteredRequests = useMemo(() => filterPurchaseRequests(baseRequests, filters), [baseRequests, filters]);
+
+  const visibleRequests = useMemo(() => {
+    if (!dueDateSort) return filteredRequests;
+
+    return [...filteredRequests].sort((first, second) => {
+      const firstTime = first.dueDate ? new Date(first.dueDate).getTime() : null;
+      const secondTime = second.dueDate ? new Date(second.dueDate).getTime() : null;
+
+      if (firstTime === null && secondTime === null) return 0;
+      if (firstTime === null) return 1;
+      if (secondTime === null) return -1;
+
+      return dueDateSort === 'asc' ? firstTime - secondTime : secondTime - firstTime;
+    });
+  }, [filteredRequests, dueDateSort]);
+
+  const handleToggleDueDateSort = () => {
+    setDueDateSort((current) => {
+      if (current === 'asc') return 'desc';
+      if (current === 'desc') return null;
+      return 'asc';
+    });
+  };
   const stats = useMemo(() => getPurchaseStats(activeRequests), [activeRequests]);
   const canManage = canManageSector(currentUser, 'Compras');
 
@@ -436,6 +460,8 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
           onStatusChange={handleStatusChange}
           onArchive={setArchivingRequest}
           onRestore={setRestoringRequest}
+          dueDateSort={dueDateSort}
+          onToggleDueDateSort={handleToggleDueDateSort}
         />
       </section>
 

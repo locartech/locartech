@@ -6536,8 +6536,13 @@ body {
 }
 
 .purchase-status-approved {
-  color: #064e3b;
-  background: #86efac;
+  color: #0f766e;
+  background: #ccfbf1;
+}
+
+.purchase-status-completed {
+  color: #065f46;
+  background: #bbf7d0;
 }
 
 .purchase-status-em_compra {
@@ -7503,4 +7508,27 @@ textarea:focus-visible {
 
 .chat-segmented-control button svg {
   flex: 0 0 auto;
+}
+
+/* Compras: clickable "Prazo" header cell that sorts by due date */
+.purchase-sort-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 0;
+  border-right: 1px solid #e4edf6;
+  color: #475569;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.purchase-sort-header:hover {
+  color: var(--lt-blue);
+  background: var(--lt-blue-faint);
 }

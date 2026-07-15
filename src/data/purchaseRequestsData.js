@@ -6,7 +6,8 @@ export const purchaseRequestTargetSector = 'Compras';
 
 export const purchaseStatuses = [
   { id: 'pending_approval', label: 'Nova' },
-  { id: 'approved', label: 'Aprovada' },
+  { id: 'approved', label: 'Em andamento' },
+  { id: 'completed', label: 'Concluida' },
   { id: 'rejected', label: 'Recusada' },
   { id: 'canceled', label: 'Cancelada' },
 ];

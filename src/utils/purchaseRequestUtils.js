@@ -200,9 +200,9 @@ export function getPurchaseStats(requests) {
   return {
     novas: requests.filter((request) => request.status === 'pending_approval' || request.status === 'nova').length,
     urgentes: requests.filter((request) => request.priority === 'urgent').length,
-    aprovadas: requests.filter((request) => request.status === 'approved').length,
+    emAndamento: requests.filter((request) => request.status === 'approved').length,
+    concluidas: requests.filter((request) => request.status === 'completed').length,
     recusadas: requests.filter((request) => request.status === 'rejected').length,
-    canceladas: requests.filter((request) => request.status === 'canceled').length,
   };
 }
 

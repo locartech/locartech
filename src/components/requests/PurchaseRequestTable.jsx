@@ -1,4 +1,4 @@
-import { Archive, ChevronDown, RotateCcw } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import EmptyState from '../common/EmptyState';
@@ -106,6 +106,8 @@ function PurchaseRequestTable({
   onStatusChange,
   onArchive,
   onRestore,
+  dueDateSort = null,
+  onToggleDueDateSort,
 }) {
   if (requests.length === 0) {
     return (
@@ -129,7 +131,16 @@ function PurchaseRequestTable({
           <div>Solicitante</div>
           <div>Obra/local</div>
           <div>Prioridade</div>
-          <div>Prazo</div>
+          <button type="button" className="purchase-sort-header" onClick={onToggleDueDateSort}>
+            Prazo
+            {dueDateSort === 'asc' ? (
+              <ArrowUp size={13} aria-hidden="true" />
+            ) : dueDateSort === 'desc' ? (
+              <ArrowDown size={13} aria-hidden="true" />
+            ) : (
+              <ArrowUpDown size={13} aria-hidden="true" />
+            )}
+          </button>
           <div>Status</div>
           <div>Acoes</div>
         </div>
