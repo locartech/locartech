@@ -23,7 +23,9 @@ function Sectors({ onOpenKnowledge }) {
         ]);
         if (!mounted) return;
 
-        setSectors(sectorList);
+        // "Operacoes" only exists so profiles can reference it as a sector_ref_id -
+        // it's a role, not a real department with its own knowledge base.
+        setSectors(sectorList.filter((sector) => sector.slug !== 'operacoes'));
 
         const nextTaskCounts = {};
         tasks

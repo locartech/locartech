@@ -186,42 +186,35 @@ function Requests() {
 
   return (
     <div className="page-stack">
-      <section className="page-heading requests-heading">
-        <div>
-          <p className="eyebrow">Solicitacoes</p>
-          <h2>Gerencie demandas entre setores da empresa</h2>
-          <span className="current-user-chip">
-            Usuario atual: {currentUser.name} - {currentUser.sector}
-          </span>
+      <div className="view-toolbar-row">
+        <div className="kanban-view-tabs" role="tablist" aria-label="Visao das solicitacoes">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'active'}
+            className={`kanban-view-tab ${view === 'active' ? 'active' : ''}`}
+            onClick={() => setView('active')}
+          >
+            <LayoutGrid size={16} aria-hidden="true" />
+            Solicitacoes ativas
+            <span className="kanban-view-tab-count">{activeRequests.length}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'archived'}
+            className={`kanban-view-tab ${view === 'archived' ? 'active' : ''}`}
+            onClick={() => setView('archived')}
+          >
+            <Archive size={16} aria-hidden="true" />
+            Solicitacoes arquivadas
+            <span className="kanban-view-tab-count">{archivedRequests.length}</span>
+          </button>
         </div>
+
         <button type="button" className="primary-button large" onClick={() => setIsFormOpen(true)}>
           <Plus size={18} aria-hidden="true" />
           Nova solicitacao
-        </button>
-      </section>
-
-      <div className="kanban-view-tabs" role="tablist" aria-label="Visao das solicitacoes">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'active'}
-          className={`kanban-view-tab ${view === 'active' ? 'active' : ''}`}
-          onClick={() => setView('active')}
-        >
-          <LayoutGrid size={16} aria-hidden="true" />
-          Solicitacoes ativas
-          <span className="kanban-view-tab-count">{activeRequests.length}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'archived'}
-          className={`kanban-view-tab ${view === 'archived' ? 'active' : ''}`}
-          onClick={() => setView('archived')}
-        >
-          <Archive size={16} aria-hidden="true" />
-          Solicitacoes arquivadas
-          <span className="kanban-view-tab-count">{archivedRequests.length}</span>
         </button>
       </div>
 

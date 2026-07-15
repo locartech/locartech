@@ -6400,8 +6400,9 @@ body {
   background: linear-gradient(135deg, #b45309, #92400e);
 }
 
-/* Compras solicitadas: compact toolbar (tabs + actions on the same row) */
-.purchase-toolbar-row {
+/* Compact toolbar row: view tabs + primary action(s) on the same line */
+.purchase-toolbar-row,
+.view-toolbar-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
