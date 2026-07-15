@@ -35,13 +35,11 @@ export async function fetchProfileByEmail(email) {
 }
 
 export async function createPendingProfile(values, authUserId = null) {
-  const sectorId = await fetchSectorIdByName(values.sector);
-
   const { data, error } = await supabase.rpc('create_pending_profile', {
     p_auth_user_id: authUserId,
     p_name: values.name.trim(),
     p_email: values.email.trim().toLowerCase(),
-    p_sector_id: sectorId,
+    p_sector_name: values.sector,
     p_role: values.role.trim(),
   });
 

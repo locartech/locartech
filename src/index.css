@@ -4655,6 +4655,14 @@ body {
   color: #f1f5f9;
 }
 
+/* The dropdown popup itself is rendered by the OS/browser with an opaque
+   background (usually white), not the page's dark background behind it -
+   without this, the near-white text color above becomes unreadable there. */
+.auth-form select option {
+  color: #0f172a;
+  background: #ffffff;
+}
+
 .auth-form input::placeholder {
   color: #64748b;
 }
