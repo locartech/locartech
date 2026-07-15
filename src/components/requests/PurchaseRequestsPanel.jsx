@@ -101,7 +101,9 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const [permissionNotice, setPermissionNotice] = useState('');
   const permissionNoticeTimeout = useRef(null);
 
-  const isOperacao = currentUser?.accountType === 'operacao';
+  // Self-registration can't set accountType, so also gate on the Operacoes sector -
+  // see the matching comment in AuthContext.jsx's isOperacao.
+  const isOperacao = currentUser?.accountType === 'operacao' || currentUser?.sector === 'Operações';
 
   const notifyNoPermission = () => {
     setPermissionNotice('Você não tem permissão para isso.');
