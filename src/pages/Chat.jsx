@@ -55,8 +55,11 @@ function Chat({ onChatUnreadChange }) {
   };
 
   useEffect(() => {
+    // Also reload when the current user's own photo changes - opening the profile
+    // modal from within Chat doesn't remount this page, so without this the sidebar
+    // and window header keep showing the stale users[] snapshot fetched on mount.
     loadChat();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, currentUser?.photoUrl]);
 
   useEffect(() => {
     if (!currentUser?.id) return undefined;
