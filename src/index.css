@@ -7458,3 +7458,25 @@ textarea:focus-visible {
   width: 92px !important;
   max-width: 92px;
 }
+
+/* ==========================================================================
+   Solicitacoes / Solicitacoes de compras only: keep the listing area from
+   collapsing to the height of a single row, and stop it from clipping the
+   status dropdown. Scoped to .requests-panel descendants specifically so
+   Kanban's archived-activities table (which also uses .request-table-shell)
+   is untouched.
+   ========================================================================== */
+
+.requests-panel {
+  min-height: 440px;
+  align-content: start;
+}
+
+.requests-panel .request-table-shell,
+.requests-panel .purchase-table-shell {
+  overflow-y: visible;
+}
+
+.requests-panel .empty-state {
+  min-height: 200px;
+}

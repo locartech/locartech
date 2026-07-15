@@ -65,7 +65,7 @@ function PurchaseRequestTable({
   if (requests.length === 0) {
     return (
       <EmptyState
-        title={view === 'archived' ? 'Nenhuma compra arquivada' : 'Nenhuma compra solicitada'}
+        title={view === 'archived' ? 'Nenhuma compra arquivada' : 'Nenhuma solicitacao de compra encontrada.'}
         description={
           view === 'archived'
             ? 'As solicitacoes de compra arquivadas aparecerao nesta lista.'
