@@ -7212,6 +7212,18 @@ textarea:focus-visible {
   font-size: 0.84rem;
 }
 
+/* With only a couple of contacts, the sidebar's "fill remaining height" row
+   left CSS Grid's default align-content: stretch pulling each row (down to
+   the name/sector pair inside a single card) apart to consume that empty
+   space, instead of just leaving it blank below a compact list. Every grid
+   in that containment chain needs align-content: start to stop it. */
+.chat-page .conversation-section,
+.chat-page .conversation-list,
+.chat-page .conversation-item,
+.chat-page .conversation-info {
+  align-content: start;
+}
+
 /* --- Dashboard: give the summary and metric groups more presence ------- */
 
 .dashboard-score {
