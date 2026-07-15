@@ -71,7 +71,11 @@ export async function fetchConversations(currentUserId, profiles) {
       .filter((conversation) =>
         conversation.conversation_participants?.some((participant) => participant.profile_id === currentUserId),
       )
-      .map((conversation) => mapConversationFromDb(conversation, profiles, currentUserId));
+      .map((conversation) => mapConversationFromDb(conversation, profiles, currentUserId))
+      .filter((conversation) => {
+        if (conversation.type !== 'direct') return true;
+        return conversation.messages.length > 0 || conversation.description === 'Conversa iniciada';
+      });
   } catch (error) {
     return [];
   }
@@ -87,7 +91,13 @@ export async function ensureDirectConversation(currentUser, otherUser) {
         conversation.participantIds.includes(otherUser.id),
     );
 
-    if (existing) return existing.id;
+    if (existing) {
+      await supabase
+        .from('conversations')
+        .update({ description: 'Conversa iniciada', updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+      return existing.id;
+    }
   } catch {
     // If RLS prevents lookup, create a conversation on demand.
   }
@@ -98,7 +108,7 @@ export async function ensureDirectConversation(currentUser, otherUser) {
     .insert({
       type: 'direct',
       title,
-      description: 'Conversa individual',
+      description: 'Conversa iniciada',
       sector: otherUser.sector,
       created_by: currentUser.id,
     })
@@ -187,28 +197,47 @@ export function subscribeToChat(profileId, onChange) {
 }
 
 async function notifyMessageRecipients(conversationId, senderId, messageText) {
-  const [{ data: conversation }, { data: sender }] = await Promise.all([
+  const [{ data: conversation }, { data: sender }, { data: participants }] = await Promise.all([
     supabase.from('conversations').select('id, title, type').eq('id', conversationId).maybeSingle(),
-    supabase.from('profiles').select('id, name').eq('id', senderId).maybeSingle(),
+    supabase.from('profiles').select('id, name, auth_user_id').eq('id', senderId).maybeSingle(),
+    supabase
+      .from('conversation_participants')
+      .select('profile_id, profiles(id, name, auth_user_id)')
+      .eq('conversation_id', conversationId),
   ]);
 
-  const { data: participants, error } = await supabase
-    .from('conversation_participants')
-    .select('profile_id')
-    .eq('conversation_id', conversationId);
+  if (!participants?.length) return;
+  const recentThreshold = new Date(Date.now() - 30 * 60 * 1000).toISOString();
 
-  if (error || !participants?.length) return;
+  const notifications = [];
+  for (const participant of participants) {
+    const recipientProfile = participant.profiles;
+    if (!recipientProfile) continue;
+    if (participant.profile_id === senderId) continue;
+    if (sender?.auth_user_id && recipientProfile.auth_user_id === sender.auth_user_id) continue;
 
-  const notifications = participants
-    .filter((participant) => participant.profile_id !== senderId)
-    .map((participant) => ({
+    const { data: recentNotification } = await supabase
+      .from('notifications')
+      .select('id')
+      .eq('user_id', participant.profile_id)
+      .eq('category', 'Chat')
+      .eq('type', 'chat_message')
+      .eq('target_user_name', sender?.name ?? '')
+      .gte('created_at', recentThreshold)
+      .limit(1)
+      .maybeSingle();
+
+    if (recentNotification) continue;
+
+    notifications.push({
       user_id: participant.profile_id,
       title: conversation?.type === 'group' ? `Nova mensagem em ${conversation.title}` : 'Nova mensagem no chat',
       message: `${sender?.name ?? 'Um membro'}: ${messageText.slice(0, 120)}`,
       category: 'Chat',
       type: 'chat_message',
       target_user_name: sender?.name ?? null,
-    }));
+    });
+  }
 
   if (notifications.length > 0) {
     await supabase.from('notifications').insert(notifications);

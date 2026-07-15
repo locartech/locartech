@@ -83,7 +83,7 @@ function ChatSidebar({
       </div>
 
       <ConversationList
-        title={activeTab === 'direct' ? 'Contatos pessoais' : 'Grupos'}
+        title={activeTab === 'direct' ? 'Contatos' : 'Grupos'}
         conversations={visibleConversations}
         users={users}
         currentUser={currentUser}
