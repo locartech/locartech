@@ -56,6 +56,16 @@ create table if not exists public.notifications (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.notification_dismissals (
+  notification_id uuid not null references public.notifications(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  dismissed_at timestamptz not null default now(),
+  primary key (notification_id, user_id)
+);
+
+create index if not exists idx_notification_dismissals_user
+  on public.notification_dismissals(user_id);
+
 create table if not exists public.kanban_tasks (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -130,6 +140,7 @@ alter table public.conversations enable row level security;
 alter table public.conversation_participants enable row level security;
 alter table public.messages enable row level security;
 alter table public.notifications enable row level security;
+alter table public.notification_dismissals enable row level security;
 alter table public.kanban_tasks enable row level security;
 alter table public.requests enable row level security;
 alter table public.knowledge_records enable row level security;
@@ -241,6 +252,21 @@ create policy "notifications editable by recipient"
     )
   );
 
+drop policy if exists "notification dismissals readable by owner" on public.notification_dismissals;
+create policy "notification dismissals readable by owner"
+  on public.notification_dismissals for select
+  using (user_id = public.current_profile_id());
+
+drop policy if exists "notification dismissals insertable by owner" on public.notification_dismissals;
+create policy "notification dismissals insertable by owner"
+  on public.notification_dismissals for insert
+  with check (user_id = public.current_profile_id());
+
+drop policy if exists "notification dismissals deletable by owner" on public.notification_dismissals;
+create policy "notification dismissals deletable by owner"
+  on public.notification_dismissals for delete
+  using (user_id = public.current_profile_id());
+
 drop policy if exists "kanban readable by authenticated users" on public.kanban_tasks;
 create policy "kanban readable by authenticated users" on public.kanban_tasks for select using (auth.uid() is not null);
 drop policy if exists "kanban writable by authenticated users" on public.kanban_tasks;
@@ -261,6 +287,7 @@ alter table public.conversations replica identity full;
 alter table public.conversation_participants replica identity full;
 alter table public.messages replica identity full;
 alter table public.notifications replica identity full;
+alter table public.notification_dismissals replica identity full;
 alter table public.kanban_tasks replica identity full;
 alter table public.requests replica identity full;
 alter table public.knowledge_records replica identity full;
@@ -292,6 +319,12 @@ end $$;
 do $$
 begin
   alter publication supabase_realtime add table public.notifications;
+exception when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.notification_dismissals;
 exception when duplicate_object then null;
 end $$;
 

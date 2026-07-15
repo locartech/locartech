@@ -17,13 +17,18 @@ export function mapNotificationFromDb(notification) {
 }
 
 export async function fetchNotifications() {
-  const { data, error } = await supabase
-    .from('notifications')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const [notificationsResult, dismissalsResult] = await Promise.all([
+    supabase.from('notifications').select('*').order('created_at', { ascending: false }),
+    supabase.from('notification_dismissals').select('notification_id'),
+  ]);
 
-  if (error) throw error;
-  return data.map(mapNotificationFromDb);
+  if (notificationsResult.error) throw notificationsResult.error;
+  if (dismissalsResult.error) throw dismissalsResult.error;
+
+  const dismissedIds = new Set((dismissalsResult.data ?? []).map((row) => row.notification_id));
+  return (notificationsResult.data ?? [])
+    .filter((notification) => !dismissedIds.has(notification.id))
+    .map(mapNotificationFromDb);
 }
 
 export async function createNotification(values) {
@@ -55,16 +60,27 @@ export async function markNotificationRead(notificationId) {
   return mapNotificationFromDb(data);
 }
 
-export async function clearNotifications(notificationIds) {
+export async function clearNotifications(notificationIds, userId) {
   if (!notificationIds.length) return [];
-  const { data, error } = await supabase.from('notifications').delete().in('id', notificationIds).select('id');
+  if (!userId) throw new Error('Usuario nao identificado. Entre novamente e tente limpar as notificacoes.');
+
+  const dismissals = notificationIds.map((notificationId) => ({
+    notification_id: notificationId,
+    user_id: userId,
+  }));
+
+  const { error } = await supabase
+    .from('notification_dismissals')
+    .upsert(dismissals, { onConflict: 'notification_id,user_id', ignoreDuplicates: true });
+
   if (error) throw error;
-  return (data ?? []).map((row) => row.id);
+  return notificationIds;
 }
 
 export function subscribeToNotifications(onChange) {
   return supabase
     .channel('notifications:all')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, onChange)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'notification_dismissals' }, onChange)
     .subscribe();
 }

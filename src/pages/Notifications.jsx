@@ -2,22 +2,20 @@ import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import ConfirmModal from '../components/common/ConfirmModal';
 import NotificationPanel from '../components/notifications/NotificationPanel';
-import { useAuth } from '../contexts/AuthContext';
 
 function Notifications({ notifications, onMarkRead, onClearNotifications }) {
-  const { currentUser } = useAuth();
   const [clearOpen, setClearOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [clearError, setClearError] = useState('');
   const [clearNotice, setClearNotice] = useState('');
   const unreadCount = notifications.filter((notification) => !notification.read).length;
-  const clearableCount = notifications.filter((notification) => notification.userId === currentUser?.id).length;
+  const clearableCount = notifications.length;
 
   const handleOpenClear = () => {
     setClearError('');
 
     if (clearableCount === 0) {
-      setClearNotice('Você não possui notificações pessoais para limpar no momento. Avisos gerais do seu setor não são removidos individualmente.');
+      setClearNotice('Você não possui notificações para limpar no momento.');
       return;
     }
 
@@ -60,7 +58,7 @@ function Notifications({ notifications, onMarkRead, onClearNotifications }) {
       <ConfirmModal
         open={clearOpen}
         title="Limpar notificações"
-        message="Tem certeza que deseja limpar suas notificações pessoais? Avisos gerais do seu setor não serão removidos."
+        message="Tem certeza que deseja limpar todas as suas notificações? Elas serão removidas somente da sua conta."
         cancelLabel="Cancelar"
         confirmLabel="Sim, limpar"
         busy={clearing}
