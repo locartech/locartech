@@ -1,6 +1,10 @@
 function MemberTypeBadge({ accountType, principal = false }) {
   const isAdmin = principal || accountType === 'admin';
-  return <span className={`member-type-badge ${isAdmin ? 'admin' : 'member'}`}>{isAdmin ? 'Administrador principal' : 'Membro'}</span>;
+  const isOperacao = !isAdmin && accountType === 'operacao';
+  const label = isAdmin ? 'Administrador principal' : isOperacao ? 'Operação' : 'Membro';
+  const tone = isAdmin ? 'admin' : isOperacao ? 'operacao' : 'member';
+
+  return <span className={`member-type-badge ${tone}`}>{label}</span>;
 }
 
 export default MemberTypeBadge;

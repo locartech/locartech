@@ -52,7 +52,16 @@ function PurchaseStatusMenu({ request, onStatusChange }) {
   );
 }
 
-function PurchaseRequestTable({ requests, canManage, view = 'active', onStatusChange, onArchive, onRestore }) {
+function PurchaseRequestTable({
+  requests,
+  canManage,
+  view = 'active',
+  restricted = false,
+  onBlockedAction,
+  onStatusChange,
+  onArchive,
+  onRestore,
+}) {
   if (requests.length === 0) {
     return (
       <EmptyState
@@ -99,11 +108,21 @@ function PurchaseRequestTable({ requests, canManage, view = 'active', onStatusCh
             </div>
             <div className="purchase-actions-cell">
               {view === 'archived' ? (
-                <button type="button" className="table-icon-button success" onClick={() => onRestore(request)} title="Restaurar solicitacao">
+                <button
+                  type="button"
+                  className="table-icon-button success"
+                  onClick={() => (restricted ? onBlockedAction?.() : onRestore(request))}
+                  title="Restaurar solicitacao"
+                >
                   <RotateCcw size={16} aria-hidden="true" />
                 </button>
               ) : (
-                <button type="button" className="table-icon-button archive" onClick={() => onArchive(request)} title="Arquivar solicitacao">
+                <button
+                  type="button"
+                  className="table-icon-button archive"
+                  onClick={() => (restricted ? onBlockedAction?.() : onArchive(request))}
+                  title="Arquivar solicitacao"
+                >
                   <Archive size={16} aria-hidden="true" />
                 </button>
               )}

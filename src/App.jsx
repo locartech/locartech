@@ -28,11 +28,16 @@ const pages = {
 };
 
 function App() {
-  const { session, profile, loading, isActive } = useAuth();
+  const { session, profile, loading, isActive, isOperacao } = useAuth();
   const [activePage, setActivePage] = useState('dashboard');
   const [knowledgeSectorId, setKnowledgeSectorId] = useState('compras');
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
+
+  // Operacao accounts only ever get Solicitacoes de compras - no other page is reachable.
+  useEffect(() => {
+    if (isOperacao && activePage !== 'purchaseRequests') setActivePage('purchaseRequests');
+  }, [isOperacao, activePage]);
 
   const loadNotifications = async () => {
     if (!profile?.id) return;
@@ -90,10 +95,10 @@ function App() {
   return (
     <AppLayout
       activePage={activePage}
-      onNavigate={setActivePage}
-      unreadCount={unreadCount}
+      onNavigate={isOperacao ? () => {} : setActivePage}
+      unreadCount={isOperacao ? 0 : unreadCount}
       chatUnreadCount={chatUnreadCount}
-      onOpenNotifications={() => setActivePage('notifications')}
+      onOpenNotifications={isOperacao ? undefined : () => setActivePage('notifications')}
     >
       <ActivePage
         notifications={notifications}

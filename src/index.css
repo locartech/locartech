@@ -4054,6 +4054,11 @@ body {
   background: #f1f5f9;
 }
 
+.member-type-badge.operacao {
+  color: #0f766e;
+  background: #ccfbf1;
+}
+
 .member-status-badge.status-ativo {
   color: #166534;
   background: #dcfce7;
@@ -6136,4 +6141,25 @@ body {
 
 .confirm-modal-warning-button:hover {
   background: linear-gradient(135deg, #b45309, #92400e);
+}
+
+/* Compras solicitadas: compact toolbar (tabs + actions on the same row) */
+.purchase-toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ghost-button.compact {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 0.78rem;
+}
+
+.tiny-permission-notice {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #94a3b8;
 }

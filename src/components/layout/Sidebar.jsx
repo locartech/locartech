@@ -31,13 +31,18 @@ const navigation = [
   { id: 'members', label: 'Membros', icon: UsersRound, adminOnly: true },
 ];
 
+// Operacao accounts only ever see this single item - no dashboard, kanban, chat, etc.
+const operacaoNavigation = [{ id: 'purchaseRequests', label: 'Solicitações de compras', icon: ShoppingCart }];
+
 function Sidebar({ activePage, onNavigate, unreadCount, chatUnreadCount, collapsed, onToggleCollapsed }) {
-  const { currentUser, isAdmin } = useAuth();
+  const { currentUser, isAdmin, isOperacao } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
   const [openSubmenus, setOpenSubmenus] = useState(() => ({
     requests: activePage === 'requests' || activePage === 'purchaseRequests',
   }));
-  const visibleNavigation = navigation.filter((item) => !item.adminOnly || isAdmin);
+  const visibleNavigation = isOperacao
+    ? operacaoNavigation
+    : navigation.filter((item) => !item.adminOnly || isAdmin);
 
   const handleNavigationClick = (item) => {
     if (item.children?.length) {
@@ -122,6 +127,7 @@ function Sidebar({ activePage, onNavigate, unreadCount, chatUnreadCount, collaps
           <small>
             {currentUser.sector}
             {isAdmin ? ' - Admin' : ''}
+            {isOperacao ? ' - Operação' : ''}
           </small>
         </div>
       </button>

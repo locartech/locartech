@@ -60,15 +60,17 @@ function Header({ activePage, unreadCount, onOpenNotifications }) {
       </div>
 
       <div className="header-actions">
-        <button
-          className="notification-button"
-          type="button"
-          title="Notificacoes pendentes"
-          onClick={onOpenNotifications}
-        >
-          <Bell size={18} aria-hidden="true" />
-          {unreadCount > 0 ? <span>{unreadCount}</span> : null}
-        </button>
+        {onOpenNotifications ? (
+          <button
+            className="notification-button"
+            type="button"
+            title="Notificacoes pendentes"
+            onClick={onOpenNotifications}
+          >
+            <Bell size={18} aria-hidden="true" />
+            {unreadCount > 0 ? <span>{unreadCount}</span> : null}
+          </button>
+        ) : null}
       </div>
     </header>
   );

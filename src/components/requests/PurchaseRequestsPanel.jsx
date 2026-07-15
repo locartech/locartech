@@ -1,5 +1,5 @@
 import { Archive, FileDown, LayoutGrid, Plus } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
 import { createNotification } from '../../services/notificationsService';
 import {
@@ -98,6 +98,16 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const [reports, setReports] = useState([]);
   const [generatingReport, setGeneratingReport] = useState(false);
   const [registeringReport, setRegisteringReport] = useState(null);
+  const [permissionNotice, setPermissionNotice] = useState('');
+  const permissionNoticeTimeout = useRef(null);
+
+  const isOperacao = currentUser?.accountType === 'operacao';
+
+  const notifyNoPermission = () => {
+    setPermissionNotice('Você não tem permissão para isso.');
+    window.clearTimeout(permissionNoticeTimeout.current);
+    permissionNoticeTimeout.current = window.setTimeout(() => setPermissionNotice(''), 2500);
+  };
 
   const loadReports = async () => {
     if (!isSupabaseConfigured) return;
@@ -162,7 +172,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
 
   const visibleRequests = useMemo(() => filterPurchaseRequests(baseRequests, filters), [baseRequests, filters]);
   const stats = useMemo(() => getPurchaseStats(activeRequests), [activeRequests]);
-  const canManage = currentUser?.sector === 'Compras' || currentUser?.accountType === 'admin';
+  const canManage = !isOperacao && (currentUser?.sector === 'Compras' || currentUser?.accountType === 'admin');
 
   const handleCreate = async (values) => {
     setFeedback('');
@@ -280,6 +290,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   };
 
   const handleGenerateReport = async () => {
+    if (isOperacao) return notifyNoPermission();
     if (generatingReport) return;
 
     // A pending report already covers the last export - reopen it instead of creating
@@ -343,20 +354,40 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
 
   return (
     <div className="purchase-panel-stack">
-      <section className="purchase-hero">
-        <div>
-          <p className="eyebrow">Compras solicitadas</p>
-          <h2>Pedidos da obra para Compras</h2>
-          <p>Centralize itens solicitados pela operacao e acompanhe prioridade, prazo e status de compra.</p>
+      <div className="purchase-toolbar-row">
+        <div className="kanban-view-tabs" role="tablist" aria-label="Visao das compras solicitadas">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'active'}
+            className={`kanban-view-tab ${view === 'active' ? 'active' : ''}`}
+            onClick={() => setView('active')}
+          >
+            <LayoutGrid size={16} aria-hidden="true" />
+            Ativas
+            <span className="kanban-view-tab-count">{activeRequests.length}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'archived'}
+            className={`kanban-view-tab ${view === 'archived' ? 'active' : ''}`}
+            onClick={() => setView('archived')}
+          >
+            <Archive size={16} aria-hidden="true" />
+            Arquivadas
+            <span className="kanban-view-tab-count">{archivedRequests.length}</span>
+          </button>
         </div>
+
         <div className="purchase-hero-actions">
           <button
             type="button"
-            className="ghost-button"
+            className="ghost-button compact"
             onClick={handleGenerateReport}
-            disabled={generatingReport || (visibleRequests.length === 0 && !pendingReport)}
+            disabled={!isOperacao && (generatingReport || (visibleRequests.length === 0 && !pendingReport))}
           >
-            <FileDown size={16} aria-hidden="true" />
+            <FileDown size={14} aria-hidden="true" />
             {generatingReport ? 'Gerando...' : 'Gerar relatorio'}
           </button>
           <button
@@ -371,32 +402,9 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
             Nova compra solicitada
           </button>
         </div>
-      </section>
-
-      <div className="kanban-view-tabs" role="tablist" aria-label="Visao das compras solicitadas">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'active'}
-          className={`kanban-view-tab ${view === 'active' ? 'active' : ''}`}
-          onClick={() => setView('active')}
-        >
-          <LayoutGrid size={16} aria-hidden="true" />
-          Ativas
-          <span className="kanban-view-tab-count">{activeRequests.length}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === 'archived'}
-          className={`kanban-view-tab ${view === 'archived' ? 'active' : ''}`}
-          onClick={() => setView('archived')}
-        >
-          <Archive size={16} aria-hidden="true" />
-          Arquivadas
-          <span className="kanban-view-tab-count">{archivedRequests.length}</span>
-        </button>
       </div>
+
+      {permissionNotice ? <p className="tiny-permission-notice">{permissionNotice}</p> : null}
 
       {feedback ? <div className="members-feedback">{feedback}</div> : null}
       {error ? <div className="members-feedback error">{error}</div> : null}
@@ -414,6 +422,8 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
           requests={visibleRequests}
           canManage={canManage}
           view={view}
+          restricted={isOperacao}
+          onBlockedAction={notifyNoPermission}
           onStatusChange={handleStatusChange}
           onArchive={setArchivingRequest}
           onRestore={setRestoringRequest}

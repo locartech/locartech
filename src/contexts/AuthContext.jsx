@@ -178,6 +178,7 @@ export function AuthProvider({ children }) {
       isAuthenticated: Boolean(session),
       isActive: canAccessSystem(profile),
       isAdmin: profile?.accountType === 'admin',
+      isOperacao: profile?.accountType === 'operacao',
       isPrimaryAdmin: Boolean(profile && organization && profile.id === organization.adminProfileId),
       login,
       register,
