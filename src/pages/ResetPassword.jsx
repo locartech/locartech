@@ -43,7 +43,6 @@ function ResetPassword() {
 
   useEffect(() => {
     let mounted = true;
-    let invalidTimer;
 
     if (!isSupabaseConfigured) {
       setRecoveryState('invalid');
@@ -59,25 +58,37 @@ function ResetPassword() {
       if (event === 'SIGNED_OUT') setRecoveryState('invalid');
     });
 
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (!mounted || completedRef.current) return;
-      const recoveryHint = window.location.hash.includes('type=recovery')
-        || new URLSearchParams(window.location.search).get('type') === 'recovery';
+    const establishRecoverySession = async () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const authorizationCode = searchParams.get('code');
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
 
-      if (!error && data.session && (recoveryDetectedRef.current || recoveryHint)) {
+      if (authorizationCode) {
+        await supabase.auth.exchangeCodeForSession(authorizationCode);
+      } else if (accessToken && refreshToken) {
+        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+      }
+
+      const { data, error } = await supabase.auth.getSession();
+      if (!mounted || completedRef.current) return;
+
+      if (!error && data.session) {
         recoveryDetectedRef.current = true;
         setRecoveryState('ready');
         return;
       }
 
-      invalidTimer = window.setTimeout(() => {
-        if (mounted && !recoveryDetectedRef.current) setRecoveryState('invalid');
-      }, 800);
+      setRecoveryState('invalid');
+    };
+
+    establishRecoverySession().catch(() => {
+      if (mounted && !completedRef.current) setRecoveryState('invalid');
     });
 
     return () => {
       mounted = false;
-      window.clearTimeout(invalidTimer);
       authListener.subscription.unsubscribe();
     };
   }, []);
