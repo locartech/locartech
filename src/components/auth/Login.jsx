@@ -63,7 +63,7 @@ function Login({ onNavigate }) {
       </button>
 
       <div className="auth-links">
-        <button type="button" onClick={() => onNavigate('forgot')}>Esqueci minha senha</button>
+        <a href="/esqueci-senha">Esqueci minha senha</a>
         <button type="button" onClick={() => onNavigate('register')}>Criar conta</button>
       </div>
     </form>

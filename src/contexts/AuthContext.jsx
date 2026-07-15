@@ -18,6 +18,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [organization, setOrganization] = useState(null);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const [loading, setLoading] = useState(isSupabaseConfigured);
 
   const loadProfile = async (authUserId) => {
@@ -53,8 +54,10 @@ export function AuthProvider({ children }) {
     };
     init();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, nextSession) => {
       if (!mounted) return;
+      if (event === 'PASSWORD_RECOVERY') setIsPasswordRecovery(true);
+      if (event === 'SIGNED_OUT') setIsPasswordRecovery(false);
       setSession(nextSession);
       if (nextSession?.user) {
         await loadProfile(nextSession.user.id);
@@ -124,16 +127,54 @@ export function AuthProvider({ children }) {
   const requestPasswordReset = async (email) => {
     const normalizedEmail = email.trim().toLowerCase();
     if (!isSupabaseConfigured) {
-      return { ok: false, message: 'Supabase nao configurado neste ambiente.' };
+      return {
+        ok: false,
+        message: 'Não foi possível enviar o link de recuperação agora. Tente novamente em instantes.',
+      };
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail);
-    if (error) return { ok: false, message: error.message };
-    return { ok: true, message: 'Se o e-mail existir, as instrucoes de recuperacao serao enviadas.' };
+    const siteUrl = (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, '');
+
+    // O Supabase Auth envia o e-mail. O SMTP transacional sera configurado no painel usando Brevo.
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+      redirectTo: `${siteUrl}/redefinir-senha`,
+    });
+
+    if (error) {
+      return {
+        ok: false,
+        message: 'Não foi possível enviar o link de recuperação agora. Tente novamente em instantes.',
+      };
+    }
+
+    return {
+      ok: true,
+      message: 'Se este e-mail estiver cadastrado, enviaremos um link para redefinir sua senha.',
+    };
+  };
+
+  const updatePassword = async (newPassword) => {
+    if (!isSupabaseConfigured) {
+      return {
+        ok: false,
+        message: 'Não foi possível atualizar sua senha. Solicite um novo link de recuperação.',
+      };
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      return {
+        ok: false,
+        message: 'Não foi possível atualizar sua senha. Solicite um novo link de recuperação.',
+      };
+    }
+
+    return { ok: true };
   };
 
   const logout = async () => {
     if (isSupabaseConfigured) await supabase.auth.signOut();
+    setIsPasswordRecovery(false);
     setSession(null);
     setProfile(null);
   };
@@ -176,6 +217,7 @@ export function AuthProvider({ children }) {
       organization,
       loading,
       isAuthenticated: Boolean(session),
+      isPasswordRecovery,
       isActive: canAccessSystem(profile),
       isAdmin: profile?.accountType === 'admin',
       // Self-registration has no "tipo de conta" field, so a member who signs up
@@ -186,13 +228,14 @@ export function AuthProvider({ children }) {
       login,
       register,
       requestPasswordReset,
+      updatePassword,
       logout,
       updateProfile,
       uploadAvatar,
       removeAvatar,
       transferAdmin,
     }),
-    [session, profile, organization, loading],
+    [session, profile, organization, isPasswordRecovery, loading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

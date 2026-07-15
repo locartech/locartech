@@ -3,10 +3,12 @@ import AccountStatusScreen from './components/auth/AccountStatusScreen';
 import AppLayout from './components/layout/AppLayout';
 import Chat from './pages/Chat';
 import Dashboard from './pages/Dashboard';
+import ForgotPassword from './pages/ForgotPassword';
 import Kanban from './pages/Kanban';
 import LoginPage from './pages/LoginPage';
 import Notifications from './pages/Notifications';
 import Requests from './pages/Requests';
+import ResetPassword from './pages/ResetPassword';
 import PurchaseRequests from './pages/PurchaseRequests';
 import Members from './pages/Members';
 import Sectors from './pages/Sectors';
@@ -33,6 +35,7 @@ function App() {
   const [knowledgeSectorId, setKnowledgeSectorId] = useState('compras');
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
+  const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
 
   // Operacao accounts only ever get Solicitacoes de compras - no other page is reachable.
   useEffect(() => {
@@ -84,6 +87,9 @@ function App() {
   };
 
   const ActivePage = pages[activePage] ?? Dashboard;
+
+  if (pathname === '/esqueci-senha' || pathname === '/forgot-password') return <ForgotPassword />;
+  if (pathname === '/redefinir-senha' || pathname === '/reset-password') return <ResetPassword />;
 
   if (loading) return null;
   if (!session) return <LoginPage />;

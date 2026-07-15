@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import ForgotPassword from '../components/auth/ForgotPassword';
+import AuthShell from '../components/auth/AuthShell';
 import Login from '../components/auth/Login';
 import Register from '../components/auth/Register';
-import LocarTechLogo from '../components/brand/LocarTechLogo';
 
 const views = {
   login: Login,
   register: Register,
-  forgot: ForgotPassword,
 };
 
 function LoginPage() {
@@ -15,18 +13,9 @@ function LoginPage() {
   const ActiveView = views[view] ?? Login;
 
   return (
-    <main className="auth-page">
-      <aside className="auth-logo-showcase" aria-hidden="true">
-        <LocarTechLogo width={640} className="auth-showcase-logo" />
-      </aside>
-      <section className="auth-card">
-        <p className="auth-badge">
-          <span className="auth-badge-dot" />
-          Ambiente seguro Locartech
-        </p>
-        <ActiveView onNavigate={setView} />
-      </section>
-    </main>
+    <AuthShell>
+      <ActiveView onNavigate={setView} />
+    </AuthShell>
   );
 }
 
