@@ -67,11 +67,11 @@ function RequestTable({
               <div>{request.stepName}</div>
               <div>
                 <strong>{request.requesterName}</strong>
-                <span className="muted-cell">{request.requesterSector}</span>
+                <span className="muted-cell">({request.requesterSector})</span>
               </div>
               <div>
                 <strong>{request.targetSector}</strong>
-                {request.responsibleName ? <span className="muted-cell">{request.responsibleName}</span> : null}
+                {request.responsibleName ? <span className="muted-cell">({request.responsibleName})</span> : null}
               </div>
               <div>
                 <RequestStatusBadge value={request.requestStatus} />
