@@ -7260,22 +7260,40 @@ textarea:focus-visible {
   letter-spacing: 0.02em;
 }
 
-.group-members-list {
-  display: flex;
+/* .participant-picker > div (written for the old 2-column checkbox grid,
+   .participant-options) has higher specificity than a single class and
+   still matches this element structurally - it was forcing this list back
+   into display:grid;grid-template-columns:repeat(2,...) regardless of the
+   plain .group-members-list rule below. Beat it on specificity. */
+.participant-picker > .group-members-list {
+  display: flex !important;
   flex-direction: column;
   gap: 6px;
   max-height: 220px;
   overflow-y: auto;
 }
 
+/* Same issue: .edit-modal-form label sets display:grid and outranks a
+   single-class rule, which broke the checkbox row in "Criar grupo". */
+.chat-group-form label.group-member-row,
 .group-member-row {
-  display: flex;
+  display: flex !important;
   align-items: center;
+  width: 100%;
   gap: 10px;
   padding: 8px;
   border: 1px solid var(--lt-border-soft);
   border-radius: 10px;
   background: #ffffff;
+}
+
+.chat-group-form .group-member-row-checkbox input[type='checkbox'] {
+  width: 16px !important;
+  height: 16px;
+  min-height: 16px !important;
+  flex: 0 0 16px;
+  padding: 0 !important;
+  border-radius: 4px;
 }
 
 .group-member-identity {
