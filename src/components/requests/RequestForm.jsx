@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { kanbanStatuses } from '../../data/kanbanData';
 import { requestPriorities, requestSectors } from '../../data/requestsData';
+import useEscapeKey from '../../hooks/useEscapeKey';
 
 const emptyForm = {
   title: '',
@@ -15,6 +16,7 @@ const emptyForm = {
 };
 
 function RequestForm({ currentUser, request, onClose, onSubmit }) {
+  useEscapeKey(onClose);
   const [draft, setDraft] = useState(emptyForm);
   const [error, setError] = useState('');
 

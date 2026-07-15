@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import useEscapeKey from '../../hooks/useEscapeKey';
 
 const formatDateTime = (value) =>
   value
@@ -13,6 +14,7 @@ const formatDateTime = (value) =>
     : '-';
 
 function RegisterDriveLinkModal({ report, onClose, onSubmit }) {
+  useEscapeKey(onClose, Boolean(report));
   const [draft, setDraft] = useState({ name: '', periodStart: '', periodEnd: '', driveLink: '', notes: '' });
   const [error, setError] = useState('');
 

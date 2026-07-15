@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { kanbanStatuses } from '../../data/kanbanData';
 import { requestPriorities } from '../../data/requestsData';
+import useEscapeKey from '../../hooks/useEscapeKey';
 
 const blankDraft = {
   title: '',
@@ -12,6 +13,7 @@ const blankDraft = {
 };
 
 function EditTaskModal({ task, onClose, onSave }) {
+  useEscapeKey(onClose, Boolean(task));
   const [draft, setDraft] = useState(blankDraft);
 
   useEffect(() => {

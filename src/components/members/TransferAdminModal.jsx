@@ -1,7 +1,9 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import useEscapeKey from '../../hooks/useEscapeKey';
 
 function TransferAdminModal({ members, primaryAdminId, onClose, onTransfer }) {
+  useEscapeKey(onClose);
   const activeMembers = members.filter((member) => member.status === 'Ativo' && member.id !== primaryAdminId);
   const [selectedId, setSelectedId] = useState(activeMembers[0]?.id ?? '');
   const selectedMember = activeMembers.find((member) => member.id === selectedId);

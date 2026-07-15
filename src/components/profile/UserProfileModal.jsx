@@ -1,9 +1,11 @@
 import { LogOut, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import useEscapeKey from '../../hooks/useEscapeKey';
 import AvatarUploader from './AvatarUploader';
 
 function UserProfileModal({ onClose }) {
+  useEscapeKey(onClose);
   const { currentUser, isAdmin, logout, uploadAvatar, removeAvatar } = useAuth();
 
   return createPortal(

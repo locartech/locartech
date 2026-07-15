@@ -1,7 +1,9 @@
 import { Search, UserRound, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import useEscapeKey from '../../hooks/useEscapeKey';
 
 function NewContactModal({ users, currentUser, onClose, onSelect }) {
+  useEscapeKey(onClose);
   const [query, setQuery] = useState('');
 
   const contacts = useMemo(() => {

@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { knowledgeTypes } from '../../data/knowledgeData';
+import useEscapeKey from '../../hooks/useEscapeKey';
 import { normalizeKnowledgeType, validateKnowledgeRecord } from '../../utils/knowledgeUtils';
 
 const emptyRecord = {
@@ -14,6 +15,7 @@ const emptyRecord = {
 };
 
 function KnowledgeFormModal({ sectorName, record, onClose, onSubmit, simplified = false }) {
+  useEscapeKey(onClose);
   const { currentUser } = useAuth();
   const [draft, setDraft] = useState(emptyRecord);
   const [error, setError] = useState('');

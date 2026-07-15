@@ -1,4 +1,5 @@
 import { AlertTriangle, HelpCircle, X } from 'lucide-react';
+import useEscapeKey from '../../hooks/useEscapeKey';
 
 function ConfirmModal({
   open,
@@ -12,6 +13,7 @@ function ConfirmModal({
   onConfirm,
   onCancel,
 }) {
+  useEscapeKey(onCancel, open && !busy);
   if (!open) return null;
 
   const Icon = tone === 'primary' ? HelpCircle : AlertTriangle;

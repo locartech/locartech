@@ -1,8 +1,10 @@
 import { ChevronDown, UsersRound, X } from 'lucide-react';
 import { useState } from 'react';
 import { chatSectors } from '../../data/chatData';
+import useEscapeKey from '../../hooks/useEscapeKey';
 
 function NewGroupModal({ users, currentUser, group, onClose, onCreate }) {
+  useEscapeKey(onClose);
   const isEditing = Boolean(group);
   const [draft, setDraft] = useState({
     name: group?.title ?? '',

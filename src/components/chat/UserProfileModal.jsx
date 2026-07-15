@@ -1,6 +1,8 @@
 import { X } from 'lucide-react';
+import useEscapeKey from '../../hooks/useEscapeKey';
 
 function UserProfileModal({ conversation, users, currentUser, onClose }) {
+  useEscapeKey(onClose, Boolean(conversation));
   if (!conversation) return null;
 
   const participants = users.filter((user) => conversation.participantIds.includes(user.id));

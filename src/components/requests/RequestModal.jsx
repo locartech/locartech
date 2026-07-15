@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { kanbanStatuses } from '../../data/kanbanData';
+import useEscapeKey from '../../hooks/useEscapeKey';
 import RequestPriorityBadge from './RequestPriorityBadge';
 import RequestStatusBadge from './RequestStatusBadge';
 
@@ -11,6 +12,7 @@ const formatDate = (value) =>
     : 'Nao informado';
 
 function RequestModal({ request, onClose }) {
+  useEscapeKey(onClose, Boolean(request));
   if (!request) return null;
 
   const kanbanStatusLabel = kanbanStatuses.find((status) => status.id === request.kanbanStatus)?.label ?? request.kanbanStatus;

@@ -1,7 +1,9 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import useEscapeKey from '../../hooks/useEscapeKey';
 
 function RequestRejectModal({ request, onClose, onConfirm }) {
+  useEscapeKey(onClose, Boolean(request));
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
 

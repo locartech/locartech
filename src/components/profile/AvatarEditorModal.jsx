@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useRef, useState } from 'react';
+import useEscapeKey from '../../hooks/useEscapeKey';
 
 const VIEWPORT_SIZE = 280;
 const OUTPUT_SIZE = 480;
@@ -9,6 +10,7 @@ function clamp(value, min, max) {
 }
 
 function AvatarEditorModal({ photoUrl, onClose, onSave }) {
+  useEscapeKey(onClose);
   const imgRef = useRef(null);
   const dragState = useRef(null);
   const [naturalSize, setNaturalSize] = useState(null);

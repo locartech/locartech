@@ -1,4 +1,5 @@
 import { ExternalLink, X } from 'lucide-react';
+import useEscapeKey from '../../hooks/useEscapeKey';
 import { normalizeKnowledgeType } from '../../utils/knowledgeUtils';
 
 const formatDate = (value) =>
@@ -7,6 +8,7 @@ const formatDate = (value) =>
   );
 
 function KnowledgeDetailsModal({ record, onClose, simplified = false }) {
+  useEscapeKey(onClose, Boolean(record));
   if (!record) return null;
 
   return (

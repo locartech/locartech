@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { accountTypes, memberSectors, memberStatuses } from '../../data/membersData';
+import useEscapeKey from '../../hooks/useEscapeKey';
 
 const emptyMember = {
   name: '',
@@ -12,6 +13,7 @@ const emptyMember = {
 };
 
 function MemberFormModal({ member, onClose, onSubmit }) {
+  useEscapeKey(onClose);
   const [draft, setDraft] = useState(emptyMember);
 
   useEffect(() => {

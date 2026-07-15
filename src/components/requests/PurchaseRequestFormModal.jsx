@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { purchasePriorities } from '../../data/purchaseRequestsData';
+import useEscapeKey from '../../hooks/useEscapeKey';
 import { validatePurchaseRequest } from '../../utils/purchaseRequestUtils';
 
 const emptyForm = {
@@ -13,6 +14,7 @@ const emptyForm = {
 };
 
 function PurchaseRequestFormModal({ currentUser, submitError = '', onClose, onSubmit }) {
+  useEscapeKey(onClose);
   const [draft, setDraft] = useState(emptyForm);
   const [error, setError] = useState('');
 
