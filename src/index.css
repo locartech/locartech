@@ -5447,7 +5447,12 @@ body {
   white-space: nowrap;
 }
 
-.participant-picker.open .participant-picker-toggle svg:last-child {
+.participant-picker-chevron {
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+
+.participant-picker.open .participant-picker-toggle .participant-picker-chevron {
   transform: rotate(180deg);
 }
 
@@ -7319,6 +7324,40 @@ textarea:focus-visible {
   opacity: 0.6;
 }
 
+.group-member-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  color: var(--lt-blue);
+  background: var(--lt-blue-faint);
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 800;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.group-member-add:hover:not(:disabled) {
+  border-color: #93c5fd;
+  background: #dbeafe;
+}
+
+.group-member-add:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.group-member-row-checkbox {
+  cursor: pointer;
+}
+
+.group-member-row-checkbox input {
+  flex-shrink: 0;
+}
+
 .group-members-empty {
   margin: 0;
   padding: 10px;
@@ -7340,9 +7379,9 @@ textarea:focus-visible {
 /* dashboard-summary's h2 had its own color/size that drifted from every
    other page's title - match .page-heading h2 exactly. */
 .dashboard-summary h2 {
-  color: #0b1220;
-  font-size: 1.28rem;
-  font-weight: 800;
+  color: #0b1220 !important;
+  font-size: 1.28rem !important;
+  font-weight: 800 !important;
 }
 
 /* --- Sidebar logo: smaller and precisely centered ----------------------- */

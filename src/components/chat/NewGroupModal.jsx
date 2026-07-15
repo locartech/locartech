@@ -13,7 +13,8 @@ function NewGroupModal({ users, currentUser, group, onClose, onCreate }) {
     sector: group?.sector ?? 'Compras',
     participantIds: group?.participantIds?.filter((participantId) => participantId !== currentUser.id) ?? [],
   });
-  const [membersOpen, setMembersOpen] = useState(false);
+  const [membersListOpen, setMembersListOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const [memberError, setMemberError] = useState('');
   const [busyMemberId, setBusyMemberId] = useState(null);
 
@@ -116,13 +117,70 @@ function NewGroupModal({ users, currentUser, group, onClose, onCreate }) {
           {memberError ? <div className="auth-alert error">{memberError}</div> : null}
 
           {isEditing ? (
-            <div className="group-members-section">
-              <span className="group-members-label">Membros do grupo</span>
+            <div className={`participant-picker ${membersListOpen ? 'open' : ''}`}>
+              <button
+                type="button"
+                className="participant-picker-toggle"
+                onClick={() => setMembersListOpen((current) => !current)}
+                aria-expanded={membersListOpen}
+              >
+                <span>
+                  <UsersRound size={18} aria-hidden="true" />
+                  Membros do grupo
+                </span>
+                <strong>{currentMembers.length}</strong>
+                <ChevronDown size={18} className="participant-picker-chevron" aria-hidden="true" />
+              </button>
+
+              {membersListOpen ? (
+                <div className="group-members-list">
+                  {currentMembers.length === 0 ? (
+                    <p className="group-members-empty">Nenhum outro membro no grupo.</p>
+                  ) : (
+                    currentMembers.map((user) => (
+                      <div key={user.id} className="group-member-row">
+                        <span className="user-avatar">{user.avatarInitials}</span>
+                        <div className="group-member-identity">
+                          <strong>{user.name}</strong>
+                          <small>{user.sector}</small>
+                        </div>
+                        <button
+                          type="button"
+                          className="group-member-remove"
+                          onClick={() => handleRemoveMember(user.id)}
+                          disabled={busyMemberId === user.id}
+                        >
+                          Remover
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className={`participant-picker ${addOpen ? 'open' : ''}`}>
+            <button
+              type="button"
+              className="participant-picker-toggle"
+              onClick={() => setAddOpen((current) => !current)}
+              aria-expanded={addOpen}
+            >
+              <span>
+                {isEditing ? <UserPlus size={18} aria-hidden="true" /> : <UsersRound size={18} aria-hidden="true" />}
+                {isEditing ? 'Adicionar membro' : 'Membros'}
+              </span>
+              {isEditing ? null : <strong>{draft.participantIds.length} selecionado(s)</strong>}
+              <ChevronDown size={18} className="participant-picker-chevron" aria-hidden="true" />
+            </button>
+
+            {addOpen ? (
               <div className="group-members-list">
-                {currentMembers.length === 0 ? (
-                  <p className="group-members-empty">Nenhum outro membro no grupo.</p>
-                ) : (
-                  currentMembers.map((user) => (
+                {addableUsers.length === 0 ? (
+                  <p className="group-members-empty">Todos os membros disponiveis ja estao no grupo.</p>
+                ) : isEditing ? (
+                  addableUsers.map((user) => (
                     <div key={user.id} className="group-member-row">
                       <span className="user-avatar">{user.avatarInitials}</span>
                       <div className="group-member-identity">
@@ -131,63 +189,27 @@ function NewGroupModal({ users, currentUser, group, onClose, onCreate }) {
                       </div>
                       <button
                         type="button"
-                        className="group-member-remove"
-                        onClick={() => handleRemoveMember(user.id)}
+                        className="group-member-add"
+                        onClick={() => handleAddMember(user.id)}
                         disabled={busyMemberId === user.id}
                       >
-                        Remover
+                        Adicionar
                       </button>
                     </div>
                   ))
-                )}
-              </div>
-            </div>
-          ) : null}
-
-          <div className={`participant-picker ${membersOpen ? 'open' : ''}`}>
-            <button
-              type="button"
-              className="participant-picker-toggle"
-              onClick={() => setMembersOpen((current) => !current)}
-              aria-expanded={membersOpen}
-            >
-              <span>
-                {isEditing ? <UserPlus size={18} aria-hidden="true" /> : <UsersRound size={18} aria-hidden="true" />}
-                {isEditing ? 'Adicionar membro' : 'Membros'}
-              </span>
-              {isEditing ? null : <strong>{draft.participantIds.length} selecionado(s)</strong>}
-              <ChevronDown size={18} aria-hidden="true" />
-            </button>
-
-            {membersOpen ? (
-              <div className="participant-options">
-                {addableUsers.length === 0 ? (
-                  <p className="group-members-empty">Todos os membros disponiveis ja estao no grupo.</p>
-                ) : isEditing ? (
-                  addableUsers.map((user) => (
-                    <button
-                      type="button"
-                      key={user.id}
-                      className="participant-option participant-option-button"
-                      onClick={() => handleAddMember(user.id)}
-                      disabled={busyMemberId === user.id}
-                    >
-                      <span className="user-avatar">{user.avatarInitials}</span>
-                      <strong>{user.name}</strong>
-                      <small>{user.sector}</small>
-                    </button>
-                  ))
                 ) : (
                   addableUsers.map((user) => (
-                    <label key={user.id} className="participant-option">
+                    <label key={user.id} className="group-member-row group-member-row-checkbox">
                       <input
                         type="checkbox"
                         checked={draft.participantIds.includes(user.id)}
                         onChange={() => toggleParticipant(user.id)}
                       />
                       <span className="user-avatar">{user.avatarInitials}</span>
-                      <strong>{user.name}</strong>
-                      <small>{user.sector}</small>
+                      <div className="group-member-identity">
+                        <strong>{user.name}</strong>
+                        <small>{user.sector}</small>
+                      </div>
                     </label>
                   ))
                 )}
