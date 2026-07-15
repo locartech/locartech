@@ -7,6 +7,6 @@ Checklist de configuração externa:
 3. Adicionar `https://DOMINIO-DA-LOCARTECH/redefinir-senha` às **Redirect URLs** permitidas.
 4. Revisar o template de e-mail de recuperação de senha no Supabase.
 5. Testar o envio do link com uma conta real.
-6. Abrir o link recebido, definir uma senha com ao menos 8 caracteres e confirmar o novo login.
+6. Abrir o link recebido, definir uma senha com ao menos 6 caracteres e confirmar o novo login.
 
 O frontend não envia e-mails diretamente e não utiliza credenciais do Brevo.

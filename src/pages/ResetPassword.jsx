@@ -14,7 +14,8 @@ function PasswordInput({ label, value, onChange, visible, onToggle, disabled }) 
           value={value}
           onChange={onChange}
           autoComplete="new-password"
-          placeholder="Mínimo de 8 caracteres"
+          minLength={6}
+          placeholder="Mínimo de 6 caracteres"
           disabled={disabled}
         />
         <button type="button" onClick={onToggle} title="Mostrar ou ocultar senha" disabled={disabled}>
@@ -102,8 +103,8 @@ function ResetPassword() {
     event.preventDefault();
     setStatus({ type: '', message: '' });
 
-    if (form.password.length < 8) {
-      setStatus({ type: 'error', message: 'A nova senha deve ter pelo menos 8 caracteres.' });
+    if (form.password.length < 6) {
+      setStatus({ type: 'error', message: 'A nova senha deve ter pelo menos 6 caracteres.' });
       return;
     }
 

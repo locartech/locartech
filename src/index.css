@@ -4722,9 +4722,8 @@ body {
 }
 
 .auth-security-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid !important;
+  place-items: center;
   width: 42px;
   height: 42px;
   margin-bottom: 8px;
@@ -4732,6 +4731,16 @@ body {
   border-radius: 10px;
   color: #7dd3fc !important;
   background: rgba(56, 189, 248, 0.1);
+}
+
+.auth-security-icon svg {
+  position: static;
+  display: block;
+  width: 21px;
+  height: 21px;
+  margin: 0;
+  transform: rotate(45deg);
+  transform-origin: center;
 }
 
 .auth-recovery-state {
