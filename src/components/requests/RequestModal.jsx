@@ -1,15 +1,9 @@
 import { X } from 'lucide-react';
 import { kanbanStatuses } from '../../data/kanbanData';
 import useEscapeKey from '../../hooks/useEscapeKey';
+import { formatRequestDate } from '../../utils/requestUtils';
 import RequestPriorityBadge from './RequestPriorityBadge';
 import RequestStatusBadge from './RequestStatusBadge';
-
-const formatDate = (value) =>
-  value
-    ? new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(
-        new Date(`${value}T12:00:00`),
-      )
-    : 'Nao informado';
 
 function RequestModal({ request, onClose }) {
   useEscapeKey(onClose, Boolean(request));
@@ -64,19 +58,19 @@ function RequestModal({ request, onClose }) {
             </div>
             <div>
               <dt>Criacao</dt>
-              <dd>{formatDate(request.createdAt)}</dd>
+              <dd>{formatRequestDate(request.createdAt, 'Nao informado')}</dd>
             </div>
             <div>
               <dt>Prazo</dt>
-              <dd>{formatDate(request.dueDate)}</dd>
+              <dd>{formatRequestDate(request.dueDate, 'Nao informado')}</dd>
             </div>
             <div>
               <dt>Aprovacao</dt>
-              <dd>{formatDate(request.approvedAt)}</dd>
+              <dd>{formatRequestDate(request.approvedAt, 'Nao informado')}</dd>
             </div>
             <div>
               <dt>Recusa</dt>
-              <dd>{formatDate(request.rejectedAt)}</dd>
+              <dd>{formatRequestDate(request.rejectedAt, 'Nao informado')}</dd>
             </div>
             <div>
               <dt>Tarefa Kanban</dt>

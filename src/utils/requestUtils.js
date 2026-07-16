@@ -4,6 +4,20 @@ export function getCurrentDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+export function formatRequestDate(value, fallback = '-') {
+  if (!value) return fallback;
+
+  const source = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00` : value;
+  const date = new Date(source);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+}
+
 export function getReceivedRequests(requests, user) {
   return requests.filter((request) => request.targetSector === user.sector);
 }

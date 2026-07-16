@@ -4,14 +4,8 @@ import { createPortal } from 'react-dom';
 import EmptyState from '../common/EmptyState';
 import RequestPriorityBadge from './RequestPriorityBadge';
 import { purchaseStatuses } from '../../data/purchaseRequestsData';
+import { formatRequestDate } from '../../utils/requestUtils';
 import PurchaseRequestStatusBadge from './PurchaseRequestStatusBadge';
-
-const formatDate = (value) =>
-  value
-    ? new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(
-        new Date(`${value}T12:00:00`),
-      )
-    : 'Sem prazo';
 
 // Rendered through a portal into document.body, positioned from the trigger's
 // actual screen coordinates - the table's horizontal-scroll wrapper otherwise
@@ -154,7 +148,7 @@ function PurchaseRequestTable({
             <div>
               <RequestPriorityBadge value={request.priority} />
             </div>
-            <div>{formatDate(request.dueDate)}</div>
+            <div>{formatRequestDate(request.dueDate, 'Sem prazo')}</div>
             <div>
               {canManage && view === 'active' ? (
                 <PurchaseStatusMenu request={request} onStatusChange={onStatusChange} />

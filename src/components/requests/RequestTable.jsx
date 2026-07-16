@@ -4,11 +4,7 @@ import RequestApprovalActions from './RequestApprovalActions';
 import RequestPriorityBadge from './RequestPriorityBadge';
 import RequestStatusBadge from './RequestStatusBadge';
 import { canArchiveRequest, canEditPendingRequest } from '../../utils/permissions';
-
-const formatDate = (value) =>
-  new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(
-    new Date(`${value}T12:00:00`),
-  );
+import { formatRequestDate } from '../../utils/requestUtils';
 
 function RequestTable({
   requests,
@@ -76,7 +72,7 @@ function RequestTable({
               <div>
                 <RequestPriorityBadge value={request.priority} />
               </div>
-              <div>{formatDate(request.dueDate)}</div>
+              <div>{formatRequestDate(request.dueDate)}</div>
               <div>
                 {request.generatedTaskId ? <span className="kanban-linked-badge">Gerada</span> : <span className="muted-cell">Nao gerada</span>}
               </div>
