@@ -30,10 +30,30 @@ const pages = {
   members: Members,
 };
 
+const ACTIVE_PAGE_STORAGE_KEY = 'locartech.navigation.activePage';
+const KNOWLEDGE_SECTOR_STORAGE_KEY = 'locartech.navigation.knowledgeSector';
+
+function getStoredActivePage() {
+  try {
+    const storedPage = sessionStorage.getItem(ACTIVE_PAGE_STORAGE_KEY);
+    return storedPage && Object.prototype.hasOwnProperty.call(pages, storedPage) ? storedPage : 'dashboard';
+  } catch {
+    return 'dashboard';
+  }
+}
+
+function getStoredKnowledgeSector() {
+  try {
+    return sessionStorage.getItem(KNOWLEDGE_SECTOR_STORAGE_KEY) || 'compras';
+  } catch {
+    return 'compras';
+  }
+}
+
 function App() {
   const { session, profile, loading, isActive, isOperacao } = useAuth();
-  const [activePage, setActivePage] = useState('dashboard');
-  const [knowledgeSectorId, setKnowledgeSectorId] = useState('compras');
+  const [activePage, setActivePage] = useState(getStoredActivePage);
+  const [knowledgeSectorId, setKnowledgeSectorId] = useState(getStoredKnowledgeSector);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
@@ -42,6 +62,22 @@ function App() {
   useEffect(() => {
     if (isOperacao && activePage !== 'purchaseRequests') setActivePage('purchaseRequests');
   }, [isOperacao, activePage]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(ACTIVE_PAGE_STORAGE_KEY, activePage);
+    } catch {
+      // Navigation still works when browser storage is unavailable.
+    }
+  }, [activePage]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(KNOWLEDGE_SECTOR_STORAGE_KEY, knowledgeSectorId);
+    } catch {
+      // The default sector remains available when browser storage is unavailable.
+    }
+  }, [knowledgeSectorId]);
 
   const loadNotifications = async () => {
     if (!profile?.id) return;

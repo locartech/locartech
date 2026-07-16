@@ -7493,9 +7493,15 @@ textarea:focus-visible {
 /* dashboard-summary's h2 had its own color/size that drifted from every
    other page's title - match .page-heading h2 exactly. */
 .dashboard-summary h2 {
-  color: #0b1220 !important;
-  font-size: 1.28rem !important;
+  color: #101828 !important;
+  font-size: 1.34rem !important;
   font-weight: 800 !important;
+  letter-spacing: 0 !important;
+}
+
+.dashboard-summary .eyebrow {
+  color: var(--lt-muted);
+  font-size: 0.9rem;
 }
 
 /* --- Sidebar logo: smaller and precisely centered ----------------------- */

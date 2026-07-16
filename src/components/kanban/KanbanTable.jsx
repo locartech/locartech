@@ -14,7 +14,9 @@ function KanbanTable({
   canManageSector,
   onBlockedAction,
 }) {
-  const [collapsedSectors, setCollapsedSectors] = useState({});
+  const [collapsedSectors, setCollapsedSectors] = useState(() =>
+    Object.fromEntries(kanbanSectors.map((sector) => [sector.id, true])),
+  );
   const [addingSectorId, setAddingSectorId] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [archivingTask, setArchivingTask] = useState(null);
