@@ -1,6 +1,7 @@
-import { Archive, LayoutGrid, Plus } from 'lucide-react';
+import { Archive, FileDown, LayoutGrid, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import ConfirmModal from '../components/common/ConfirmModal';
+import ReportGenerationModal from '../components/common/ReportGenerationModal';
 import RequestFilters from '../components/requests/RequestFilters';
 import RequestForm from '../components/requests/RequestForm';
 import RequestModal from '../components/requests/RequestModal';
@@ -16,12 +17,20 @@ import {
   archiveRequestRpc,
   cancelRemoteRequest,
   createRemoteRequest,
+  deleteArchivedRequestHistory,
   fetchRemoteRequests,
   rejectRequestRpc,
   restoreRequestRpc,
   subscribeToRequests,
   updateRemoteRequest,
 } from '../services/requestsService';
+import { downloadExcelReport } from '../utils/excelReportUtils';
+import {
+  archivedDateAccessor,
+  buildRequestReportRows,
+  makeReportFileName,
+  requestReportColumns,
+} from '../utils/reportDataUtils';
 import {
   filterRequests,
   getPendingApprovalRequests,
@@ -31,7 +40,7 @@ import {
 } from '../utils/requestUtils';
 
 function Requests() {
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -50,6 +59,11 @@ function Requests() {
   const [rejectingRequest, setRejectingRequest] = useState(null);
   const [archivingRequest, setArchivingRequest] = useState(null);
   const [restoringRequest, setRestoringRequest] = useState(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [cleanupIds, setCleanupIds] = useState([]);
+  const [cleanupStep, setCleanupStep] = useState(0);
+  const [feedback, setFeedback] = useState('');
 
   const loadRequests = async () => {
     try {
@@ -184,6 +198,45 @@ function Requests() {
     }
   };
 
+  const handleGenerateReport = async (draft, selectedRequests) => {
+    if (generatingReport) return;
+    setGeneratingReport(true);
+    setError('');
+    try {
+      await downloadExcelReport({
+        fileName: makeReportFileName(draft.name),
+        sheetName: 'Solicitacoes arquivadas',
+        tableName: 'SolicitacoesArquivadas',
+        title: draft.name,
+        columns: requestReportColumns,
+        rows: buildRequestReportRows(selectedRequests),
+      });
+      setReportOpen(false);
+      setFeedback(`Relatorio gerado com ${selectedRequests.length} solicitacao(oes).`);
+      if (isAdmin) {
+        setCleanupIds(selectedRequests.map((request) => request.id));
+        setCleanupStep(1);
+      }
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel gerar o relatorio.');
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  const handleCleanupHistory = async () => {
+    try {
+      await deleteArchivedRequestHistory(cleanupIds);
+      setRequests((current) => current.filter((request) => !cleanupIds.includes(request.id)));
+      setFeedback(`${cleanupIds.length} registro(s) arquivado(s) excluido(s) do site.`);
+      setCleanupIds([]);
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel excluir o historico.');
+    } finally {
+      setCleanupStep(0);
+    }
+  };
+
   return (
     <div className="page-stack">
       <div className="view-toolbar-row">
@@ -212,12 +265,21 @@ function Requests() {
           </button>
         </div>
 
-        <button type="button" className="primary-button large" onClick={() => setIsFormOpen(true)}>
-          <Plus size={18} aria-hidden="true" />
-          Nova solicitacao
-        </button>
+        <div className="purchase-hero-actions">
+          {view === 'archived' ? (
+            <button type="button" className="ghost-button compact" onClick={() => setReportOpen(true)} disabled={generatingReport || archivedRequests.length === 0}>
+              <FileDown size={16} aria-hidden="true" />
+              Gerar relatorio
+            </button>
+          ) : null}
+          <button type="button" className="primary-button large" onClick={() => setIsFormOpen(true)}>
+            <Plus size={18} aria-hidden="true" />
+            Nova solicitacao
+          </button>
+        </div>
       </div>
 
+      {feedback ? <div className="members-feedback">{feedback}</div> : null}
       {error ? <div className="members-feedback error">{error}</div> : null}
       {loading ? <div className="members-feedback">Carregando solicitacoes...</div> : null}
 
@@ -285,6 +347,35 @@ function Requests() {
         tone="primary"
         onCancel={() => setRestoringRequest(null)}
         onConfirm={handleConfirmRestore}
+      />
+
+      <ReportGenerationModal
+        open={reportOpen}
+        title="Gerar relatorio de solicitacoes arquivadas"
+        defaultName="Relatorio de solicitacoes arquivadas"
+        items={archivedRequests}
+        dateAccessor={archivedDateAccessor}
+        entityLabel="solicitacao(oes) arquivada(s)"
+        onClose={() => setReportOpen(false)}
+        onGenerate={handleGenerateReport}
+      />
+      <ConfirmModal
+        open={cleanupStep === 1}
+        title="Excluir dados do relatorio"
+        message={`Deseja excluir do site os ${cleanupIds.length} registro(s) incluidos no relatorio que acabou de ser gerado?`}
+        cancelLabel="Nao"
+        confirmLabel="Sim"
+        onCancel={() => setCleanupStep(0)}
+        onConfirm={() => setCleanupStep(2)}
+      />
+      <ConfirmModal
+        open={cleanupStep === 2}
+        title="Confirmar exclusao permanente"
+        message="Tem certeza que deseja excluir este historico do site? Esta acao nao pode ser desfeita."
+        cancelLabel="Cancelar"
+        confirmLabel="Sim, excluir historico"
+        onCancel={() => setCleanupStep(0)}
+        onConfirm={handleCleanupHistory}
       />
     </div>
   );

@@ -73,8 +73,8 @@ export async function updateProfileStatus(memberId, status) {
   return mapProfileFromDb(data);
 }
 
-export async function deleteProfile(memberId) {
-  const { error } = await supabase.from('profiles').delete().eq('id', memberId);
+export async function deleteMemberAccountRpc(memberId) {
+  const { error } = await supabase.rpc('delete_member_account', { p_profile_id: memberId });
   if (error) throw error;
 }
 

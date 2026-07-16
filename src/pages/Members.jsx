@@ -1,6 +1,7 @@
 import { ShieldCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import AccessDenied from '../components/auth/AccessDenied';
+import ConfirmModal from '../components/common/ConfirmModal';
 import MemberFormModal from '../components/members/MemberFormModal';
 import MembersStats from '../components/members/MembersStats';
 import MembersTable from '../components/members/MembersTable';
@@ -10,7 +11,7 @@ import { supabase } from '../lib/supabase';
 import {
   approveMemberRpc,
   deactivateMemberRpc,
-  deleteProfile,
+  deleteMemberAccountRpc,
   fetchProfiles,
   rejectMemberRpc,
   updateProfile,
@@ -26,6 +27,8 @@ function Members() {
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [removingMember, setRemovingMember] = useState(null);
+  const [removing, setRemoving] = useState(false);
 
   const stats = useMemo(() => getMemberStats(members), [members]);
   const primaryAdminId = organization?.adminProfileId;
@@ -88,15 +91,22 @@ function Members() {
       return;
     }
 
-    const canRemove = window.confirm(`Deseja remover ${member.name}?`);
-    if (!canRemove) return;
+    setError('');
+    setRemovingMember(member);
+  };
 
+  const handleConfirmRemoveMember = async () => {
+    if (!removingMember) return;
+    setRemoving(true);
     try {
-      await deleteProfile(member.id);
-      setMembers((current) => current.filter((item) => item.id !== member.id));
-      setFeedback('Membro removido com sucesso.');
+      await deleteMemberAccountRpc(removingMember.id);
+      setMembers((current) => current.filter((item) => item.id !== removingMember.id));
+      setFeedback('Conta e dados pessoais do membro excluidos com sucesso.');
+      setRemovingMember(null);
     } catch (err) {
-      setFeedback(err.message ?? 'Nao foi possivel remover o membro.');
+      setError(err.message ?? 'Nao foi possivel excluir a conta do membro.');
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -199,6 +209,20 @@ function Members() {
           onTransfer={handleTransferAdmin}
         />
       ) : null}
+
+      <ConfirmModal
+        open={Boolean(removingMember)}
+        title="Excluir conta do membro"
+        message={`Tem certeza que deseja excluir a conta de ${removingMember?.name ?? 'este membro'}? O acesso, as conversas pessoais e as notificacoes dessa conta serao removidos permanentemente. Os dados operacionais dos setores serao preservados.`}
+        cancelLabel="Cancelar"
+        confirmLabel="Sim, excluir conta"
+        busy={removing}
+        error={error}
+        onCancel={() => {
+          if (!removing) setRemovingMember(null);
+        }}
+        onConfirm={handleConfirmRemoveMember}
+      />
     </div>
   );
 }

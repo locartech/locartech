@@ -139,6 +139,12 @@ export async function restoreRequestRpc(requestId) {
   return mapRequestFromDb(data);
 }
 
+export async function deleteArchivedRequestHistory(requestIds) {
+  if (!requestIds.length) return;
+  const { error } = await supabase.rpc('delete_archived_request_history', { p_request_ids: requestIds });
+  if (error) throw error;
+}
+
 export function subscribeToRequests(onChange) {
   return supabase
     .channel('requests:all')

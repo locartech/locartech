@@ -84,9 +84,9 @@ export async function deleteRemoteKanbanTask(taskId) {
   if (error) throw error;
 }
 
-export async function deleteKanbanTasksByIds(taskIds) {
+export async function deleteArchivedKanbanHistory(taskIds) {
   if (!taskIds.length) return;
-  const { error } = await supabase.from('kanban_tasks').delete().in('id', taskIds).eq('archived', true);
+  const { error } = await supabase.rpc('delete_archived_kanban_history', { p_task_ids: taskIds });
   if (error) throw error;
 }
 

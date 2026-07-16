@@ -7491,6 +7491,24 @@ textarea:focus-visible {
   min-height: 200px;
 }
 
+.report-generation-modal {
+  width: min(640px, calc(100vw - 32px));
+}
+
+.report-selection-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 11px 14px;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  color: #1d4ed8;
+  background: #eff6ff;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 /* Optical centering: the collapse control makes the logo look slightly right-heavy. */
 .sidebar:not(.collapsed) .brand-copy {
   transform: translateX(-6px);

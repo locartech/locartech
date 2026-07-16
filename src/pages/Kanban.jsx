@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase';
 import {
   archiveKanbanTask,
   createRemoteKanbanTask,
-  deleteKanbanTasksByIds,
+  deleteArchivedKanbanHistory,
   deleteRemoteKanbanTask,
   fetchKanbanTasks,
   restoreKanbanTask,
@@ -108,7 +108,7 @@ function Kanban() {
   };
 
   const handleCleanupTasks = async (taskIds) => {
-    await deleteKanbanTasksByIds(taskIds);
+    await deleteArchivedKanbanHistory(taskIds);
     setStageTasks((current) => current.filter((task) => !taskIds.includes(task.id)));
   };
 

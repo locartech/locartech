@@ -10,17 +10,10 @@ import {
   subscribeToPurchaseRequests,
   updateRemotePurchaseRequestStatus,
 } from '../../services/purchaseRequestsService';
-import {
-  createPurchaseReport,
-  fetchPurchaseReports,
-  registerPurchaseReportDriveLink,
-  subscribeToPurchaseReports,
-} from '../../services/purchaseReportsService';
 import { fetchProfiles } from '../../services/profilesService';
+import { deleteArchivedRequestHistory } from '../../services/requestsService';
 import {
   archiveLocalPurchaseRequest,
-  buildPurchaseRequestsCsv,
-  buildPurchaseRequestsReportFileName,
   createLocalPurchaseRequest,
   filterPurchaseRequests,
   getPurchaseStats,
@@ -31,11 +24,17 @@ import {
   savePurchaseStatusOverride,
   updateLocalPurchaseStatus,
 } from '../../utils/purchaseRequestUtils';
-import { downloadCsvFile } from '../../utils/archivedReportUtils';
+import { downloadExcelReport } from '../../utils/excelReportUtils';
+import {
+  archivedDateAccessor,
+  buildPurchaseReportRows,
+  makeReportFileName,
+  purchaseReportColumns,
+} from '../../utils/reportDataUtils';
 import { purchaseStatuses } from '../../data/purchaseRequestsData';
 import { canManageSector } from '../../utils/permissions';
 import ConfirmModal from '../common/ConfirmModal';
-import RegisterDriveLinkModal from '../kanban/RegisterDriveLinkModal';
+import ReportGenerationModal from '../common/ReportGenerationModal';
 import PurchaseRequestFilters from './PurchaseRequestFilters';
 import PurchaseRequestFormModal from './PurchaseRequestFormModal';
 import PurchaseRequestStats from './PurchaseRequestStats';
@@ -97,9 +96,10 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const [error, setError] = useState('');
   const [archivingRequest, setArchivingRequest] = useState(null);
   const [restoringRequest, setRestoringRequest] = useState(null);
-  const [reports, setReports] = useState([]);
   const [generatingReport, setGeneratingReport] = useState(false);
-  const [registeringReport, setRegisteringReport] = useState(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [cleanupIds, setCleanupIds] = useState([]);
+  const [cleanupStep, setCleanupStep] = useState(0);
   const [permissionNotice, setPermissionNotice] = useState('');
   const permissionNoticeTimeout = useRef(null);
 
@@ -108,32 +108,6 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
     window.clearTimeout(permissionNoticeTimeout.current);
     permissionNoticeTimeout.current = window.setTimeout(() => setPermissionNotice(''), 2500);
   };
-
-  const loadReports = async () => {
-    if (!isSupabaseConfigured) return;
-
-    try {
-      const remoteReports = await fetchPurchaseReports();
-      setReports(remoteReports);
-    } catch {
-      // Reports stay at their last known value if the fetch fails.
-    }
-  };
-
-  useEffect(() => {
-    loadReports();
-  }, []);
-
-  useEffect(() => {
-    if (!isSupabaseConfigured) return undefined;
-
-    const channel = subscribeToPurchaseReports(loadReports);
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const pendingReport = useMemo(() => reports.find((report) => report.status === 'Pendente de Drive'), [reports]);
 
   const loadRemote = async () => {
     if (!isSupabaseConfigured) return;
@@ -321,51 +295,28 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
     }
   };
 
-  const handleGenerateReport = async () => {
+  const handleGenerateReport = async (draft, selectedRequests) => {
     if (!canManage) return notifyNoPermission();
     if (generatingReport) return;
-
-    // A pending report already covers the last export - reopen it instead of creating
-    // an orphaned duplicate that would never get its Drive link registered.
-    if (pendingReport) {
-      setRegisteringReport(pendingReport);
-      return;
-    }
-
-    if (visibleRequests.length === 0) return;
-
-    if (!usingSupabase) {
-      const csv = buildPurchaseRequestsCsv(visibleRequests);
-      downloadCsvFile(csv, buildPurchaseRequestsReportFileName());
-      setFeedback('Relatorio gerado e baixado com sucesso.');
-      return;
-    }
-
     setGeneratingReport(true);
     setFeedback('');
     setError('');
 
     try {
-      const csv = buildPurchaseRequestsCsv(visibleRequests);
-      downloadCsvFile(csv, buildPurchaseRequestsReportFileName());
-
-      const todayLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(new Date());
-      const today = new Date().toISOString().slice(0, 10);
-
-      const created = await createPurchaseReport(
-        {
-          name: `Relatório de compras solicitadas - ${todayLabel}`,
-          periodStart: today,
-          periodEnd: today,
-          totalExported: visibleRequests.length,
-          exportedRequestIds: visibleRequests.map((request) => request.id),
-        },
-        currentUser,
-      );
-
-      setReports((current) => [created, ...current]);
-      setRegisteringReport(created);
-      setFeedback('Relatório gerado e baixado. Salve o arquivo no Drive da empresa e registre o link para concluir.');
+      await downloadExcelReport({
+        fileName: makeReportFileName(draft.name),
+        sheetName: 'Compras arquivadas',
+        tableName: 'ComprasArquivadas',
+        title: draft.name,
+        columns: purchaseReportColumns,
+        rows: buildPurchaseReportRows(selectedRequests),
+      });
+      setReportOpen(false);
+      setFeedback(`Relatorio gerado com ${selectedRequests.length} solicitacao(oes) de compra.`);
+      if (currentUser?.accountType === 'admin') {
+        setCleanupIds(selectedRequests.map((request) => request.id));
+        setCleanupStep(1);
+      }
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel gerar o relatorio.');
     } finally {
@@ -373,15 +324,16 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
     }
   };
 
-  const handleSubmitDriveLink = async (reportId, values) => {
-    if (!canManage) return notifyNoPermission();
+  const handleCleanupHistory = async () => {
     try {
-      const updated = await registerPurchaseReportDriveLink(reportId, values);
-      setReports((current) => current.map((report) => (report.id === updated.id ? updated : report)));
-      setRegisteringReport(null);
-      setFeedback('Link do Drive registrado com sucesso.');
+      if (usingSupabase) await deleteArchivedRequestHistory(cleanupIds);
+      setRequests((current) => current.filter((request) => !cleanupIds.includes(request.id)));
+      setFeedback(`${cleanupIds.length} registro(s) arquivado(s) excluido(s) do site.`);
+      setCleanupIds([]);
     } catch (err) {
-      setError(err.message ?? 'Nao foi possivel registrar o link do Drive.');
+      setError(err.message ?? 'Nao foi possivel excluir o historico.');
+    } finally {
+      setCleanupStep(0);
     }
   };
 
@@ -414,15 +366,17 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
         </div>
 
         <div className="purchase-hero-actions">
-          <button
-            type="button"
-            className="ghost-button compact"
-            onClick={handleGenerateReport}
-            disabled={canManage && (generatingReport || (visibleRequests.length === 0 && !pendingReport))}
-          >
-            <FileDown size={14} aria-hidden="true" />
-            {generatingReport ? 'Gerando...' : 'Gerar relatorio'}
-          </button>
+          {view === 'archived' ? (
+            <button
+              type="button"
+              className="ghost-button compact"
+              onClick={() => (canManage ? setReportOpen(true) : notifyNoPermission())}
+              disabled={generatingReport || archivedRequests.length === 0}
+            >
+              <FileDown size={14} aria-hidden="true" />
+              {generatingReport ? 'Gerando...' : 'Gerar relatorio'}
+            </button>
+          ) : null}
           <button
             type="button"
             className="primary-button large"
@@ -495,10 +449,33 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
         onConfirm={handleConfirmRestore}
       />
 
-      <RegisterDriveLinkModal
-        report={registeringReport}
-        onClose={() => setRegisteringReport(null)}
-        onSubmit={handleSubmitDriveLink}
+      <ReportGenerationModal
+        open={reportOpen}
+        title="Gerar relatorio de compras arquivadas"
+        defaultName="Relatorio de compras solicitadas arquivadas"
+        items={archivedRequests}
+        dateAccessor={archivedDateAccessor}
+        entityLabel="solicitacao(oes) de compra arquivada(s)"
+        onClose={() => setReportOpen(false)}
+        onGenerate={handleGenerateReport}
+      />
+      <ConfirmModal
+        open={cleanupStep === 1}
+        title="Excluir dados do relatorio"
+        message={`Deseja excluir do site os ${cleanupIds.length} registro(s) incluidos no relatorio que acabou de ser gerado?`}
+        cancelLabel="Nao"
+        confirmLabel="Sim"
+        onCancel={() => setCleanupStep(0)}
+        onConfirm={() => setCleanupStep(2)}
+      />
+      <ConfirmModal
+        open={cleanupStep === 2}
+        title="Confirmar exclusao permanente"
+        message="Tem certeza que deseja excluir este historico do site? Esta acao nao pode ser desfeita."
+        cancelLabel="Cancelar"
+        confirmLabel="Sim, excluir historico"
+        onCancel={() => setCleanupStep(0)}
+        onConfirm={handleCleanupHistory}
       />
     </div>
   );
