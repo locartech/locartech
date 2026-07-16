@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import AccountStatusScreen from './components/auth/AccountStatusScreen';
 import AppLayout from './components/layout/AppLayout';
 import ForgotPassword from './pages/ForgotPassword';
@@ -7,6 +7,7 @@ import ResetPassword from './pages/ResetPassword';
 import { supabase } from './lib/supabase';
 import { clearNotifications, fetchNotifications, markNotificationRead, subscribeToNotifications } from './services/notificationsService';
 import { useAuth } from './contexts/AuthContext';
+import { enableNotificationSound, playNotificationSound } from './utils/notificationSound';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Kanban = lazy(() => import('./pages/Kanban'));
@@ -56,6 +57,7 @@ function App() {
   const [knowledgeSectorId, setKnowledgeSectorId] = useState(getStoredKnowledgeSector);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
+  const notificationSnapshotRef = useRef({ initialized: false, ids: new Set() });
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
 
   // Operacao accounts only ever get Solicitacoes de compras - no other page is reachable.
@@ -79,11 +81,42 @@ function App() {
     }
   }, [knowledgeSectorId]);
 
+  useEffect(() => {
+    const enableSound = () => {
+      enableNotificationSound();
+      window.removeEventListener('pointerdown', enableSound);
+      window.removeEventListener('keydown', enableSound);
+    };
+
+    window.addEventListener('pointerdown', enableSound, { once: true });
+    window.addEventListener('keydown', enableSound, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', enableSound);
+      window.removeEventListener('keydown', enableSound);
+    };
+  }, []);
+
+  useEffect(() => {
+    notificationSnapshotRef.current = { initialized: false, ids: new Set() };
+  }, [profile?.id]);
+
   const loadNotifications = async () => {
     if (!profile?.id) return;
     try {
       const remoteNotifications = await fetchNotifications();
+      const snapshot = notificationSnapshotRef.current;
+      const hasNewUnreadNotification =
+        snapshot.initialized &&
+        remoteNotifications.some(
+          (notification) => !notification.read && !snapshot.ids.has(notification.id),
+        );
+
+      notificationSnapshotRef.current = {
+        initialized: true,
+        ids: new Set(remoteNotifications.map((notification) => notification.id)),
+      };
       setNotifications(remoteNotifications);
+      if (hasNewUnreadNotification) playNotificationSound();
     } catch {
       // Notifications stay at their last known value if the fetch fails.
     }
