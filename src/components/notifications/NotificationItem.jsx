@@ -1,5 +1,4 @@
 import { Check, Circle } from 'lucide-react';
-import { sectors, users } from '../../data/mockData';
 
 const formatNotificationDate = (value) =>
   new Intl.DateTimeFormat('pt-BR', {
@@ -10,10 +9,8 @@ const formatNotificationDate = (value) =>
   }).format(new Date(value));
 
 function NotificationItem({ notification, onMarkRead }) {
-  const sector = sectors.find((item) => item.id === notification.targetSectorId);
-  const user = users.find((item) => item.id === notification.targetUserId);
-  const sectorLabel = sector?.name ?? notification.targetSectorName ?? 'Geral';
-  const userLabel = user?.name ?? notification.targetUserName;
+  const sectorLabel = notification.targetSectorName ?? 'Geral';
+  const userLabel = notification.targetUserName;
 
   return (
     <article className={`notification-item ${notification.read ? 'read' : 'unread'}`}>

@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase';
 import { purchaseRequestSource, purchaseRequestTargetSector } from '../data/purchaseRequestsData';
-import { fetchSectorIdByName } from './sectorsService';
 
 function mapRequestFromDb(request) {
   return {
@@ -41,76 +40,36 @@ export async function fetchRemoteRequests() {
 }
 
 export async function createRemoteRequest(values, currentUser) {
-  const [requesterSectorId, targetSectorId] = await Promise.all([
-    currentUser.sectorId ? Promise.resolve(currentUser.sectorId) : fetchSectorIdByName(currentUser.sector),
-    fetchSectorIdByName(values.targetSector),
-  ]);
-
-  const payload = {
-    title: values.stepName.trim(),
-    description: (values.description ?? '').trim(),
-    step_name: values.stepName.trim(),
-    from_sector: currentUser.sector,
-    to_sector: values.targetSector,
-    requester_sector_id: requesterSectorId,
-    target_sector_id: targetSectorId,
-    requester_id: currentUser.id,
-    requester_name: currentUser.name,
-    responsible_name: values.responsibleName?.trim() || null,
-    status: 'pending_approval',
-    kanban_status: values.kanbanStatus || 'todo',
-    priority: values.priority,
-    due_date: values.dueDate || null,
-    organization_id: currentUser.organizationId,
-  };
-
-  const { data, error } = await supabase.from('requests').insert(payload).select('*').single();
-  if (error) throw error;
-
-  await supabase.from('notifications').insert({
-    organization_id: currentUser.organizationId,
-    recipient_sector_id: targetSectorId,
-    actor_profile_id: currentUser.id,
-    title: 'Nova solicitacao recebida',
-    message: `Nova solicitacao recebida de ${currentUser.sector}: ${data.title}.`,
-    category: 'Solicitacoes',
-    type: 'request_created',
-    target_sector_name: values.targetSector,
-    target_user_name: values.responsibleName || null,
+  const { data, error } = await supabase.rpc('create_general_request', {
+    p_target_sector_name: values.targetSector,
+    p_step_name: values.stepName.trim(),
+    p_description: (values.description ?? '').trim(),
+    p_responsible_name: values.responsibleName?.trim() || null,
+    p_kanban_status: values.kanbanStatus || 'todo',
+    p_priority: values.priority,
+    p_due_date: values.dueDate,
   });
-
+  if (error) throw error;
   return mapRequestFromDb(data);
 }
 
 export async function updateRemoteRequest(requestId, values) {
-  const targetSectorId = values.targetSector ? await fetchSectorIdByName(values.targetSector) : undefined;
-
-  const payload = {
-    title: values.stepName.trim(),
-    description: (values.description ?? '').trim(),
-    step_name: values.stepName.trim(),
-    to_sector: values.targetSector,
-    target_sector_id: targetSectorId,
-    responsible_name: values.responsibleName?.trim() || null,
-    kanban_status: values.kanbanStatus,
-    priority: values.priority,
-    due_date: values.dueDate || null,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { data, error } = await supabase.from('requests').update(payload).eq('id', requestId).select('*').single();
+  const { data, error } = await supabase.rpc('update_pending_request', {
+    p_request_id: requestId,
+    p_target_sector_name: values.targetSector,
+    p_step_name: values.stepName.trim(),
+    p_description: (values.description ?? '').trim(),
+    p_responsible_name: values.responsibleName?.trim() || null,
+    p_kanban_status: values.kanbanStatus,
+    p_priority: values.priority,
+    p_due_date: values.dueDate,
+  });
   if (error) throw error;
   return mapRequestFromDb(data);
 }
 
 export async function cancelRemoteRequest(requestId) {
-  const { data, error } = await supabase
-    .from('requests')
-    .update({ status: 'canceled', cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-    .eq('id', requestId)
-    .select('*')
-    .single();
-
+  const { data, error } = await supabase.rpc('cancel_request', { p_request_id: requestId });
   if (error) throw error;
   return mapRequestFromDb(data);
 }

@@ -17,6 +17,7 @@ function PurchaseRequestFormModal({ currentUser, submitError = '', onClose, onSu
   useEscapeKey(onClose);
   const [draft, setDraft] = useState(emptyForm);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setDraft((current) => ({
@@ -29,7 +30,7 @@ function PurchaseRequestFormModal({ currentUser, submitError = '', onClose, onSu
     setDraft((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const validationError = validatePurchaseRequest(draft);
     if (validationError) {
@@ -37,7 +38,13 @@ function PurchaseRequestFormModal({ currentUser, submitError = '', onClose, onSu
       return;
     }
 
-    onSubmit(draft);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onSubmit(draft);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -98,11 +105,11 @@ function PurchaseRequestFormModal({ currentUser, submitError = '', onClose, onSu
           </label>
 
           <div className="modal-actions">
-            <button type="button" className="ghost-button" onClick={onClose}>
+            <button type="button" className="ghost-button" onClick={onClose} disabled={submitting}>
               Cancelar
             </button>
-            <button type="submit" className="primary-button">
-              Criar solicitacao
+            <button type="submit" className="primary-button" disabled={submitting}>
+              {submitting ? 'Criando...' : 'Criar solicitacao'}
             </button>
           </div>
         </form>

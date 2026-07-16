@@ -6,16 +6,23 @@ function RequestRejectModal({ request, onClose, onConfirm }) {
   useEscapeKey(onClose, Boolean(request));
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   if (!request) return null;
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!reason.trim()) {
       setError('Informe o motivo da recusa.');
       return;
     }
-    onConfirm(request, reason);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onConfirm(request, reason);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -38,11 +45,11 @@ function RequestRejectModal({ request, onClose, onConfirm }) {
             <textarea value={reason} onChange={(event) => setReason(event.target.value)} />
           </label>
           <div className="modal-actions">
-            <button type="button" className="ghost-button" onClick={onClose}>
+            <button type="button" className="ghost-button" onClick={onClose} disabled={submitting}>
               Cancelar
             </button>
-            <button type="submit" className="primary-button danger-action">
-              Recusar solicitacao
+            <button type="submit" className="primary-button danger-action" disabled={submitting}>
+              {submitting ? 'Recusando...' : 'Recusar solicitacao'}
             </button>
           </div>
         </form>

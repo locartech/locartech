@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { sectors } from '../data/mockData';
+import { sectors } from '../data/sectorsData';
 import { fetchSectorIdByName } from './sectorsService';
 
 const TASK_SELECT = '*, requester_sector:sectors!requester_sector_id(name), requester_profile:profiles!requester_profile_id(name)';

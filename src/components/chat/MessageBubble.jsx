@@ -4,6 +4,15 @@ const formatTime = (value) =>
   new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 
 function MessageBubble({ message, own, readLabel }) {
+  if (message.type === 'system') {
+    return (
+      <div className="message-system-event">
+        <span>{message.text}</span>
+        <time>{formatTime(message.createdAt)}</time>
+      </div>
+    );
+  }
+
   const hasBeenRead = readLabel && readLabel !== 'Enviada' && !readLabel.startsWith('0/');
   const ReadIcon = hasBeenRead ? CheckCheck : Check;
   const readTitle = hasBeenRead ? 'Visualizada' : 'Entregue';

@@ -5,34 +5,8 @@ import {
 import { supabase } from '../lib/supabase';
 import {
   encodePurchaseDescription,
-  getPurchaseRequestTitle,
   normalizePurchaseRequest,
 } from '../utils/purchaseRequestUtils';
-import { fetchSectorIdByName } from './sectorsService';
-
-async function mapPurchaseRequestToDb(values, currentUser) {
-  const targetSectorId = await fetchSectorIdByName(purchaseRequestTargetSector).catch(() => null);
-  const title = getPurchaseRequestTitle(values);
-
-  return {
-    title,
-    description: encodePurchaseDescription(values),
-    step_name: title,
-    from_sector: purchaseRequestSource,
-    to_sector: purchaseRequestTargetSector,
-    requester_sector_id: currentUser.sectorId ?? null,
-    target_sector_id: targetSectorId,
-    requester_id: currentUser.id,
-    requester_name: values.requesterName.trim(),
-    responsible_name: null,
-    status: 'pending_approval',
-    kanban_status: 'todo',
-    priority: values.priority,
-    due_date: values.dueDate,
-    organization_id: currentUser.organizationId ?? null,
-    updated_at: new Date().toISOString(),
-  };
-}
 
 export async function fetchRemotePurchaseRequests() {
   const { data, error } = await supabase
@@ -46,13 +20,13 @@ export async function fetchRemotePurchaseRequests() {
   return data.map(normalizePurchaseRequest);
 }
 
-export async function createRemotePurchaseRequest(values, currentUser) {
-  const payload = await mapPurchaseRequestToDb(values, currentUser);
-  const { data, error } = await supabase
-    .from('requests')
-    .insert(payload)
-    .select('*')
-    .single();
+export async function createRemotePurchaseRequest(values) {
+  const { data, error } = await supabase.rpc('create_purchase_request', {
+    p_description: encodePurchaseDescription(values),
+    p_requester_name: values.requesterName.trim(),
+    p_priority: values.priority,
+    p_due_date: values.dueDate,
+  });
 
   if (error) throw error;
   return normalizePurchaseRequest(data);

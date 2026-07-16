@@ -1,7 +1,6 @@
 import { Archive, FileDown, LayoutGrid, Plus } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isSupabaseConfigured, supabase } from '../../lib/supabase';
-import { createNotification } from '../../services/notificationsService';
 import {
   archiveRemotePurchaseRequest,
   createRemotePurchaseRequest,
@@ -10,7 +9,6 @@ import {
   subscribeToPurchaseRequests,
   updateRemotePurchaseRequestStatus,
 } from '../../services/purchaseRequestsService';
-import { fetchProfiles } from '../../services/profilesService';
 import { deleteArchivedRequestHistory } from '../../services/requestsService';
 import {
   archiveLocalPurchaseRequest,
@@ -18,10 +16,8 @@ import {
   filterPurchaseRequests,
   getPurchaseStats,
   loadPurchaseRequests,
-  removePurchaseStatusOverride,
   restoreLocalPurchaseRequest,
   savePurchaseRequests,
-  savePurchaseStatusOverride,
   updateLocalPurchaseStatus,
 } from '../../utils/purchaseRequestUtils';
 import { downloadExcelReport } from '../../utils/excelReportUtils';
@@ -31,7 +27,6 @@ import {
   makeReportFileName,
   purchaseReportColumns,
 } from '../../utils/reportDataUtils';
-import { purchaseStatuses } from '../../data/purchaseRequestsData';
 import { canManageSector } from '../../utils/permissions';
 import ConfirmModal from '../common/ConfirmModal';
 import ReportGenerationModal from '../common/ReportGenerationModal';
@@ -40,54 +35,9 @@ import PurchaseRequestFormModal from './PurchaseRequestFormModal';
 import PurchaseRequestStats from './PurchaseRequestStats';
 import PurchaseRequestTable from './PurchaseRequestTable';
 
-function getStatusLabel(statusId) {
-  return purchaseStatuses.find((status) => status.id === statusId)?.label ?? statusId;
-}
-
-async function notifyComprasTeam(request) {
-  try {
-    const profiles = await fetchProfiles();
-    const purchaseMembers = profiles.filter(
-      (profile) => profile.status === 'Ativo' && profile.sector === 'Compras',
-    );
-
-    await Promise.all(
-      purchaseMembers.map((member) =>
-        createNotification({
-          userId: member.id,
-          title: 'Nova compra solicitada',
-          message: `${request.requesterName} solicitou a compra de ${request.item}.`,
-          category: 'Compras solicitadas',
-          targetSectorName: 'Compras',
-          targetUserName: member.name,
-        }),
-      ),
-    );
-  } catch {
-    // A compra nao deve falhar se apenas a notificacao estiver indisponivel.
-  }
-}
-
-async function notifyRequester(request, status) {
-  if (!request.requesterId) return;
-
-  try {
-    await createNotification({
-      userId: request.requesterId,
-      title: 'Compra solicitada atualizada',
-      message: `A solicitacao de compra ${request.item} mudou para ${getStatusLabel(status)}.`,
-      category: 'Compras solicitadas',
-      targetSectorName: 'Compras',
-      targetUserName: request.requesterName,
-    });
-  } catch {
-    // A atualizacao de status nao deve falhar se apenas a notificacao estiver indisponivel.
-  }
-}
-
 function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }) {
   const [requests, setRequests] = useState(loadPurchaseRequests);
-  const [usingSupabase, setUsingSupabase] = useState(false);
+  const [usingSupabase, setUsingSupabase] = useState(isSupabaseConfigured);
   const [formOpen, setFormOpen] = useState(false);
   const [view, setView] = useState('active');
   const [filters, setFilters] = useState({ query: '', status: 'all', priority: 'all' });
@@ -117,8 +67,8 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
       setRequests(remoteRequests);
       setUsingSupabase(true);
       onCountChange?.(remoteRequests.filter((request) => !request.archived).length);
-    } catch {
-      setUsingSupabase(false);
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel carregar as solicitacoes de compra.');
     }
   };
 
@@ -176,12 +126,11 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
     setError('');
 
     try {
-      if (usingSupabase) {
+      if (isSupabaseConfigured) {
         const created = await createRemotePurchaseRequest(values, currentUser);
         setRequests((current) => [created, ...current]);
         setFormOpen(false);
         setFeedback('Solicitacao de compra criada com sucesso.');
-        await notifyComprasTeam(created);
         return;
       }
 
@@ -208,18 +157,16 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
     if (!canManage) return notifyNoPermission();
     setFeedback('');
     setError('');
-    savePurchaseStatusOverride(request.id, status);
     setRequests((current) =>
       current.map((item) => (item.id === request.id ? { ...item, status } : item)),
     );
 
     try {
-      if (usingSupabase) {
+      if (isSupabaseConfigured) {
         const updated = await updateRemotePurchaseRequestStatus(request.id, status);
         const updatedRequest = updated ?? { ...request, status };
         setRequests((current) => current.map((item) => (item.id === request.id ? updatedRequest : item)));
         setFeedback('Status atualizado com sucesso.');
-        await notifyRequester(updatedRequest, status);
         return;
       }
 
@@ -239,7 +186,6 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
 
       setFeedback('Status atualizado com sucesso.');
     } catch (err) {
-      removePurchaseStatusOverride(request.id);
       setRequests((current) =>
         current.map((item) => (item.id === request.id ? { ...item, status: request.status } : item)),
       );

@@ -15,6 +15,7 @@ const blankDraft = {
 function EditTaskModal({ task, onClose, onSave }) {
   useEscapeKey(onClose, Boolean(task));
   const [draft, setDraft] = useState(blankDraft);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setDraft(task ?? blankDraft);
@@ -26,16 +27,22 @@ function EditTaskModal({ task, onClose, onSave }) {
     setDraft((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!draft.title.trim() || !draft.assignee.trim() || !draft.date) return;
-    onSave(task.id, {
-      title: draft.title.trim(),
-      assignee: draft.assignee.trim(),
-      status: draft.status,
-      priority: draft.priority ?? 'medium',
-      date: draft.date,
-    });
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onSave(task.id, {
+        title: draft.title.trim(),
+        assignee: draft.assignee.trim(),
+        status: draft.status,
+        priority: draft.priority ?? 'medium',
+        date: draft.date,
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -90,10 +97,10 @@ function EditTaskModal({ task, onClose, onSave }) {
           </label>
 
           <div className="modal-actions">
-            <button type="button" className="ghost-button" onClick={onClose}>
+            <button type="button" className="ghost-button" onClick={onClose} disabled={submitting}>
               Cancelar
             </button>
-            <button type="submit" className="primary-button">
+            <button type="submit" className="primary-button" disabled={submitting}>
               Salvar alterações
             </button>
           </div>

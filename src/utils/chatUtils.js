@@ -23,6 +23,17 @@ export function getConversationOtherUser(conversation, users, currentUser) {
 }
 
 export function getConversationSubtitle(conversation, users, currentUser) {
+  const lastMessage = getLastMessage(conversation);
+  if (lastMessage) {
+    if (lastMessage.type === 'system') return lastMessage.text;
+    const prefix = lastMessage.senderId === currentUser.id
+      ? 'Voce: '
+      : conversation.type === 'group'
+        ? `${lastMessage.senderName}: `
+        : '';
+    return `${prefix}${lastMessage.text}`;
+  }
+
   if (conversation.type === 'group') {
     return `${conversation.participantIds.length} participantes`;
   }

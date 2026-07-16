@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import EmptyState from '../common/EmptyState';
 import ChatHeader from './ChatHeader';
 import MessageBubble from './MessageBubble';
@@ -28,6 +29,23 @@ function ChatWindow({
     (user) => conversation.participantIds.includes(user.id) && user.id !== currentUser.id,
   );
   const readTargetCount = participants.length;
+  let previousDate = '';
+
+  const getDateKey = (value) => {
+    const date = new Date(value);
+    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  };
+
+  const formatDateLabel = (value) => {
+    const date = new Date(value);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const key = getDateKey(date);
+    if (key === getDateKey(today)) return 'Hoje';
+    if (key === getDateKey(yesterday)) return 'Ontem';
+    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).format(date);
+  };
 
   return (
     <section className="chat-window">
@@ -52,7 +70,16 @@ function ChatWindow({
                 : 'Enviada'
             : '';
 
-          return <MessageBubble key={message.id} message={message} own={own} readLabel={readLabel} />;
+          const messageDate = getDateKey(message.createdAt);
+          const showDate = messageDate !== previousDate;
+          previousDate = messageDate;
+
+          return (
+            <Fragment key={message.id}>
+              {showDate ? <div className="message-date-separator"><span>{formatDateLabel(message.createdAt)}</span></div> : null}
+              <MessageBubble message={message} own={own} readLabel={readLabel} />
+            </Fragment>
+          );
         })}
       </div>
 

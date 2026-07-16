@@ -1,21 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import AccountStatusScreen from './components/auth/AccountStatusScreen';
 import AppLayout from './components/layout/AppLayout';
-import Chat from './pages/Chat';
-import Dashboard from './pages/Dashboard';
 import ForgotPassword from './pages/ForgotPassword';
-import Kanban from './pages/Kanban';
 import LoginPage from './pages/LoginPage';
-import Notifications from './pages/Notifications';
-import Requests from './pages/Requests';
 import ResetPassword from './pages/ResetPassword';
-import PurchaseRequests from './pages/PurchaseRequests';
-import Members from './pages/Members';
-import Sectors from './pages/Sectors';
-import SectorKnowledge from './pages/SectorKnowledge';
 import { supabase } from './lib/supabase';
 import { clearNotifications, fetchNotifications, markNotificationRead, subscribeToNotifications } from './services/notificationsService';
 import { useAuth } from './contexts/AuthContext';
+
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Kanban = lazy(() => import('./pages/Kanban'));
+const Requests = lazy(() => import('./pages/Requests'));
+const PurchaseRequests = lazy(() => import('./pages/PurchaseRequests'));
+const Chat = lazy(() => import('./pages/Chat'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Sectors = lazy(() => import('./pages/Sectors'));
+const SectorKnowledge = lazy(() => import('./pages/SectorKnowledge'));
+const Members = lazy(() => import('./pages/Members'));
 
 const pages = {
   dashboard: Dashboard,
@@ -71,7 +72,7 @@ function App() {
   );
 
   const handleMarkRead = async (notificationId) => {
-    const updated = await markNotificationRead(notificationId);
+    const updated = await markNotificationRead(notificationId, profile?.id);
     setNotifications((current) =>
       current.map((notification) => (notification.id === notificationId ? updated : notification)),
     );
@@ -104,19 +105,21 @@ function App() {
       chatUnreadCount={chatUnreadCount}
       onOpenNotifications={isOperacao ? undefined : () => setActivePage('notifications')}
     >
-      <ActivePage
-        notifications={notifications}
-        onMarkRead={handleMarkRead}
-        onClearNotifications={handleClearNotifications}
-        onChatUnreadChange={setChatUnreadCount}
-        onNavigate={setActivePage}
-        knowledgeSectorId={knowledgeSectorId}
-        onOpenKnowledge={(sectorId) => {
-          setKnowledgeSectorId(sectorId);
-          setActivePage('sectorKnowledge');
-        }}
-        onBackToSectors={() => setActivePage('sectors')}
-      />
+      <Suspense fallback={<div className="members-feedback">Carregando pagina...</div>}>
+        <ActivePage
+          notifications={notifications}
+          onMarkRead={handleMarkRead}
+          onClearNotifications={handleClearNotifications}
+          onChatUnreadChange={setChatUnreadCount}
+          onNavigate={setActivePage}
+          knowledgeSectorId={knowledgeSectorId}
+          onOpenKnowledge={(sectorId) => {
+            setKnowledgeSectorId(sectorId);
+            setActivePage('sectorKnowledge');
+          }}
+          onBackToSectors={() => setActivePage('sectors')}
+        />
+      </Suspense>
     </AppLayout>
   );
 }

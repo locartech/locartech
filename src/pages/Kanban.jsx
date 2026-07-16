@@ -58,6 +58,7 @@ function Kanban() {
       setStageTasks((current) => [...current, created]);
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel criar a atividade.');
+      throw err;
     }
   };
 
@@ -71,6 +72,7 @@ function Kanban() {
       setStageTasks((prev) => prev.map((task) => (task.id === taskId ? updated : task)));
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel atualizar a atividade.');
+      throw err;
     }
   };
 

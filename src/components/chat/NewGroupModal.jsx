@@ -17,6 +17,7 @@ function NewGroupModal({ users, currentUser, group, onClose, onCreate }) {
   const [addOpen, setAddOpen] = useState(false);
   const [memberError, setMemberError] = useState('');
   const [busyMemberId, setBusyMemberId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const availableUsers = users.filter((user) => user.id !== currentUser.id);
   const currentMembers = availableUsers.filter((user) => draft.participantIds.includes(user.id));
@@ -74,11 +75,17 @@ function NewGroupModal({ users, currentUser, group, onClose, onCreate }) {
     }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!draft.name.trim()) return;
     if (!isEditing && draft.participantIds.length === 0) return;
-    onCreate(draft);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onCreate(draft);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -218,11 +225,11 @@ function NewGroupModal({ users, currentUser, group, onClose, onCreate }) {
           </div>
 
           <div className="modal-actions">
-            <button type="button" className="ghost-button" onClick={onClose}>
+            <button type="button" className="ghost-button" onClick={onClose} disabled={submitting}>
               {isEditing ? 'Fechar' : 'Cancelar'}
             </button>
-            <button type="submit" className="primary-button">
-              {isEditing ? 'Salvar grupo' : 'Criar grupo'}
+            <button type="submit" className="primary-button" disabled={submitting}>
+              {submitting ? 'Salvando...' : isEditing ? 'Salvar grupo' : 'Criar grupo'}
             </button>
           </div>
         </form>

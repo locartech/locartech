@@ -12,7 +12,7 @@ function ChatHeader({
 
   const participantSummary =
     conversation.type === 'group'
-      ? `${participants.length} participantes - ${conversation.sector}`
+      ? `${conversation.participantIds.length} participantes - ${conversation.sector}`
       : `${participants[0]?.sector ?? ''} - ${participants[0]?.role ?? ''}`;
 
   const Icon = conversation.type === 'group' ? Hash : UserRound;

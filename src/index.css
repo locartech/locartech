@@ -5951,6 +5951,47 @@ body {
   color: #2563eb;
 }
 
+.message-date-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0 4px;
+}
+
+.message-date-separator span {
+  padding: 5px 10px;
+  border: 1px solid #dbe4ef;
+  border-radius: 999px;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 2px rgba(15, 42, 67, 0.05);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.message-system-event {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(78%, 620px);
+  margin: 4px auto;
+  padding: 6px 10px;
+  border: 1px solid #dbe4ef;
+  border-radius: 8px;
+  color: #64748b;
+  background: rgba(248, 250, 252, 0.94);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.message-system-event time {
+  flex: 0 0 auto;
+  color: #94a3b8;
+  font-size: 0.66rem;
+}
+
 .chat-header-actions {
   display: inline-flex;
   align-items: center;

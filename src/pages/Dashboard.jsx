@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import StatCard from '../components/dashboard/StatCard';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchKanbanTasks } from '../services/kanbanService';
-import { fetchRemoteRequests } from '../services/requestsService';
+import { supabase } from '../lib/supabase';
+import { fetchKanbanTasks, subscribeToKanban } from '../services/kanbanService';
+import { fetchRemoteRequests, subscribeToRequests } from '../services/requestsService';
 
 function getDaysUntil(dateValue) {
   if (!dateValue) return Number.POSITIVE_INFINITY;
@@ -13,7 +14,7 @@ function getDaysUntil(dateValue) {
 }
 
 function Dashboard() {
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const [stageTasks, setStageTasks] = useState([]);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +23,7 @@ function Dashboard() {
   useEffect(() => {
     let mounted = true;
 
-    Promise.all([fetchKanbanTasks(), fetchRemoteRequests()])
+    const loadIndicators = () => Promise.all([fetchKanbanTasks(), fetchRemoteRequests()])
       .then(([tasks, requestList]) => {
         if (!mounted) return;
         setStageTasks(tasks);
@@ -35,39 +36,54 @@ function Dashboard() {
       .finally(() => {
         if (mounted) setLoading(false);
       });
+    loadIndicators();
+
+    const kanbanChannel = subscribeToKanban(loadIndicators);
+    const requestsChannel = subscribeToRequests(loadIndicators);
 
     return () => {
       mounted = false;
+      supabase.removeChannel(kanbanChannel);
+      supabase.removeChannel(requestsChannel);
     };
-  }, []);
+  }, [currentUser?.id]);
 
-  const totalTasks = stageTasks.length;
-  const completedTasks = stageTasks.filter((task) => task.status === 'done').length;
-  const todoTasks = stageTasks.filter((task) => task.status === 'todo').length;
-  const doingTasks = stageTasks.filter((task) => task.status === 'doing').length;
-  const dueSoonTasks = stageTasks.filter((task) => {
+  const normalizedUserName = currentUser?.name?.trim().toLocaleLowerCase('pt-BR');
+  const activeTasks = stageTasks.filter((task) => !task.archived && task.status !== 'canceled');
+  const scopedTasks = isAdmin
+    ? activeTasks
+    : activeTasks.filter(
+        (task) =>
+          task.responsibleId === currentUser?.id ||
+          task.assignee?.trim().toLocaleLowerCase('pt-BR') === normalizedUserName,
+      );
+  const totalTasks = scopedTasks.length;
+  const completedTasks = scopedTasks.filter((task) => task.status === 'done').length;
+  const todoTasks = scopedTasks.filter((task) => task.status === 'todo').length;
+  const doingTasks = scopedTasks.filter((task) => task.status === 'doing').length;
+  const dueSoonTasks = scopedTasks.filter((task) => {
     const daysUntil = getDaysUntil(task.date);
     return !['done', 'canceled'].includes(task.status) && daysUntil >= 0 && daysUntil <= 7;
   }).length;
-  const overdueTasks = stageTasks.filter(
+  const overdueTasks = scopedTasks.filter(
     (task) => !['done', 'canceled'].includes(task.status) && getDaysUntil(task.date) < 0,
   ).length;
   const completionRate = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   const currentSector = currentUser?.sector ?? 'Compras';
-  const receivedRequests = requests.filter((request) => request.targetSector === currentSector);
+  const activeRequests = requests.filter((request) => !request.archived);
+  const receivedRequests = activeRequests.filter((request) => isAdmin || request.targetSector === currentSector);
   const sentRequests = requests.filter(
     (request) =>
-      request.requesterUserId === currentUser?.id ||
-      request.requesterName === currentUser?.name ||
-      request.requesterSector === currentSector,
+      !request.archived &&
+      (isAdmin || request.requesterUserId === currentUser?.id || request.requesterName === currentUser?.name),
   );
-  const relevantRequests = requests.filter(
+  const relevantRequests = activeRequests.filter(
     (request) =>
+      isAdmin ||
       request.targetSector === currentSector ||
       request.requesterUserId === currentUser?.id ||
-      request.requesterName === currentUser?.name ||
-      request.requesterSector === currentSector,
+      request.requesterName === currentUser?.name,
   );
   const urgentRequests = relevantRequests.filter((request) => request.priority === 'urgent').length;
   const pendingRequests = relevantRequests.filter((request) => request.requestStatus === 'pending_approval').length;
@@ -81,7 +97,7 @@ function Dashboard() {
         </div>
         <div className="dashboard-score">
           <span>{completionRate}%</span>
-          <small>conclusao das tarefas</small>
+          <small>{isAdmin ? 'conclusao geral' : 'conclusao das suas tarefas'}</small>
         </div>
       </section>
 
@@ -92,7 +108,7 @@ function Dashboard() {
         <div className="section-heading compact">
           <div>
             <p className="eyebrow">Tarefas</p>
-            <h2>Produtividade e prazos</h2>
+            <h2>{isAdmin ? 'Produtividade e prazos da empresa' : 'Sua produtividade e prazos'}</h2>
           </div>
         </div>
         <div className="stats-grid dashboard-metrics-grid dashboard-task-grid">
@@ -112,8 +128,8 @@ function Dashboard() {
           </div>
         </div>
         <div className="stats-grid dashboard-metrics-grid dashboard-request-grid">
-          <StatCard label="Recebidas" value={receivedRequests.length} detail="Demandas destinadas ao setor atual" tone="blue" />
-          <StatCard label="Enviadas" value={sentRequests.length} detail="Solicitacoes abertas pelo setor atual" />
+          <StatCard label="Recebidas" value={receivedRequests.length} detail={isAdmin ? 'Demandas recebidas pela empresa' : 'Demandas destinadas ao seu setor'} tone="blue" />
+          <StatCard label="Enviadas" value={sentRequests.length} detail={isAdmin ? 'Solicitacoes emitidas pela empresa' : 'Solicitacoes abertas por voce'} />
           <StatCard label="Urgentes" value={urgentRequests} detail="Prioridade maxima" tone="amber" />
           <StatCard label="Pendentes" value={pendingRequests} detail="Pendentes ou em andamento" tone="amber" />
         </div>

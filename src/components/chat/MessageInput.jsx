@@ -3,12 +3,18 @@ import { useState } from 'react';
 
 function MessageInput({ disabled, onSend }) {
   const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!message.trim()) return;
-    onSend(message);
-    setMessage('');
+    if (!message.trim() || sending) return;
+    setSending(true);
+    try {
+      await onSend(message);
+      setMessage('');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -17,11 +23,11 @@ function MessageInput({ disabled, onSend }) {
         value={message}
         onChange={(event) => setMessage(event.target.value)}
         placeholder={disabled ? 'Selecione uma conversa' : 'Digite uma mensagem'}
-        disabled={disabled}
+        disabled={disabled || sending}
       />
-      <button type="submit" className="primary-button" disabled={disabled || !message.trim()}>
+      <button type="submit" className="primary-button" disabled={disabled || sending || !message.trim()}>
         <Send size={16} aria-hidden="true" />
-        Enviar
+        {sending ? 'Enviando...' : 'Enviar'}
       </button>
     </form>
   );

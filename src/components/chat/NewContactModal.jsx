@@ -5,6 +5,7 @@ import useEscapeKey from '../../hooks/useEscapeKey';
 function NewContactModal({ users, currentUser, onClose, onSelect }) {
   useEscapeKey(onClose);
   const [query, setQuery] = useState('');
+  const [busyId, setBusyId] = useState(null);
 
   const contacts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -43,12 +44,26 @@ function NewContactModal({ users, currentUser, onClose, onSelect }) {
 
           <div className="contact-picker-list">
             {contacts.map((contact) => (
-              <button key={contact.id} type="button" className="contact-picker-item" onClick={() => onSelect(contact)}>
+              <button
+                key={contact.id}
+                type="button"
+                className="contact-picker-item"
+                disabled={Boolean(busyId)}
+                onClick={async () => {
+                  if (busyId) return;
+                  setBusyId(contact.id);
+                  try {
+                    await onSelect(contact);
+                  } finally {
+                    setBusyId(null);
+                  }
+                }}
+              >
                 <span className="user-avatar">
                   {contact.avatarInitials || <UserRound size={18} aria-hidden="true" />}
                 </span>
                 <span>
-                  <strong>{contact.name}</strong>
+                  <strong>{busyId === contact.id ? 'Abrindo conversa...' : contact.name}</strong>
                   <small>{contact.sector} - {contact.role}</small>
                 </span>
               </button>

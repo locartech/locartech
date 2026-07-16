@@ -29,8 +29,8 @@ function KanbanTable({
     }));
   };
 
-  const handleAddTask = (sectorId, values) => {
-    onAddTask(sectorId, values);
+  const handleAddTask = async (sectorId, values) => {
+    await onAddTask(sectorId, values);
     setAddingSectorId(null);
   };
 
@@ -41,8 +41,8 @@ function KanbanTable({
     }
   };
 
-  const handleEditSave = (taskId, values) => {
-    onUpdateTask(taskId, values);
+  const handleEditSave = async (taskId, values) => {
+    await onUpdateTask(taskId, values);
     setEditingTask(null);
   };
 

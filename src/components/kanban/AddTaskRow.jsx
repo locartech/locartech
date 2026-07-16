@@ -13,16 +13,23 @@ const blankTask = {
 
 function AddTaskRow({ onAdd, onCancel }) {
   const [draft, setDraft] = useState(blankTask);
+  const [submitting, setSubmitting] = useState(false);
 
   const updateDraft = (field, value) => {
     setDraft((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!draft.title.trim() || !draft.assignee.trim() || !draft.date) return;
-    onAdd(draft);
-    setDraft(blankTask);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onAdd(draft);
+      setDraft(blankTask);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -72,7 +79,7 @@ function AddTaskRow({ onAdd, onCancel }) {
         />
       </div>
       <div className="stage-cell stage-actions-cell">
-        <button type="submit" className="table-icon-button primary" title="Salvar atividade">
+        <button type="submit" className="table-icon-button primary" title="Salvar atividade" disabled={submitting}>
           <Check size={16} aria-hidden="true" />
         </button>
         <button type="button" className="table-icon-button" onClick={onCancel} title="Cancelar inclusão">

@@ -9,6 +9,7 @@ import {
   archiveConversationForUser,
   createGroupConversation,
   ensureDirectConversation,
+  fetchConversationMessages,
   fetchConversations,
   markConversationRead,
   restoreConversationForUser,
@@ -37,7 +38,7 @@ function Chat({ onChatUnreadChange }) {
     [activeConversationId, conversations],
   );
 
-  const loadChat = async () => {
+  const loadChat = async (selectedConversationId = activeConversationId) => {
     if (!currentUser?.id) return;
 
     try {
@@ -45,7 +46,16 @@ function Chat({ onChatUnreadChange }) {
       const activeProfiles = profiles.filter((profile) => profile.status === 'Ativo');
       setUsers(activeProfiles);
 
-      const remoteConversations = await fetchConversations(currentUser.id, activeProfiles);
+      let remoteConversations = await fetchConversations(currentUser.id, activeProfiles);
+      if (selectedConversationId) {
+        const selected = remoteConversations.find((conversation) => conversation.id === selectedConversationId);
+        if (selected) {
+          const messages = await fetchConversationMessages(selectedConversationId, activeProfiles);
+          remoteConversations = remoteConversations.map((conversation) =>
+            conversation.id === selectedConversationId ? { ...conversation, messages } : conversation,
+          );
+        }
+      }
       setConversations(remoteConversations);
       onChatUnreadChange?.(getTotalUnreadCount(remoteConversations));
       setError('');
@@ -60,25 +70,30 @@ function Chat({ onChatUnreadChange }) {
     // Also reload when the current user's own photo changes - opening the profile
     // modal from within Chat doesn't remount this page, so without this the sidebar
     // and window header keep showing the stale users[] snapshot fetched on mount.
-    loadChat();
+    loadChat(activeConversationId);
   }, [currentUser?.id, currentUser?.photoUrl]);
 
   useEffect(() => {
     if (!currentUser?.id) return undefined;
 
-    const channel = subscribeToChat(currentUser.id, loadChat);
+    let timer;
+    const channel = subscribeToChat(currentUser.id, () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => loadChat(activeConversationId), 120);
+    });
     return () => {
+      window.clearTimeout(timer);
       supabase.removeChannel(channel);
     };
-  }, [currentUser?.id]);
+  }, [currentUser?.id, activeConversationId]);
 
   useEffect(() => {
     if (!activeConversation?.id || !currentUser?.id || !activeConversation.unreadCount) return;
 
     let canceled = false;
-    markConversationRead(activeConversation.id, currentUser.id)
+    markConversationRead(activeConversation.id)
       .then(() => {
-        if (!canceled) loadChat();
+        if (!canceled) loadChat(activeConversation.id);
       })
       .catch(() => {});
 
@@ -90,8 +105,8 @@ function Chat({ onChatUnreadChange }) {
   const handleSelectConversation = async (conversationId) => {
     try {
       setActiveConversationId(conversationId);
-      await markConversationRead(conversationId, currentUser.id);
-      await loadChat();
+      await markConversationRead(conversationId);
+      await loadChat(conversationId);
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel abrir a conversa.');
     }
@@ -102,8 +117,8 @@ function Chat({ onChatUnreadChange }) {
       const conversationId = await ensureDirectConversation(currentUser, contact);
       setActiveConversationId(conversationId);
       setIsNewContactOpen(false);
-      await markConversationRead(conversationId, currentUser.id);
-      await loadChat();
+      await markConversationRead(conversationId);
+      await loadChat(conversationId);
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel iniciar a conversa.');
     }
@@ -112,18 +127,20 @@ function Chat({ onChatUnreadChange }) {
   const handleSendMessage = async (conversationId, messageText) => {
     try {
       await sendChatMessage(conversationId, currentUser.id, messageText);
-      await loadChat();
+      await markConversationRead(conversationId);
+      await loadChat(conversationId);
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel enviar a mensagem.');
+      throw err;
     }
   };
 
   const handleCreateGroup = async (groupData) => {
     try {
-      const conversationId = await createGroupConversation(groupData, currentUser);
+      const conversationId = await createGroupConversation(groupData);
       setActiveConversationId(conversationId);
       setIsNewGroupOpen(false);
-      await loadChat();
+      await loadChat(conversationId);
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel criar o grupo.');
     }
@@ -136,7 +153,7 @@ function Chat({ onChatUnreadChange }) {
       const conversationId = await updateGroupConversation(editingGroup.id, groupData);
       setActiveConversationId(conversationId);
       setEditingGroup(null);
-      await loadChat();
+      await loadChat(conversationId);
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel editar o grupo.');
     }
@@ -146,7 +163,7 @@ function Chat({ onChatUnreadChange }) {
     try {
       await archiveConversationForUser(conversationId, currentUser.id);
       setActiveConversationId(null);
-      await loadChat();
+      await loadChat(null);
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel arquivar a conversa.');
     }
@@ -155,7 +172,7 @@ function Chat({ onChatUnreadChange }) {
   const handleRestoreConversation = async (conversationId) => {
     try {
       await restoreConversationForUser(conversationId, currentUser.id);
-      await loadChat();
+      await loadChat(conversationId);
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel restaurar a conversa.');
     }

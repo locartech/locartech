@@ -19,6 +19,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
   useEscapeKey(onClose);
   const [draft, setDraft] = useState(emptyForm);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (request) {
@@ -43,7 +44,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
     setDraft((current) => ({ ...current, [field]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
 
@@ -52,11 +53,17 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
     if (!draft.dueDate) return setError('Informe a data de vencimento.');
     if (!draft.priority) return setError('Escolha a prioridade.');
 
-    onSubmit({
-      ...draft,
-      title: draft.stepName,
-      description: '',
-    });
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onSubmit({
+        ...draft,
+        title: draft.stepName,
+        description: '',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -135,11 +142,11 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
           </div>
 
           <div className="modal-actions">
-            <button type="button" className="ghost-button" onClick={onClose}>
+            <button type="button" className="ghost-button" onClick={onClose} disabled={submitting}>
               Cancelar
             </button>
-            <button type="submit" className="primary-button">
-              {request ? 'Salvar alteracoes' : 'Criar solicitacao'}
+            <button type="submit" className="primary-button" disabled={submitting}>
+              {submitting ? 'Salvando...' : request ? 'Salvar alteracoes' : 'Criar solicitacao'}
             </button>
           </div>
         </form>
