@@ -29,14 +29,24 @@ function KnowledgeFilters({ filters, onChange, simplified = false }) {
           </select>
         </label>
       ) : null}
-      <label>
-        <span>Data de publicacao</span>
-        <input
-          type="date"
-          value={filters.publishedAt || ''}
-          onChange={(event) => updateFilter('publishedAt', event.target.value)}
-        />
-      </label>
+      <div className="knowledge-filter-period">
+        <label>
+          <span>Publicado de</span>
+          <input
+            type="date"
+            value={filters.publishedFrom || ''}
+            onChange={(event) => updateFilter('publishedFrom', event.target.value)}
+          />
+        </label>
+        <label>
+          <span>Ate</span>
+          <input
+            type="date"
+            value={filters.publishedTo || ''}
+            onChange={(event) => updateFilter('publishedTo', event.target.value)}
+          />
+        </label>
+      </div>
     </div>
   );
 }

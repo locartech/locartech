@@ -24,21 +24,25 @@ function KnowledgeDetailsModal({ record, onClose, simplified = false }) {
           </button>
         </div>
 
-        <div className="knowledge-detail-body">
-          {!simplified ? <span className="knowledge-type-badge">{normalizeKnowledgeType(record.type)}</span> : null}
-          <p>{record.description}</p>
+        <div className="request-detail-body">
           {!simplified ? (
-            <dl className="profile-detail-grid">
+            <div className="request-detail-badges">
+              <span className="knowledge-type-badge">{normalizeKnowledgeType(record.type)}</span>
+            </div>
+          ) : null}
+          <p>{record.description || 'Sem descricao.'}</p>
+          {!simplified ? (
+            <dl className="request-detail-grid">
               <div>
                 <dt>Setor</dt>
                 <dd>{record.sector}</dd>
               </div>
               <div>
-                <dt>Responsável</dt>
-                <dd>{record.responsible}</dd>
+                <dt>Responsavel</dt>
+                <dd>{record.responsible || 'Nao informado'}</dd>
               </div>
               <div>
-                <dt>Publicação</dt>
+                <dt>Publicacao</dt>
                 <dd>{formatDate(record.publishedAt)}</dd>
               </div>
               <div>
@@ -47,10 +51,12 @@ function KnowledgeDetailsModal({ record, onClose, simplified = false }) {
               </div>
             </dl>
           ) : null}
-          <a className="primary-button" href={record.driveLink} target="_blank" rel="noopener noreferrer">
-            <ExternalLink size={15} aria-hidden="true" />
-            Abrir no Drive
-          </a>
+          {record.driveLink ? (
+            <a className="primary-button" href={record.driveLink} target="_blank" rel="noopener noreferrer">
+              <ExternalLink size={15} aria-hidden="true" />
+              Abrir no Drive
+            </a>
+          ) : null}
         </div>
       </section>
     </div>

@@ -16,7 +16,9 @@ export function filterKnowledgeRecords(records, sector, filters) {
     const recordType = normalizeKnowledgeType(record.type);
     const sectorMatches = record.sector === sector;
     const typeMatches = filters.type === 'Todos' || recordType === filters.type;
-    const publishedAtMatches = !filters.publishedAt || record.publishedAt === filters.publishedAt;
+    const publishedAtMatches =
+      (!filters.publishedFrom || record.publishedAt >= filters.publishedFrom) &&
+      (!filters.publishedTo || record.publishedAt <= filters.publishedTo);
     const queryMatches =
       !normalizedQuery ||
       `${record.title} ${record.description} ${recordType} ${record.responsible}`
