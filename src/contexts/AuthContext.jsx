@@ -221,9 +221,9 @@ export function AuthProvider({ children }) {
       isActive: canAccessSystem(profile),
       isAdmin: profile?.accountType === 'admin',
       // Self-registration has no "tipo de conta" field, so a member who signs up
-      // choosing the Operacoes sector stays accountType 'member' - gate on either
+      // choosing the Obra sector stays accountType 'member' - gate on either
       // signal so restricted access can't be bypassed by just picking that sector.
-      isOperacao: profile?.accountType === 'operacao' || profile?.sector === 'Operações',
+      isOperacao: profile?.accountType === 'operacao' || profile?.sector === 'Obra',
       isPrimaryAdmin: Boolean(profile && organization && profile.id === organization.adminProfileId),
       login,
       register,

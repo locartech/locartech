@@ -14,6 +14,7 @@ function mapRequestFromDb(request) {
     responsibleName: request.responsible_name ?? '',
     requestStatus: request.status,
     kanbanStatus: request.kanban_status || 'todo',
+    driveLink: request.drive_link ?? '',
     priority: request.priority,
     dueDate: request.due_date,
     createdAt: request.created_at?.slice(0, 10),
@@ -48,6 +49,7 @@ export async function createRemoteRequest(values, currentUser) {
     p_kanban_status: values.kanbanStatus || 'todo',
     p_priority: values.priority,
     p_due_date: values.dueDate,
+    p_drive_link: values.driveLink?.trim() || null,
   });
   if (error) throw error;
   return mapRequestFromDb(data);
@@ -63,6 +65,7 @@ export async function updateRemoteRequest(requestId, values) {
     p_kanban_status: values.kanbanStatus,
     p_priority: values.priority,
     p_due_date: values.dueDate,
+    p_drive_link: values.driveLink?.trim() || null,
   });
   if (error) throw error;
   return mapRequestFromDb(data);

@@ -6960,6 +6960,12 @@ body {
   font-size: 0.78rem;
 }
 
+.ghost-button.danger {
+  color: #b42318;
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
 .tiny-permission-notice {
   margin: 0;
   font-size: 0.72rem;

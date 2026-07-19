@@ -1,4 +1,4 @@
-import { Archive, ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, RotateCcw } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Pencil, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import EmptyState from '../common/EmptyState';
@@ -102,6 +102,9 @@ function PurchaseRequestTable({
   onRestore,
   dueDateSort = null,
   onToggleDueDateSort,
+  pendingEditsByRequestId = {},
+  onRequestEdit,
+  onReviewEdit,
 }) {
   if (requests.length === 0) {
     return (
@@ -139,46 +142,77 @@ function PurchaseRequestTable({
           <div>Acoes</div>
         </div>
 
-        {requests.map((request) => (
-          <div className="purchase-row" key={request.id}>
-            <div className="purchase-text-cell purchase-description-cell">{request.description}</div>
-            <div className="purchase-text-cell">{request.notes || '-'}</div>
-            <div>{request.requesterName}</div>
-            <div>{request.workLocation || '-'}</div>
-            <div>
-              <RequestPriorityBadge value={request.priority} />
+        {requests.map((request) => {
+          const pendingEdit = pendingEditsByRequestId[request.id];
+          const isEditable = view === 'active' && ['pending_approval', 'approved'].includes(request.status);
+
+          return (
+            <div className="purchase-row" key={request.id}>
+              <div className="purchase-text-cell purchase-description-cell">{request.description}</div>
+              <div className="purchase-text-cell">{request.notes || '-'}</div>
+              <div>{request.requesterName}</div>
+              <div>{request.workLocation || '-'}</div>
+              <div>
+                <RequestPriorityBadge value={request.priority} />
+              </div>
+              <div>{formatRequestDate(request.dueDate, 'Sem prazo')}</div>
+              <div>
+                {canManage && view === 'active' ? (
+                  <PurchaseStatusMenu request={request} onStatusChange={onStatusChange} />
+                ) : (
+                  <PurchaseRequestStatusBadge value={request.status} />
+                )}
+              </div>
+              <div className="purchase-actions-cell">
+                {canManage && pendingEdit ? (
+                  <button
+                    type="button"
+                    className="table-icon-button"
+                    onClick={() => onReviewEdit?.(request)}
+                    title="Revisar pedido de edicao"
+                  >
+                    <Pencil size={16} aria-hidden="true" />
+                  </button>
+                ) : null}
+                {restricted && isEditable ? (
+                  pendingEdit ? (
+                    <span className="muted-cell" title="Aguardando avaliacao de Compras">
+                      Edicao pendente
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="table-icon-button"
+                      onClick={() => onRequestEdit?.(request)}
+                      title="Pedir edicao desta compra"
+                    >
+                      <Pencil size={16} aria-hidden="true" />
+                    </button>
+                  )
+                ) : null}
+                {view === 'archived' ? (
+                  <button
+                    type="button"
+                    className="table-icon-button success"
+                    onClick={() => (restricted ? onBlockedAction?.() : onRestore(request))}
+                    title="Restaurar solicitacao"
+                  >
+                    <RotateCcw size={16} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="table-icon-button archive"
+                    onClick={() => (restricted ? onBlockedAction?.() : onArchive(request))}
+                    title="Arquivar solicitacao"
+                  >
+                    <Archive size={16} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
             </div>
-            <div>{formatRequestDate(request.dueDate, 'Sem prazo')}</div>
-            <div>
-              {canManage && view === 'active' ? (
-                <PurchaseStatusMenu request={request} onStatusChange={onStatusChange} />
-              ) : (
-                <PurchaseRequestStatusBadge value={request.status} />
-              )}
-            </div>
-            <div className="purchase-actions-cell">
-              {view === 'archived' ? (
-                <button
-                  type="button"
-                  className="table-icon-button success"
-                  onClick={() => (restricted ? onBlockedAction?.() : onRestore(request))}
-                  title="Restaurar solicitacao"
-                >
-                  <RotateCcw size={16} aria-hidden="true" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="table-icon-button archive"
-                  onClick={() => (restricted ? onBlockedAction?.() : onArchive(request))}
-                  title="Arquivar solicitacao"
-                >
-                  <Archive size={16} aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

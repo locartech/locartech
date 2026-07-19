@@ -11,6 +11,12 @@ import {
 } from '../../services/purchaseRequestsService';
 import { deleteArchivedRequestHistory } from '../../services/requestsService';
 import {
+  createPurchaseRequestEdit,
+  fetchPurchaseRequestEdits,
+  reviewPurchaseRequestEdit,
+  subscribeToPurchaseRequestEdits,
+} from '../../services/purchaseRequestEditsService';
+import {
   archiveLocalPurchaseRequest,
   createLocalPurchaseRequest,
   filterPurchaseRequests,
@@ -30,6 +36,8 @@ import {
 import { canManageSector } from '../../utils/permissions';
 import ConfirmModal from '../common/ConfirmModal';
 import ReportGenerationModal from '../common/ReportGenerationModal';
+import PurchaseRequestEditModal from './PurchaseRequestEditModal';
+import PurchaseRequestEditReviewModal from './PurchaseRequestEditReviewModal';
 import PurchaseRequestFilters from './PurchaseRequestFilters';
 import PurchaseRequestFormModal from './PurchaseRequestFormModal';
 import PurchaseRequestStats from './PurchaseRequestStats';
@@ -52,6 +60,9 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const [cleanupStep, setCleanupStep] = useState(0);
   const [permissionNotice, setPermissionNotice] = useState('');
   const permissionNoticeTimeout = useRef(null);
+  const [edits, setEdits] = useState([]);
+  const [editingRequest, setEditingRequest] = useState(null);
+  const [reviewingEdit, setReviewingEdit] = useState(null);
 
   const notifyNoPermission = () => {
     setPermissionNotice('Você não tem permissão para isso.');
@@ -72,8 +83,19 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
     }
   };
 
+  const loadEdits = async () => {
+    if (!isSupabaseConfigured) return;
+    try {
+      const remoteEdits = await fetchPurchaseRequestEdits();
+      setEdits(remoteEdits);
+    } catch {
+      // Edit-request visibility is a secondary concern; keep the main list usable if this fails.
+    }
+  };
+
   useEffect(() => {
     loadRemote();
+    loadEdits();
   }, []);
 
   useEffect(() => {
@@ -89,6 +111,49 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
       supabase.removeChannel(channel);
     };
   }, [requests, usingSupabase]);
+
+  useEffect(() => {
+    if (!usingSupabase) return undefined;
+    const channel = subscribeToPurchaseRequestEdits(loadEdits);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [usingSupabase]);
+
+  const pendingEditsByRequestId = useMemo(() => {
+    const map = {};
+    edits.forEach((edit) => {
+      if (edit.status === 'pending') map[edit.requestId] = edit;
+    });
+    return map;
+  }, [edits]);
+
+  const handleRequestEdit = async (values) => {
+    if (!editingRequest) return;
+    setFeedback('');
+    setError('');
+    try {
+      await createPurchaseRequestEdit(editingRequest.id, values);
+      await loadEdits();
+      setEditingRequest(null);
+      setFeedback('Pedido de edicao enviado para Compras.');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel enviar o pedido de edicao.');
+    }
+  };
+
+  const handleReviewEdit = async (editId, approve, reviewNote) => {
+    setFeedback('');
+    setError('');
+    try {
+      await reviewPurchaseRequestEdit(editId, approve, reviewNote);
+      await Promise.all([loadRemote(), loadEdits()]);
+      setReviewingEdit(null);
+      setFeedback(approve ? 'Edicao aprovada com sucesso.' : 'Edicao recusada.');
+    } catch (err) {
+      setError(err.message ?? 'Nao foi possivel avaliar o pedido de edicao.');
+    }
+  };
 
   const activeRequests = useMemo(() => requests.filter((request) => !request.archived), [requests]);
   const archivedRequests = useMemo(() => requests.filter((request) => request.archived), [requests]);
@@ -362,6 +427,9 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
           onRestore={setRestoringRequest}
           dueDateSort={dueDateSort}
           onToggleDueDateSort={handleToggleDueDateSort}
+          pendingEditsByRequestId={pendingEditsByRequestId}
+          onRequestEdit={setEditingRequest}
+          onReviewEdit={setReviewingEdit}
         />
       </section>
 
@@ -371,6 +439,23 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
           submitError={error}
           onClose={() => setFormOpen(false)}
           onSubmit={handleCreate}
+        />
+      ) : null}
+
+      {editingRequest ? (
+        <PurchaseRequestEditModal
+          request={editingRequest}
+          onClose={() => setEditingRequest(null)}
+          onSubmit={handleRequestEdit}
+        />
+      ) : null}
+
+      {reviewingEdit ? (
+        <PurchaseRequestEditReviewModal
+          request={reviewingEdit}
+          edit={pendingEditsByRequestId[reviewingEdit.id]}
+          onClose={() => setReviewingEdit(null)}
+          onReview={handleReviewEdit}
         />
       ) : null}
 

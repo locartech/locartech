@@ -1,10 +1,9 @@
 import { CheckCircle2, XCircle } from 'lucide-react';
-import { canManageIncomingRequest, isAdminUser, isRequestOwner } from '../../utils/permissions';
+import { canManageIncomingRequest } from '../../utils/permissions';
 
-function RequestApprovalActions({ request, currentUser, onApprove, onReject, onCancel }) {
+function RequestApprovalActions({ request, currentUser, onApprove, onReject }) {
   const isPending = request.requestStatus === 'pending_approval';
   const canManage = canManageIncomingRequest(currentUser, request);
-  const canCancel = isPending && (isAdminUser(currentUser) || isRequestOwner(currentUser, request));
 
   return (
     <>
@@ -17,12 +16,6 @@ function RequestApprovalActions({ request, currentUser, onApprove, onReject, onC
             <XCircle size={16} aria-hidden="true" />
           </button>
         </>
-      ) : null}
-
-      {canCancel ? (
-        <button type="button" className="ghost-button compact-action" onClick={() => onCancel(request.id)}>
-          Cancelar
-        </button>
       ) : null}
     </>
   );

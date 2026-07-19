@@ -13,6 +13,7 @@ const emptyForm = {
   kanbanStatus: 'todo',
   dueDate: '',
   priority: 'medium',
+  driveLink: '',
 };
 
 function RequestForm({ currentUser, request, onClose, onSubmit }) {
@@ -32,6 +33,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
         kanbanStatus: request.kanbanStatus ?? 'todo',
         priority: request.priority,
         dueDate: request.dueDate,
+        driveLink: request.driveLink ?? '',
       });
       return;
     }
@@ -53,6 +55,9 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
     if (!draft.dueDate) return setError('Informe a data de vencimento.');
     if (!draft.priority) return setError('Escolha a prioridade.');
 
+    const trimmedLink = draft.driveLink.trim();
+    const driveLink = trimmedLink && !/^https?:\/\//i.test(trimmedLink) ? `https://${trimmedLink}` : trimmedLink;
+
     if (submitting) return;
     setSubmitting(true);
     try {
@@ -60,6 +65,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
         ...draft,
         title: draft.stepName,
         description: '',
+        driveLink,
       });
     } finally {
       setSubmitting(false);
@@ -140,6 +146,16 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
               </select>
             </label>
           </div>
+
+          <label>
+            <span>Link do Drive (opcional)</span>
+            <input
+              type="text"
+              value={draft.driveLink}
+              onChange={(event) => updateDraft('driveLink', event.target.value)}
+              placeholder="https://..."
+            />
+          </label>
 
           <div className="modal-actions">
             <button type="button" className="ghost-button" onClick={onClose} disabled={submitting}>

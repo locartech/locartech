@@ -37,7 +37,7 @@ function RequestModal({ request, onClose }) {
               <dd>{request.stepName}</dd>
             </div>
             <div>
-              <dt>Status inicial no Kanban</dt>
+              <dt>Status no Kanban</dt>
               <dd>{kanbanStatusLabel}</dd>
             </div>
             <div>
@@ -79,6 +79,18 @@ function RequestModal({ request, onClose }) {
             <div>
               <dt>Motivo da recusa</dt>
               <dd>{request.rejectionReason || 'Nao informado'}</dd>
+            </div>
+            <div>
+              <dt>Link do Drive</dt>
+              <dd>
+                {request.driveLink ? (
+                  <a href={request.driveLink} target="_blank" rel="noreferrer">
+                    Abrir link
+                  </a>
+                ) : (
+                  'Nao informado'
+                )}
+              </dd>
             </div>
           </dl>
         </div>

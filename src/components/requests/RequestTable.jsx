@@ -3,6 +3,7 @@ import EmptyState from '../common/EmptyState';
 import RequestApprovalActions from './RequestApprovalActions';
 import RequestPriorityBadge from './RequestPriorityBadge';
 import RequestStatusBadge from './RequestStatusBadge';
+import { kanbanStatuses } from '../../data/kanbanData';
 import { canArchiveRequest, canEditPendingRequest } from '../../utils/permissions';
 import { formatRequestDate } from '../../utils/requestUtils';
 
@@ -15,7 +16,6 @@ function RequestTable({
   onEdit,
   onApprove,
   onReject,
-  onCancel,
   onArchive,
   onRestore,
 }) {
@@ -74,7 +74,13 @@ function RequestTable({
               </div>
               <div>{formatRequestDate(request.dueDate)}</div>
               <div>
-                {request.generatedTaskId ? <span className="kanban-linked-badge">Gerada</span> : <span className="muted-cell">Nao gerada</span>}
+                {request.generatedTaskId ? (
+                  <span className={`kanban-linked-badge kanban-linked-badge-${request.kanbanStatus}`}>
+                    {kanbanStatuses.find((status) => status.id === request.kanbanStatus)?.label ?? request.kanbanStatus}
+                  </span>
+                ) : (
+                  <span className="muted-cell">Nao gerada</span>
+                )}
               </div>
               <div className="request-actions">
                 <button type="button" className="table-icon-button" onClick={() => onView(request)} title="Ver detalhes">
@@ -97,7 +103,6 @@ function RequestTable({
                       activeTab={activeTab}
                       onApprove={onApprove}
                       onReject={onReject}
-                      onCancel={onCancel}
                     />
                     {canArchive ? (
                       <button type="button" className="table-icon-button archive" onClick={() => onArchive(request)} title="Arquivar solicitacao">

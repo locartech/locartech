@@ -43,7 +43,9 @@ function Chat({ onChatUnreadChange }) {
 
     try {
       const profiles = await fetchProfiles();
-      const activeProfiles = profiles.filter((profile) => profile.status === 'Ativo');
+      const activeProfiles = profiles.filter(
+        (profile) => profile.status === 'Ativo' && profile.accountType !== 'operacao',
+      );
       setUsers(activeProfiles);
 
       let remoteConversations = await fetchConversations(currentUser.id, activeProfiles);

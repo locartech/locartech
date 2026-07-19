@@ -14,6 +14,7 @@ export function isAdminUser(user) {
 export function canManageSector(user, sector) {
   if (isAdminUser(user)) return true;
   if (!user || !sector) return false;
+  if (user.accountType === 'operacao') return false;
 
   const targetId = typeof sector === 'object' ? sector.id : null;
   const targetName = typeof sector === 'object' ? sector.name || sector.slug : sector;

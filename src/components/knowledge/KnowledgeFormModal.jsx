@@ -43,14 +43,18 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit, simplified 
   const handleSubmit = (event) => {
     event.preventDefault();
 
+    const trimmedLink = draft.driveLink.trim();
+    const normalizedLink = trimmedLink && !/^https?:\/\//i.test(trimmedLink) ? `https://${trimmedLink}` : trimmedLink;
+
     const submission = simplified
       ? {
           ...draft,
+          driveLink: normalizedLink,
           type: draft.type || 'Outros',
           responsible: draft.responsible || currentUser?.name || sectorName,
           publishedAt: draft.publishedAt || new Date().toISOString().slice(0, 10),
         }
-      : draft;
+      : { ...draft, driveLink: normalizedLink };
 
     const validationError = validateKnowledgeRecord(submission);
     if (validationError) {

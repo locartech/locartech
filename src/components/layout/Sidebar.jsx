@@ -127,7 +127,7 @@ function Sidebar({ activePage, onNavigate, unreadCount, chatUnreadCount, collaps
           <small>
             {currentUser.sector}
             {isAdmin ? ' - Admin' : ''}
-            {isOperacao ? ' - Operação' : ''}
+            {isOperacao ? ' - Obra' : ''}
           </small>
         </div>
       </button>

@@ -302,7 +302,6 @@ function Requests() {
           }}
           onApprove={handleApproveRequest}
           onReject={setRejectingRequest}
-          onCancel={handleCancelRequest}
           onArchive={setArchivingRequest}
           onRestore={setRestoringRequest}
         />
