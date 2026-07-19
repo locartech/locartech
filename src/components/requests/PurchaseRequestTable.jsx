@@ -2,6 +2,7 @@ import { Archive, ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Pencil, RotateCc
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import EmptyState from '../common/EmptyState';
+import RowActionsMenu from '../common/RowActionsMenu';
 import RequestPriorityBadge from './RequestPriorityBadge';
 import { purchaseStatuses } from '../../data/purchaseRequestsData';
 import { formatRequestDate } from '../../utils/requestUtils';
@@ -164,51 +165,41 @@ function PurchaseRequestTable({
                 )}
               </div>
               <div className="purchase-actions-cell">
-                {canManage && pendingEdit ? (
-                  <button
-                    type="button"
-                    className="table-icon-button"
-                    onClick={() => onReviewEdit?.(request)}
-                    title="Revisar pedido de edicao"
-                  >
-                    <Pencil size={16} aria-hidden="true" />
-                  </button>
+                {restricted && isEditable && pendingEdit ? (
+                  <span className="muted-cell" title="Aguardando avaliacao de Compras">
+                    Edicao pendente
+                  </span>
                 ) : null}
-                {restricted && isEditable ? (
-                  pendingEdit ? (
-                    <span className="muted-cell" title="Aguardando avaliacao de Compras">
-                      Edicao pendente
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="table-icon-button"
-                      onClick={() => onRequestEdit?.(request)}
-                      title="Pedir edicao desta compra"
-                    >
-                      <Pencil size={16} aria-hidden="true" />
-                    </button>
-                  )
-                ) : null}
-                {view === 'archived' ? (
-                  <button
-                    type="button"
-                    className="table-icon-button success"
-                    onClick={() => (restricted ? onBlockedAction?.() : onRestore(request))}
-                    title="Restaurar solicitacao"
-                  >
-                    <RotateCcw size={16} aria-hidden="true" />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="table-icon-button archive"
-                    onClick={() => (restricted ? onBlockedAction?.() : onArchive(request))}
-                    title="Arquivar solicitacao"
-                  >
-                    <Archive size={16} aria-hidden="true" />
-                  </button>
-                )}
+                <RowActionsMenu
+                  items={[
+                    canManage && pendingEdit
+                      ? {
+                          label: 'Revisar pedido de edicao',
+                          icon: <Pencil size={16} aria-hidden="true" />,
+                          onClick: () => onReviewEdit?.(request),
+                        }
+                      : null,
+                    restricted && isEditable && !pendingEdit
+                      ? {
+                          label: 'Pedir edicao desta compra',
+                          icon: <Pencil size={16} aria-hidden="true" />,
+                          onClick: () => onRequestEdit?.(request),
+                        }
+                      : null,
+                    view === 'archived'
+                      ? {
+                          label: 'Restaurar solicitacao',
+                          icon: <RotateCcw size={16} aria-hidden="true" />,
+                          tone: 'success',
+                          onClick: () => (restricted ? onBlockedAction?.() : onRestore(request)),
+                        }
+                      : {
+                          label: 'Arquivar solicitacao',
+                          icon: <Archive size={16} aria-hidden="true" />,
+                          onClick: () => (restricted ? onBlockedAction?.() : onArchive(request)),
+                        },
+                  ]}
+                />
               </div>
             </div>
           );

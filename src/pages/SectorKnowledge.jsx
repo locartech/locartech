@@ -85,8 +85,8 @@ function SectorKnowledge({ knowledgeSectorId, onBackToSectors }) {
 
     try {
       const saved = editingRecord
-        ? await updateRemoteKnowledgeRecord(editingRecord.id, sector.name, values)
-        : await createRemoteKnowledgeRecord(sector.name, values);
+        ? await updateRemoteKnowledgeRecord(editingRecord.id, sector.name, values, currentUser?.organizationId)
+        : await createRemoteKnowledgeRecord(sector.name, values, currentUser?.organizationId);
 
       setRecords((current) =>
         editingRecord

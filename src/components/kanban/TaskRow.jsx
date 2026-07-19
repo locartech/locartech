@@ -1,4 +1,5 @@
 import { Archive, Pencil, Trash2 } from 'lucide-react';
+import RowActionsMenu from '../common/RowActionsMenu';
 import RequestPriorityBadge from '../requests/RequestPriorityBadge';
 import StatusBadge from './StatusBadge';
 
@@ -41,15 +42,26 @@ function TaskRow({ task, onStatusChange, onDateChange, onEdit, onDelete, onArchi
         )}
       </div>
       <div className="stage-cell stage-actions-cell">
-        <button type="button" className="table-icon-button archive" onClick={(event) => (canEdit ? onArchive(task) : onBlockedAction(event))} title="Arquivar atividade">
-          <Archive size={16} aria-hidden="true" />
-        </button>
-        <button type="button" className="table-icon-button" onClick={(event) => (canEdit ? onEdit(task) : onBlockedAction(event))} title="Editar atividade">
-          <Pencil size={16} aria-hidden="true" />
-        </button>
-        <button type="button" className="table-icon-button danger" onClick={(event) => (canEdit ? onDelete(task.id) : onBlockedAction(event))} title="Excluir atividade">
-          <Trash2 size={16} aria-hidden="true" />
-        </button>
+        <RowActionsMenu
+          items={[
+            {
+              label: 'Arquivar atividade',
+              icon: <Archive size={16} aria-hidden="true" />,
+              onClick: (event) => (canEdit ? onArchive(task) : onBlockedAction(event)),
+            },
+            {
+              label: 'Editar atividade',
+              icon: <Pencil size={16} aria-hidden="true" />,
+              onClick: (event) => (canEdit ? onEdit(task) : onBlockedAction(event)),
+            },
+            {
+              label: 'Excluir atividade',
+              icon: <Trash2 size={16} aria-hidden="true" />,
+              tone: 'danger',
+              onClick: (event) => (canEdit ? onDelete(task.id) : onBlockedAction(event)),
+            },
+          ]}
+        />
       </div>
     </div>
   );

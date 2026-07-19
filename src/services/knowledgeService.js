@@ -16,16 +16,17 @@ function mapRecordFromDb(record) {
   };
 }
 
-async function mapRecordToDb(sector, values) {
+async function mapRecordToDb(sector, values, organizationId) {
   return {
     sector,
     sector_ref_id: await fetchSectorIdByName(sector).catch(() => null),
     title: values.title.trim(),
-    description: values.description.trim(),
+    description: (values.description ?? '').trim(),
     type: values.type,
-    responsible: values.responsible.trim(),
+    responsible: (values.responsible ?? '').trim(),
     published_at: values.publishedAt,
-    drive_link: values.driveLink.trim(),
+    drive_link: (values.driveLink ?? '').trim(),
+    organization_id: organizationId,
     updated_at: new Date().toISOString(),
   };
 }
@@ -40,8 +41,8 @@ export async function fetchKnowledgeRecords() {
   return data.map(mapRecordFromDb);
 }
 
-export async function createRemoteKnowledgeRecord(sector, values) {
-  const payload = await mapRecordToDb(sector, values);
+export async function createRemoteKnowledgeRecord(sector, values, organizationId) {
+  const payload = await mapRecordToDb(sector, values, organizationId);
   const { data, error } = await supabase
     .from('knowledge_records')
     .insert(payload)
@@ -52,8 +53,8 @@ export async function createRemoteKnowledgeRecord(sector, values) {
   return mapRecordFromDb(data);
 }
 
-export async function updateRemoteKnowledgeRecord(recordId, sector, values) {
-  const payload = await mapRecordToDb(sector, values);
+export async function updateRemoteKnowledgeRecord(recordId, sector, values, organizationId) {
+  const payload = await mapRecordToDb(sector, values, organizationId);
   const { data, error } = await supabase
     .from('knowledge_records')
     .update(payload)

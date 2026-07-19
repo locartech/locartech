@@ -1,16 +1,15 @@
-import { Archive, Eye, Pencil, RotateCcw } from 'lucide-react';
+import { Archive, CheckCircle2, Eye, Pencil, RotateCcw, XCircle } from 'lucide-react';
 import EmptyState from '../common/EmptyState';
-import RequestApprovalActions from './RequestApprovalActions';
+import RowActionsMenu from '../common/RowActionsMenu';
 import RequestPriorityBadge from './RequestPriorityBadge';
 import RequestStatusBadge from './RequestStatusBadge';
 import { kanbanStatuses } from '../../data/kanbanData';
-import { canArchiveRequest, canEditPendingRequest } from '../../utils/permissions';
+import { canArchiveRequest, canEditPendingRequest, canManageIncomingRequest } from '../../utils/permissions';
 import { formatRequestDate } from '../../utils/requestUtils';
 
 function RequestTable({
   requests,
   currentUser,
-  activeTab,
   view = 'active',
   onView,
   onEdit,
@@ -50,6 +49,8 @@ function RequestTable({
         {requests.map((request) => {
           const canEdit = view === 'active' && canEditPendingRequest(currentUser, request);
           const canArchive = canArchiveRequest(currentUser, request);
+          const isPending = request.requestStatus === 'pending_approval';
+          const canManage = canManageIncomingRequest(currentUser, request);
 
           return (
             <div className="request-row" key={request.id}>
@@ -83,34 +84,45 @@ function RequestTable({
                 )}
               </div>
               <div className="request-actions">
-                <button type="button" className="table-icon-button" onClick={() => onView(request)} title="Ver detalhes">
-                  <Eye size={16} aria-hidden="true" />
-                </button>
-                {canEdit ? (
-                  <button type="button" className="table-icon-button" onClick={() => onEdit(request)} title="Editar solicitacao">
-                    <Pencil size={16} aria-hidden="true" />
-                  </button>
-                ) : null}
-                {view === 'archived' && canArchive ? (
-                  <button type="button" className="table-icon-button success" onClick={() => onRestore(request)} title="Restaurar solicitacao">
-                    <RotateCcw size={16} aria-hidden="true" />
-                  </button>
-                ) : (
-                  <>
-                    <RequestApprovalActions
-                      request={request}
-                      currentUser={currentUser}
-                      activeTab={activeTab}
-                      onApprove={onApprove}
-                      onReject={onReject}
-                    />
-                    {canArchive ? (
-                      <button type="button" className="table-icon-button archive" onClick={() => onArchive(request)} title="Arquivar solicitacao">
-                        <Archive size={16} aria-hidden="true" />
-                      </button>
-                    ) : null}
-                  </>
-                )}
+                <RowActionsMenu
+                  items={[
+                    { label: 'Ver detalhes', icon: <Eye size={16} aria-hidden="true" />, onClick: () => onView(request) },
+                    canEdit
+                      ? { label: 'Editar solicitacao', icon: <Pencil size={16} aria-hidden="true" />, onClick: () => onEdit(request) }
+                      : null,
+                    view === 'archived' && canArchive
+                      ? {
+                          label: 'Restaurar solicitacao',
+                          icon: <RotateCcw size={16} aria-hidden="true" />,
+                          tone: 'success',
+                          onClick: () => onRestore(request),
+                        }
+                      : null,
+                    view !== 'archived' && canManage && isPending
+                      ? {
+                          label: 'Aprovar solicitacao',
+                          icon: <CheckCircle2 size={16} aria-hidden="true" />,
+                          tone: 'success',
+                          onClick: () => onApprove(request),
+                        }
+                      : null,
+                    view !== 'archived' && canManage && isPending
+                      ? {
+                          label: 'Recusar solicitacao',
+                          icon: <XCircle size={16} aria-hidden="true" />,
+                          tone: 'danger',
+                          onClick: () => onReject(request),
+                        }
+                      : null,
+                    view !== 'archived' && canArchive
+                      ? {
+                          label: 'Arquivar solicitacao',
+                          icon: <Archive size={16} aria-hidden="true" />,
+                          onClick: () => onArchive(request),
+                        }
+                      : null,
+                  ]}
+                />
               </div>
             </div>
           );

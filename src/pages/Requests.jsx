@@ -293,7 +293,6 @@ function Requests() {
         <RequestTable
           requests={visibleRequests}
           currentUser={currentUser}
-          activeTab={activeTab}
           view={view}
           onView={setDetailRequest}
           onEdit={(request) => {

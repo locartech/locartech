@@ -87,7 +87,7 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit, simplified 
           </label>
 
           <label>
-            <span>Descricao</span>
+            <span>Descricao (opcional)</span>
             <textarea value={draft.description} onChange={(event) => updateDraft('description', event.target.value)} />
           </label>
 
@@ -105,7 +105,7 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit, simplified 
                   </select>
                 </label>
                 <label>
-                  <span>Responsavel</span>
+                  <span>Responsavel (opcional)</span>
                   <input value={draft.responsible} onChange={(event) => updateDraft('responsible', event.target.value)} />
                 </label>
               </div>
@@ -118,7 +118,7 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit, simplified 
           ) : null}
 
           <label>
-            <span>Link do Drive</span>
+            <span>Link do Drive (opcional)</span>
             <input value={draft.driveLink} onChange={(event) => updateDraft('driveLink', event.target.value)} placeholder="https://..." />
           </label>
 

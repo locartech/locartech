@@ -38,11 +38,8 @@ export function getKnowledgeStats(records, sector) {
 
 export function validateKnowledgeRecord(values) {
   if (!values.title.trim()) return 'Informe o nome do arquivo ou material.';
-  if (!values.description.trim()) return 'Informe uma descrição.';
-  if (!values.responsible.trim()) return 'Informe o responsável.';
   if (!values.publishedAt) return 'Informe a data de publicação.';
-  if (!values.driveLink.trim()) return 'Informe o link do Drive.';
-  if (!/^https?:\/\//i.test(values.driveLink.trim())) {
+  if (values.driveLink.trim() && !/^https?:\/\//i.test(values.driveLink.trim())) {
     return 'O link deve começar com http:// ou https://.';
   }
   return '';

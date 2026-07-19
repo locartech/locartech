@@ -54,7 +54,7 @@ function Kanban() {
   const handleAddTask = async (sectorId, values) => {
     if (!canManageTaskSector(sectorId)) return showPermissionNotice();
     try {
-      const created = await createRemoteKanbanTask(sectorId, values);
+      const created = await createRemoteKanbanTask(sectorId, values, currentUser?.organizationId);
       setStageTasks((current) => [...current, created]);
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel criar a atividade.');
@@ -68,7 +68,7 @@ function Kanban() {
     if (!canManageTaskSector(current.sectorId)) return showPermissionNotice();
 
     try {
-      const updated = await updateRemoteKanbanTask(taskId, current.sectorId, { ...current, ...values });
+      const updated = await updateRemoteKanbanTask(taskId, current.sectorId, { ...current, ...values }, currentUser?.organizationId);
       setStageTasks((prev) => prev.map((task) => (task.id === taskId ? updated : task)));
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel atualizar a atividade.');

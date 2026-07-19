@@ -28,7 +28,7 @@ function mapTaskFromDb(task) {
   };
 }
 
-async function mapTaskToDb(sectorId, values) {
+async function mapTaskToDb(sectorId, values, organizationId) {
   const sector = sectors.find((item) => item.id === sectorId);
   return {
     sector_id: sectorId,
@@ -40,6 +40,7 @@ async function mapTaskToDb(sectorId, values) {
     status: values.status,
     priority: values.priority || 'medium',
     due_date: values.date || null,
+    organization_id: organizationId,
     updated_at: new Date().toISOString(),
   };
 }
@@ -54,8 +55,8 @@ export async function fetchKanbanTasks() {
   return data.map(mapTaskFromDb);
 }
 
-export async function createRemoteKanbanTask(sectorId, values) {
-  const payload = await mapTaskToDb(sectorId, values);
+export async function createRemoteKanbanTask(sectorId, values, organizationId) {
+  const payload = await mapTaskToDb(sectorId, values, organizationId);
   const { data, error } = await supabase
     .from('kanban_tasks')
     .insert(payload)
@@ -66,8 +67,8 @@ export async function createRemoteKanbanTask(sectorId, values) {
   return mapTaskFromDb(data);
 }
 
-export async function updateRemoteKanbanTask(taskId, sectorId, values) {
-  const payload = await mapTaskToDb(sectorId, values);
+export async function updateRemoteKanbanTask(taskId, sectorId, values, organizationId) {
+  const payload = await mapTaskToDb(sectorId, values, organizationId);
   const { data, error } = await supabase
     .from('kanban_tasks')
     .update(payload)
