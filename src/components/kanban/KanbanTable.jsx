@@ -3,6 +3,7 @@ import { kanbanSectors } from '../../data/kanbanData';
 import { getSortedSectors, groupTasksBySector } from '../../utils/kanbanUtils';
 import ConfirmModal from '../common/ConfirmModal';
 import EditTaskModal from './EditTaskModal';
+import KanbanTaskDetailsModal from './KanbanTaskDetailsModal';
 import SectorGroup from './SectorGroup';
 
 function KanbanTable({
@@ -20,6 +21,7 @@ function KanbanTable({
   const [addingSectorId, setAddingSectorId] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [archivingTask, setArchivingTask] = useState(null);
+  const [viewingTask, setViewingTask] = useState(null);
 
   const sortedSectors = useMemo(() => getSortedSectors(kanbanSectors), []);
   const tasksBySector = useMemo(() => groupTasksBySector(tasks), [tasks]);
@@ -69,6 +71,7 @@ function KanbanTable({
             onAddTask={handleAddTask}
             onStatusChange={(taskId, status) => onUpdateTask(taskId, { status })}
             onDateChange={(taskId, date) => onUpdateTask(taskId, { date })}
+            onView={setViewingTask}
             onEdit={setEditingTask}
             onDelete={handleDeleteTask}
             onArchive={setArchivingTask}
@@ -79,6 +82,7 @@ function KanbanTable({
       </div>
 
       <EditTaskModal task={editingTask} onClose={() => setEditingTask(null)} onSave={handleEditSave} />
+      <KanbanTaskDetailsModal task={viewingTask} onClose={() => setViewingTask(null)} />
 
       <ConfirmModal
         open={Boolean(archivingTask)}

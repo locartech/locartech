@@ -1,9 +1,9 @@
-import { Archive, Pencil, Trash2 } from 'lucide-react';
+import { Archive, Eye, Pencil, Trash2 } from 'lucide-react';
 import RowActionsMenu from '../common/RowActionsMenu';
 import RequestPriorityBadge from '../requests/RequestPriorityBadge';
 import StatusBadge from './StatusBadge';
 
-function TaskRow({ task, onStatusChange, onDateChange, onEdit, onDelete, onArchive, canEdit, onBlockedAction }) {
+function TaskRow({ task, onStatusChange, onDateChange, onView, onEdit, onDelete, onArchive, canEdit, onBlockedAction }) {
   return (
     <div className="stage-row">
       <div className="stage-cell stage-title-cell">
@@ -44,6 +44,11 @@ function TaskRow({ task, onStatusChange, onDateChange, onEdit, onDelete, onArchi
       <div className="stage-cell stage-actions-cell">
         <RowActionsMenu
           items={[
+            {
+              label: 'Ver detalhes',
+              icon: <Eye size={16} aria-hidden="true" />,
+              onClick: () => onView(task),
+            },
             {
               label: 'Arquivar atividade',
               icon: <Archive size={16} aria-hidden="true" />,

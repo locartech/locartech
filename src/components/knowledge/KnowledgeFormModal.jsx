@@ -5,14 +5,22 @@ import { knowledgeTypes } from '../../data/knowledgeData';
 import useEscapeKey from '../../hooks/useEscapeKey';
 import { normalizeKnowledgeType, validateKnowledgeRecord } from '../../utils/knowledgeUtils';
 
+const todayIso = () => new Date().toISOString().slice(0, 10);
+
 const emptyRecord = {
   title: '',
   description: '',
   type: 'Manual do setor',
   responsible: '',
-  publishedAt: '',
+  publishedAt: todayIso(),
   driveLink: '',
 };
+
+function formatPublishedAt(value) {
+  if (!value) return '';
+  const [year, month, day] = value.split('-');
+  return `${day}/${month}/${year}`;
+}
 
 function KnowledgeFormModal({ sectorName, record, onClose, onSubmit, simplified = false }) {
   useEscapeKey(onClose);
@@ -33,7 +41,7 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit, simplified 
       return;
     }
 
-    setDraft(emptyRecord);
+    setDraft({ ...emptyRecord, publishedAt: todayIso() });
   }, [record]);
 
   const updateDraft = (field, value) => {
@@ -52,7 +60,6 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit, simplified 
           driveLink: normalizedLink,
           type: draft.type || 'Outros',
           responsible: draft.responsible || currentUser?.name || sectorName,
-          publishedAt: draft.publishedAt || new Date().toISOString().slice(0, 10),
         }
       : { ...draft, driveLink: normalizedLink };
 
@@ -92,35 +99,34 @@ function KnowledgeFormModal({ sectorName, record, onClose, onSubmit, simplified 
           </label>
 
           {!simplified ? (
-            <>
-              <div className="form-grid-two">
-                <label>
-                  <span>Tipo</span>
-                  <select value={draft.type} onChange={(event) => updateDraft('type', event.target.value)}>
-                    {knowledgeTypes.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  <span>Responsavel (opcional)</span>
-                  <input value={draft.responsible} onChange={(event) => updateDraft('responsible', event.target.value)} />
-                </label>
-              </div>
-
+            <div className="form-grid-two">
               <label>
-                <span>Data de publicacao</span>
-                <input type="date" value={draft.publishedAt} onChange={(event) => updateDraft('publishedAt', event.target.value)} />
+                <span>Tipo</span>
+                <select value={draft.type} onChange={(event) => updateDraft('type', event.target.value)}>
+                  {knowledgeTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
               </label>
-            </>
+              <label>
+                <span>Responsavel (opcional)</span>
+                <input value={draft.responsible} onChange={(event) => updateDraft('responsible', event.target.value)} />
+              </label>
+            </div>
           ) : null}
 
-          <label>
-            <span>Link do Drive (opcional)</span>
-            <input value={draft.driveLink} onChange={(event) => updateDraft('driveLink', event.target.value)} placeholder="https://..." />
-          </label>
+          <div className="form-grid-two">
+            <label>
+              <span>Link do Drive (opcional)</span>
+              <input value={draft.driveLink} onChange={(event) => updateDraft('driveLink', event.target.value)} placeholder="https://..." />
+            </label>
+            <label>
+              <span>Data de publicacao</span>
+              <input type="text" value={formatPublishedAt(draft.publishedAt)} readOnly disabled />
+            </label>
+          </div>
 
           <div className="modal-actions">
             <button type="button" className="ghost-button" onClick={onClose}>

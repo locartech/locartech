@@ -52,7 +52,7 @@ function RequestFilters({ filters, onChange }) {
         </select>
       </label>
       <label>
-        <span>Data</span>
+        <span>Prazo</span>
         <input type="date" value={filters.date} onChange={(event) => updateFilter('date', event.target.value)} />
       </label>
       <button

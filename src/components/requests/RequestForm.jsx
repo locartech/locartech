@@ -52,7 +52,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
 
     if (!draft.stepName.trim()) return setError('Informe a atividade que sera criada no Kanban.');
     if (!draft.targetSector) return setError('Escolha o setor responsavel.');
-    if (!draft.dueDate) return setError('Informe a data de vencimento.');
+    if (!draft.dueDate) return setError('Informe o prazo.');
     if (!draft.priority) return setError('Escolha a prioridade.');
 
     const trimmedLink = draft.driveLink.trim();
@@ -131,7 +131,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
 
           <div className="form-grid-two">
             <label>
-              <span>Data de vencimento</span>
+              <span>Prazo</span>
               <input type="date" value={draft.dueDate} onChange={(event) => updateDraft('dueDate', event.target.value)} />
             </label>
 

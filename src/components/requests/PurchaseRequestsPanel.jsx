@@ -36,6 +36,7 @@ import {
 import { canManageSector } from '../../utils/permissions';
 import ConfirmModal from '../common/ConfirmModal';
 import ReportGenerationModal from '../common/ReportGenerationModal';
+import PurchaseRequestDetailsModal from './PurchaseRequestDetailsModal';
 import PurchaseRequestEditModal from './PurchaseRequestEditModal';
 import PurchaseRequestEditReviewModal from './PurchaseRequestEditReviewModal';
 import PurchaseRequestFilters from './PurchaseRequestFilters';
@@ -63,6 +64,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
   const [edits, setEdits] = useState([]);
   const [editingRequest, setEditingRequest] = useState(null);
   const [reviewingEdit, setReviewingEdit] = useState(null);
+  const [viewingRequest, setViewingRequest] = useState(null);
 
   const notifyNoPermission = () => {
     setPermissionNotice('Você não tem permissão para isso.');
@@ -430,6 +432,7 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
           pendingEditsByRequestId={pendingEditsByRequestId}
           onRequestEdit={setEditingRequest}
           onReviewEdit={setReviewingEdit}
+          onView={setViewingRequest}
         />
       </section>
 
@@ -458,6 +461,8 @@ function PurchaseRequestsPanel({ currentUser, onCountChange, onAddNotification }
           onReview={handleReviewEdit}
         />
       ) : null}
+
+      <PurchaseRequestDetailsModal request={viewingRequest} onClose={() => setViewingRequest(null)} />
 
       <ConfirmModal
         open={Boolean(archivingRequest)}

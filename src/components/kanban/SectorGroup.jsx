@@ -13,6 +13,7 @@ function SectorGroup({
   onAddTask,
   onStatusChange,
   onDateChange,
+  onView,
   onEdit,
   onDelete,
   onArchive,
@@ -45,7 +46,7 @@ function SectorGroup({
             <div className="stage-cell" role="columnheader">Responsável</div>
             <div className="stage-cell" role="columnheader">Status</div>
             <div className="stage-cell" role="columnheader">Prioridade</div>
-            <div className="stage-cell" role="columnheader">Data</div>
+            <div className="stage-cell" role="columnheader">Prazo</div>
             <div className="stage-cell" role="columnheader">Ações</div>
           </div>
 
@@ -55,6 +56,7 @@ function SectorGroup({
               task={task}
               onStatusChange={onStatusChange}
               onDateChange={onDateChange}
+              onView={onView}
               onEdit={onEdit}
               onDelete={onDelete}
               onArchive={onArchive}

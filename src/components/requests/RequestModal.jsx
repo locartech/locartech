@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { kanbanStatuses } from '../../data/kanbanData';
 import useEscapeKey from '../../hooks/useEscapeKey';
-import { formatRequestDate } from '../../utils/requestUtils';
+import { formatDateTime, formatRequestDate } from '../../utils/requestUtils';
 import RequestPriorityBadge from './RequestPriorityBadge';
 import RequestStatusBadge from './RequestStatusBadge';
 
@@ -57,8 +57,8 @@ function RequestModal({ request, onClose }) {
               <dd>{request.responsibleName || 'Nao definido'}</dd>
             </div>
             <div>
-              <dt>Criacao</dt>
-              <dd>{formatRequestDate(request.createdAt, 'Nao informado')}</dd>
+              <dt>Criada em</dt>
+              <dd>{formatDateTime(request.createdAtFull, 'Nao informado')}</dd>
             </div>
             <div>
               <dt>Prazo</dt>

@@ -18,6 +18,7 @@ function mapRequestFromDb(request) {
     priority: request.priority,
     dueDate: request.due_date,
     createdAt: request.created_at?.slice(0, 10),
+    createdAtFull: request.created_at,
     approvedAt: request.approved_at?.slice(0, 10) ?? null,
     rejectedAt: request.rejected_at?.slice(0, 10) ?? null,
     cancelledAt: request.cancelled_at?.slice(0, 10) ?? null,

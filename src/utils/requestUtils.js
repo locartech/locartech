@@ -18,6 +18,21 @@ export function formatRequestDate(value, fallback = '-') {
   }).format(date);
 }
 
+export function formatDateTime(value, fallback = '-') {
+  if (!value) return fallback;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
 export function getReceivedRequests(requests, user) {
   return requests.filter((request) => request.targetSector === user.sector);
 }

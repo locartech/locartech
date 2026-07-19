@@ -8,7 +8,7 @@ const formatDate = (value) =>
 
 function KnowledgeCard({ record, onView, onEdit, onDelete, simplified = false, canEdit = true, onBlockedAction }) {
   return (
-    <article className="knowledge-card">
+    <article className={`knowledge-card${simplified ? ' knowledge-card-simplified' : ''}`}>
       <div className="knowledge-card-icon">
         <FileText size={18} aria-hidden="true" />
       </div>

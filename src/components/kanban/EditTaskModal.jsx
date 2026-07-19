@@ -92,7 +92,7 @@ function EditTaskModal({ task, onClose, onSave }) {
           </label>
 
           <label>
-            <span>Data</span>
+            <span>Prazo</span>
             <input type="date" value={draft.date} min="2026-01-01" onChange={(event) => updateDraft('date', event.target.value)} />
           </label>
 

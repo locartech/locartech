@@ -116,6 +116,7 @@ export function normalizePurchaseRequest(request) {
     priority: normalizePriority(request.priority),
     dueDate: request.dueDate ?? request.due_date ?? '',
     createdAt: request.createdAt ?? request.created_at?.slice?.(0, 10) ?? today,
+    createdAtFull: request.createdAtFull ?? request.created_at ?? null,
     updatedAt: request.updatedAt ?? request.updated_at?.slice?.(0, 10) ?? null,
     archived: request.archived ?? false,
     archivedAt: request.archivedAt ?? request.archived_at ?? null,

@@ -4378,14 +4378,24 @@ body {
   min-height: 230px;
   padding: 16px;
   border: 1px solid var(--lt-border-soft);
+  border-left: 3px solid var(--lt-blue);
   border-radius: 8px;
-  background: #ffffff;
+  background: linear-gradient(165deg, var(--lt-blue-faint) 0%, #ffffff 55%);
   box-shadow: 0 8px 22px rgba(15, 42, 67, 0.05);
 }
 
 .knowledge-card:hover {
   border-color: #bfdbfe;
+  border-left-color: var(--lt-blue);
   box-shadow: 0 12px 26px rgba(15, 42, 67, 0.08);
+}
+
+.knowledge-card-simplified {
+  min-height: 150px;
+}
+
+.knowledge-card-simplified p {
+  min-height: 0;
 }
 
 .knowledge-card-icon {

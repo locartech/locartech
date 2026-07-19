@@ -1,4 +1,4 @@
-import { Archive, ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Pencil, RotateCcw } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Eye, Pencil, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import EmptyState from '../common/EmptyState';
@@ -106,6 +106,7 @@ function PurchaseRequestTable({
   pendingEditsByRequestId = {},
   onRequestEdit,
   onReviewEdit,
+  onView,
 }) {
   if (requests.length === 0) {
     return (
@@ -172,6 +173,11 @@ function PurchaseRequestTable({
                 ) : null}
                 <RowActionsMenu
                   items={[
+                    {
+                      label: 'Ver detalhes',
+                      icon: <Eye size={16} aria-hidden="true" />,
+                      onClick: () => onView?.(request),
+                    },
                     canManage && pendingEdit
                       ? {
                           label: 'Revisar pedido de edicao',
