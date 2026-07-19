@@ -4293,10 +4293,8 @@ body {
 }
 
 .knowledge-filters {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 12px;
-  align-items: end;
 }
 
 .knowledge-search,
@@ -4307,23 +4305,65 @@ body {
 
 .knowledge-search {
   position: relative;
-  flex: 1 1 240px;
+  width: 100%;
 }
 
-.knowledge-filters > label {
+.knowledge-filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+
+.knowledge-filters-row > label {
   flex: 0 0 auto;
-  width: 170px;
+  width: 180px;
 }
 
 .knowledge-filter-period {
   display: flex;
   flex: 0 0 auto;
-  align-items: end;
+  align-items: center;
   gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--lt-border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.knowledge-filter-period-label {
+  color: #64748b;
+  font-size: 0.74rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.knowledge-filter-period-divider {
+  color: #94a3b8;
 }
 
 .knowledge-filter-period label {
-  width: 140px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+}
+
+.knowledge-filter-period label span {
+  font-size: 0.74rem;
+}
+
+.knowledge-filter-period input[type='date'] {
+  width: 128px;
+  min-height: 30px;
+  padding: 0 4px;
+  border: none;
+  background: transparent;
+}
+
+.knowledge-filter-period input[type='date']:focus {
+  box-shadow: none;
 }
 
 .knowledge-search svg {
@@ -4396,8 +4436,8 @@ body {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr);
   gap: 12px;
-  min-height: 195px;
-  padding: 16px;
+  min-height: 150px;
+  padding: 14px;
   border: 1px solid var(--lt-border-soft);
   border-left: 3px solid var(--lt-blue);
   border-radius: 8px;
@@ -4412,7 +4452,7 @@ body {
 }
 
 .knowledge-card-simplified {
-  min-height: 150px;
+  min-height: 110px;
 }
 
 .knowledge-card-simplified p {
@@ -4434,7 +4474,7 @@ body {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .knowledge-card-heading {
@@ -4484,7 +4524,6 @@ body {
 .knowledge-meta {
   display: grid;
   gap: 4px;
-  margin-top: auto;
   color: #64748b;
   font-size: 0.76rem;
 }

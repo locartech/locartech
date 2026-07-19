@@ -16,36 +16,42 @@ function KnowledgeFilters({ filters, onChange, simplified = false }) {
           placeholder={simplified ? 'Buscar por nome ou descricao' : 'Buscar por titulo, descricao ou tipo'}
         />
       </label>
-      {!simplified ? (
-        <label>
-          <span>Tipo</span>
-          <select value={filters.type} onChange={(event) => updateFilter('type', event.target.value)}>
-            <option value="Todos">Todos</option>
-            {knowledgeTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
-      <div className="knowledge-filter-period">
-        <label>
-          <span>Publicado de</span>
-          <input
-            type="date"
-            value={filters.publishedFrom || ''}
-            onChange={(event) => updateFilter('publishedFrom', event.target.value)}
-          />
-        </label>
-        <label>
-          <span>Ate</span>
-          <input
-            type="date"
-            value={filters.publishedTo || ''}
-            onChange={(event) => updateFilter('publishedTo', event.target.value)}
-          />
-        </label>
+      <div className="knowledge-filters-row">
+        {!simplified ? (
+          <label>
+            <span>Tipo</span>
+            <select value={filters.type} onChange={(event) => updateFilter('type', event.target.value)}>
+              <option value="Todos">Todos</option>
+              {knowledgeTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        <div className="knowledge-filter-period">
+          <span className="knowledge-filter-period-label">Publicado</span>
+          <label>
+            <span>De</span>
+            <input
+              type="date"
+              value={filters.publishedFrom || ''}
+              onChange={(event) => updateFilter('publishedFrom', event.target.value)}
+            />
+          </label>
+          <span className="knowledge-filter-period-divider" aria-hidden="true">
+            &ndash;
+          </span>
+          <label>
+            <span>Ate</span>
+            <input
+              type="date"
+              value={filters.publishedTo || ''}
+              onChange={(event) => updateFilter('publishedTo', event.target.value)}
+            />
+          </label>
+        </div>
       </div>
     </div>
   );
