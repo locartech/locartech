@@ -43,13 +43,19 @@ function mapConversationSummary(row, profiles, currentUserId) {
   };
 }
 
-export async function fetchConversations(currentUserId, profiles) {
+export async function fetchConversations(currentUserId, profiles, selectedConversationId = null) {
   const { data, error } = await supabase.rpc('list_my_conversations');
   if (error) throw error;
 
   return (data ?? [])
     .map((row) => mapConversationSummary(row, profiles, currentUserId))
-    .filter((conversation) => conversation.type !== 'direct' || conversation.messages.length > 0 || conversation.description === 'Conversa iniciada');
+    .filter(
+      (conversation) =>
+        conversation.type !== 'direct' ||
+        conversation.messages.length > 0 ||
+        conversation.description === 'Conversa iniciada' ||
+        conversation.id === selectedConversationId,
+    );
 }
 
 export async function fetchConversationMessages(conversationId, profiles) {

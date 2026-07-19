@@ -48,7 +48,11 @@ function Chat({ onChatUnreadChange }) {
       );
       setUsers(activeProfiles);
 
-      let remoteConversations = await fetchConversations(currentUser.id, activeProfiles);
+      let remoteConversations = await fetchConversations(
+        currentUser.id,
+        activeProfiles,
+        selectedConversationId,
+      );
       if (selectedConversationId) {
         const selected = remoteConversations.find((conversation) => conversation.id === selectedConversationId);
         if (selected) {
