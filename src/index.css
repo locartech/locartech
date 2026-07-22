@@ -6646,6 +6646,15 @@ body {
   background: #f1f5f9;
 }
 
+.row-actions-option:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.row-actions-option:disabled:hover {
+  background: transparent;
+}
+
 .row-actions-option.danger {
   color: #b42318;
 }

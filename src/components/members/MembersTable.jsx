@@ -1,4 +1,5 @@
 import { Ban, Check, Pencil, Trash2, XCircle } from 'lucide-react';
+import RowActionsMenu from '../common/RowActionsMenu';
 import MemberStatusBadge from './MemberStatusBadge';
 import MemberTypeBadge from './MemberTypeBadge';
 
@@ -45,37 +46,40 @@ function MembersTable({ members, primaryAdminId, onEdit, onRemove, onDeactivate,
                 <MemberStatusBadge status={member.status} />
               </div>
               <div className="member-actions">
-                {member.status === 'Pendente' ? (
-                  <>
-                    <button type="button" className="table-icon-button success" onClick={() => onApprove(member.id)} title="Aprovar conta">
-                      <Check size={15} aria-hidden="true" />
-                    </button>
-                    <button type="button" className="table-icon-button danger" onClick={() => onReject(member.id)} title="Rejeitar conta">
-                      <XCircle size={15} aria-hidden="true" />
-                    </button>
-                  </>
-                ) : null}
-                <button type="button" className="table-icon-button" onClick={() => onEdit(member)} title="Editar membro">
-                  <Pencil size={15} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="table-icon-button"
-                  onClick={() => onDeactivate(member.id)}
-                  disabled={isCompanyAdmin || member.status === 'Inativo'}
-                  title="Desativar membro"
-                >
-                  <Ban size={15} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="table-icon-button danger"
-                  onClick={() => onRemove(member)}
-                  disabled={isCompanyAdmin}
-                  title="Remover membro"
-                >
-                  <Trash2 size={15} aria-hidden="true" />
-                </button>
+                <RowActionsMenu
+                  items={[
+                    member.status === 'Pendente' && {
+                      label: 'Aprovar conta',
+                      icon: <Check size={16} aria-hidden="true" />,
+                      tone: 'success',
+                      onClick: () => onApprove(member.id),
+                    },
+                    member.status === 'Pendente' && {
+                      label: 'Rejeitar conta',
+                      icon: <XCircle size={16} aria-hidden="true" />,
+                      tone: 'danger',
+                      onClick: () => onReject(member.id),
+                    },
+                    {
+                      label: 'Editar membro',
+                      icon: <Pencil size={16} aria-hidden="true" />,
+                      onClick: () => onEdit(member),
+                    },
+                    {
+                      label: 'Desativar membro',
+                      icon: <Ban size={16} aria-hidden="true" />,
+                      disabled: isCompanyAdmin || member.status === 'Inativo',
+                      onClick: () => onDeactivate(member.id),
+                    },
+                    {
+                      label: 'Excluir conta',
+                      icon: <Trash2 size={16} aria-hidden="true" />,
+                      tone: 'danger',
+                      disabled: isCompanyAdmin,
+                      onClick: () => onRemove(member),
+                    },
+                  ]}
+                />
               </div>
             </div>
           );
