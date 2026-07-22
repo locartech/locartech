@@ -2,6 +2,7 @@ import { Archive, Eye, Pencil, Trash2 } from 'lucide-react';
 import RowActionsMenu from '../common/RowActionsMenu';
 import RequestPriorityBadge from '../requests/RequestPriorityBadge';
 import StatusBadge from './StatusBadge';
+import { formatDatePtBr, MAX_OPERATIONAL_DATE, MIN_OPERATIONAL_DATE } from '../../utils/dateUtils';
 
 function TaskRow({ task, onStatusChange, onDateChange, onView, onEdit, onDelete, onArchive, canEdit, onBlockedAction }) {
   return (
@@ -31,13 +32,14 @@ function TaskRow({ task, onStatusChange, onDateChange, onView, onEdit, onDelete,
           <input
             type="date"
             value={task.date || ''}
-            min="2026-01-01"
+            min={MIN_OPERATIONAL_DATE}
+            max={MAX_OPERATIONAL_DATE}
             onChange={(event) => onDateChange(task.id, event.target.value)}
             aria-label={`Data da atividade ${task.title}`}
           />
         ) : (
           <button type="button" className="stage-readonly-date" onClick={(event) => onBlockedAction(event)}>
-            {task.date ? new Date(`${task.date}T12:00:00`).toLocaleDateString('pt-BR') : 'Sem data'}
+            {formatDatePtBr(task.date)}
           </button>
         )}
       </div>

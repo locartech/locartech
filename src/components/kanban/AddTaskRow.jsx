@@ -2,6 +2,7 @@ import { Check, X } from 'lucide-react';
 import { useState } from 'react';
 import { requestPriorities } from '../../data/requestsData';
 import StatusBadge from './StatusBadge';
+import { isOperationalDate, MAX_OPERATIONAL_DATE, MIN_OPERATIONAL_DATE } from '../../utils/dateUtils';
 
 const blankTask = {
   title: '',
@@ -21,7 +22,7 @@ function AddTaskRow({ onAdd, onCancel }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!draft.title.trim() || !draft.assignee.trim() || !draft.date) return;
+    if (!draft.title.trim() || !draft.assignee.trim() || !isOperationalDate(draft.date)) return;
     if (submitting) return;
     setSubmitting(true);
     try {
@@ -73,7 +74,8 @@ function AddTaskRow({ onAdd, onCancel }) {
         <input
           type="date"
           value={draft.date}
-          min="2026-01-01"
+          min={MIN_OPERATIONAL_DATE}
+          max={MAX_OPERATIONAL_DATE}
           onChange={(event) => updateDraft('date', event.target.value)}
           aria-label="Data da atividade"
         />

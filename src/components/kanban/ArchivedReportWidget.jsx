@@ -1,7 +1,5 @@
 import { AlertTriangle, FileDown } from 'lucide-react';
-
-const formatDate = (value) =>
-  value ? new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(value) : '-';
+import { formatDatePtBr } from '../../utils/dateUtils';
 
 function ArchivedReportWidget({ volumeStatus, generating, onGenerateReport }) {
   const { level, message, total, oldestDate } = volumeStatus;
@@ -15,7 +13,7 @@ function ArchivedReportWidget({ volumeStatus, generating, onGenerateReport }) {
         <div className="archived-report-stats">
           <div className="archived-report-stat"><span>Status do volume</span><strong>{level === 'strong' ? 'Critico' : level === 'light' ? 'Atencao' : 'Normal'}</strong></div>
           <div className="archived-report-stat"><span>Arquivadas</span><strong>{total}</strong></div>
-          <div className="archived-report-stat"><span>Mais antiga</span><strong>{formatDate(oldestDate)}</strong></div>
+          <div className="archived-report-stat"><span>Mais antiga</span><strong>{formatDatePtBr(oldestDate, '-')}</strong></div>
         </div>
       </div>
       {level !== 'none' ? <div className={`archived-report-alert archived-report-alert-${level}`}><AlertTriangle size={16} /><span>{message}</span></div> : null}

@@ -1,5 +1,6 @@
 import { kanbanStatuses } from '../data/kanbanData';
 import { requestPriorities } from '../data/requestsData';
+import { parseDateValue } from './dateUtils';
 
 const CSV_HEADERS = [
   'ID da atividade',
@@ -49,7 +50,7 @@ export function buildArchivedActivitiesCsv(tasks) {
     task.requesterName || '',
     task.requesterSector || '',
     task.archivedByName || '',
-    task.archivedAt ? new Date(task.archivedAt).toISOString() : '',
+    parseDateValue(task.archivedAt)?.toISOString() ?? '',
   ]);
 
   const lines = [CSV_HEADERS, ...rows].map((row) => row.map(escapeCsvValue).join(';'));
@@ -83,7 +84,8 @@ export function getArchiveVolumeStatus(tasks) {
 
   const oldestDate = tasks.reduce((oldest, task) => {
     if (!task.archivedAt) return oldest;
-    const date = new Date(task.archivedAt);
+    const date = parseDateValue(task.archivedAt);
+    if (!date) return oldest;
     return !oldest || date < oldest ? date : oldest;
   }, null);
 

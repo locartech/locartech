@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { kanbanStatuses } from '../../data/kanbanData';
 import { requestPriorities } from '../../data/requestsData';
 import useEscapeKey from '../../hooks/useEscapeKey';
+import { isOperationalDate, MAX_OPERATIONAL_DATE, MIN_OPERATIONAL_DATE } from '../../utils/dateUtils';
 
 const blankDraft = {
   title: '',
@@ -29,7 +30,7 @@ function EditTaskModal({ task, onClose, onSave }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!draft.title.trim() || !draft.assignee.trim() || !draft.date) return;
+    if (!draft.title.trim() || !draft.assignee.trim() || !isOperationalDate(draft.date)) return;
     if (submitting) return;
     setSubmitting(true);
     try {
@@ -93,7 +94,13 @@ function EditTaskModal({ task, onClose, onSave }) {
 
           <label>
             <span>Prazo</span>
-            <input type="date" value={draft.date} min="2026-01-01" onChange={(event) => updateDraft('date', event.target.value)} />
+            <input
+              type="date"
+              value={draft.date}
+              min={MIN_OPERATIONAL_DATE}
+              max={MAX_OPERATIONAL_DATE}
+              onChange={(event) => updateDraft('date', event.target.value)}
+            />
           </label>
 
           <div className="modal-actions">

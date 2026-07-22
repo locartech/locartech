@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { sectors } from '../data/sectorsData';
 import { fetchSectorIdByName } from './sectorsService';
+import { isOperationalDate } from '../utils/dateUtils';
 
 const TASK_SELECT = '*, requester_sector:sectors!requester_sector_id(name), requester_profile:profiles!requester_profile_id(name)';
 
@@ -29,6 +30,10 @@ function mapTaskFromDb(task) {
 }
 
 async function mapTaskToDb(sectorId, values, organizationId) {
+  if (values.date && !isOperationalDate(values.date)) {
+    throw new Error('Informe um prazo valido entre 1900 e 2100.');
+  }
+
   const sector = sectors.find((item) => item.id === sectorId);
   return {
     sector_id: sectorId,
