@@ -7,7 +7,7 @@ const initialForm = {
   email: '',
   password: '',
   confirmPassword: '',
-  sector: 'Compras',
+  sector: '',
   role: '',
 };
 
@@ -27,7 +27,7 @@ function Register({ onNavigate }) {
     setError('');
     setMessage('');
 
-    if (!form.name.trim() || !form.email.trim() || !form.password || !form.confirmPassword || !form.role.trim()) {
+    if (!form.name.trim() || !form.email.trim() || !form.password || !form.confirmPassword || !form.sector || !form.role.trim()) {
       setError('Preencha todos os campos obrigatorios.');
       return;
     }
@@ -50,7 +50,7 @@ function Register({ onNavigate }) {
   };
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit}>
+    <form className="auth-form" onSubmit={handleSubmit} autoComplete="off">
       <div>
         <p className="eyebrow">Nova conta</p>
         <h1>Criar conta</h1>
@@ -62,26 +62,27 @@ function Register({ onNavigate }) {
 
       <label>
         <span>Nome completo</span>
-        <input value={form.name} onChange={(event) => updateForm('name', event.target.value)} />
+        <input autoComplete="off" value={form.name} onChange={(event) => updateForm('name', event.target.value)} />
       </label>
       <label>
         <span>E-mail</span>
-        <input type="email" value={form.email} onChange={(event) => updateForm('email', event.target.value)} />
+        <input type="email" autoComplete="off" value={form.email} onChange={(event) => updateForm('email', event.target.value)} />
       </label>
       <div className="form-grid-two">
         <label>
           <span>Senha</span>
-          <input type="password" value={form.password} onChange={(event) => updateForm('password', event.target.value)} />
+          <input type="password" autoComplete="new-password" value={form.password} onChange={(event) => updateForm('password', event.target.value)} />
         </label>
         <label>
           <span>Confirmar senha</span>
-          <input type="password" value={form.confirmPassword} onChange={(event) => updateForm('confirmPassword', event.target.value)} />
+          <input type="password" autoComplete="new-password" value={form.confirmPassword} onChange={(event) => updateForm('confirmPassword', event.target.value)} />
         </label>
       </div>
       <div className="form-grid-two">
         <label>
           <span>Setor</span>
           <select value={form.sector} onChange={(event) => updateForm('sector', event.target.value)}>
+            <option value="" disabled>Selecione um setor</option>
             {memberSectors.map((sector) => (
               <option key={sector} value={sector}>{sector}</option>
             ))}
@@ -89,7 +90,7 @@ function Register({ onNavigate }) {
         </label>
         <label>
           <span>Cargo</span>
-          <input value={form.role} onChange={(event) => updateForm('role', event.target.value)} />
+          <input autoComplete="off" value={form.role} onChange={(event) => updateForm('role', event.target.value)} />
         </label>
       </div>
 

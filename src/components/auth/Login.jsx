@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 function Login({ onNavigate }) {
   const { login } = useAuth();
-  const [form, setForm] = useState({ email: 'admin@locartech.com.br', password: '' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,7 +24,7 @@ function Login({ onNavigate }) {
   };
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit}>
+    <form className="auth-form" onSubmit={handleSubmit} autoComplete="off">
       <div>
         <p className="eyebrow">Acesso ao sistema</p>
         <h1>Entrar na Locartech</h1>
@@ -37,6 +37,7 @@ function Login({ onNavigate }) {
         <span>E-mail</span>
         <input
           type="email"
+          autoComplete="off"
           value={form.email}
           onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
           placeholder="nome@locartech.com.br"
@@ -48,6 +49,7 @@ function Login({ onNavigate }) {
         <div className="password-field">
           <input
             type={showPassword ? 'text' : 'password'}
+            autoComplete="new-password"
             value={form.password}
             onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
             placeholder="Digite sua senha"
