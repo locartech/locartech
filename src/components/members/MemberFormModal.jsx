@@ -12,7 +12,7 @@ const emptyMember = {
   status: 'Ativo',
 };
 
-function MemberFormModal({ member, onClose, onSubmit }) {
+function MemberFormModal({ member, protectAdminAccess = false, onClose, onSubmit }) {
   useEscapeKey(onClose);
   const [draft, setDraft] = useState(emptyMember);
 
@@ -87,7 +87,12 @@ function MemberFormModal({ member, onClose, onSubmit }) {
           <div className="form-grid-two">
             <label>
               <span>Tipo de conta</span>
-              <select value={draft.accountType} onChange={(event) => updateDraft('accountType', event.target.value)}>
+              <select
+                value={draft.accountType}
+                disabled={protectAdminAccess}
+                title={protectAdminAccess ? 'Transfira a administracao antes de alterar este acesso' : undefined}
+                onChange={(event) => updateDraft('accountType', event.target.value)}
+              >
                 {accountTypes.map((type) => (
                   <option key={type.id} value={type.id}>
                     {type.label}
@@ -97,7 +102,12 @@ function MemberFormModal({ member, onClose, onSubmit }) {
             </label>
             <label>
               <span>Status</span>
-              <select value={draft.status} onChange={(event) => updateDraft('status', event.target.value)}>
+              <select
+                value={draft.status}
+                disabled={protectAdminAccess}
+                title={protectAdminAccess ? 'O administrador principal deve permanecer ativo' : undefined}
+                onChange={(event) => updateDraft('status', event.target.value)}
+              >
                 {memberStatuses.map((status) => (
                   <option key={status} value={status}>
                     {status}

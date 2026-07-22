@@ -73,7 +73,10 @@ function Members() {
 
   const handleEditMember = async (values) => {
     try {
-      const updated = await updateProfile(editingMember.id, values);
+      const protectedValues = editingMember.id === primaryAdminId
+        ? { ...values, accountType: 'admin', status: 'Ativo' }
+        : values;
+      const updated = await updateProfile(editingMember.id, protectedValues);
       setMembers((current) => current.map((member) => (member.id === updated.id ? updated : member)));
       if (updated.id === currentUser.id) setCurrentUser(updated);
       setFeedback('Membro atualizado com sucesso.');
@@ -86,6 +89,10 @@ function Members() {
   };
 
   const handleRemoveMember = async (member) => {
+    if (member.id === currentUser?.id) {
+      setFeedback('Voce nao pode excluir a propria conta. Outro administrador deve realizar essa acao.');
+      return;
+    }
     if (member.id === primaryAdminId) {
       setFeedback('O administrador principal nao pode ser removido.');
       return;
@@ -111,6 +118,10 @@ function Members() {
   };
 
   const handleDeactivateMember = async (memberId) => {
+    if (memberId === currentUser?.id) {
+      setFeedback('Voce nao pode desativar a propria conta.');
+      return;
+    }
     if (memberId === primaryAdminId) {
       setFeedback('O administrador principal nao pode ser desativado antes de transferir a administracao.');
       return;
@@ -178,6 +189,7 @@ function Members() {
       <section className="members-panel">
         <MembersTable
           members={members}
+          currentUserId={currentUser?.id}
           primaryAdminId={primaryAdminId}
           onEdit={(member) => {
             setEditingMember(member);
@@ -193,6 +205,7 @@ function Members() {
       {isModalOpen ? (
         <MemberFormModal
           member={editingMember}
+          protectAdminAccess={editingMember?.id === primaryAdminId}
           onClose={() => {
             setIsModalOpen(false);
             setEditingMember(null);

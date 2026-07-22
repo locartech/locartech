@@ -69,6 +69,7 @@ function RowActionsMenu({ items }) {
                   type="button"
                   className={`row-actions-option${item.tone ? ` ${item.tone}` : ''}`}
                   disabled={item.disabled}
+                  title={item.disabledReason}
                   onClick={(event) => {
                     setOpen(false);
                     item.onClick(event);

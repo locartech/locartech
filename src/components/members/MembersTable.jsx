@@ -10,7 +10,7 @@ const formatDate = (value) =>
       )
     : 'Sem registro';
 
-function MembersTable({ members, primaryAdminId, onEdit, onRemove, onDeactivate, onApprove, onReject }) {
+function MembersTable({ members, currentUserId, primaryAdminId, onEdit, onRemove, onDeactivate, onApprove, onReject }) {
   return (
     <div className="members-table-shell">
       <div className="members-table">
@@ -26,6 +26,7 @@ function MembersTable({ members, primaryAdminId, onEdit, onRemove, onDeactivate,
 
         {members.map((member) => {
           const isCompanyAdmin = member.id === primaryAdminId;
+          const isCurrentUser = member.id === currentUserId;
 
           return (
             <div className={`members-row ${member.status === 'Inativo' ? 'inactive' : ''}`} key={member.id}>
@@ -68,14 +69,16 @@ function MembersTable({ members, primaryAdminId, onEdit, onRemove, onDeactivate,
                     {
                       label: 'Desativar membro',
                       icon: <Ban size={16} aria-hidden="true" />,
-                      disabled: isCompanyAdmin || member.status === 'Inativo',
+                      disabled: isCurrentUser || isCompanyAdmin || member.status === 'Inativo',
+                      disabledReason: isCurrentUser ? 'Voce nao pode desativar a propria conta' : undefined,
                       onClick: () => onDeactivate(member.id),
                     },
                     {
                       label: 'Excluir conta',
                       icon: <Trash2 size={16} aria-hidden="true" />,
                       tone: 'danger',
-                      disabled: isCompanyAdmin,
+                      disabled: isCurrentUser || isCompanyAdmin,
+                      disabledReason: isCurrentUser ? 'Voce nao pode excluir a propria conta' : undefined,
                       onClick: () => onRemove(member),
                     },
                   ]}
