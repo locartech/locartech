@@ -78,6 +78,15 @@ export async function deleteMemberAccountRpc(memberId) {
   if (error) throw error;
 }
 
+export async function setMemberAdminStatusRpc(memberId, makeAdmin) {
+  const { data, error } = await supabase.rpc('set_member_admin_status', {
+    p_profile_id: memberId,
+    p_make_admin: makeAdmin,
+  });
+  if (error) throw error;
+  return mapProfileFromDb(data);
+}
+
 export async function updateProfilePhoto(memberId, photoUrl) {
   const { data, error } = await supabase
     .from('profiles')

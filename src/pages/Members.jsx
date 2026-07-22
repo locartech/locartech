@@ -1,11 +1,9 @@
-import { ShieldCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import AccessDenied from '../components/auth/AccessDenied';
 import ConfirmModal from '../components/common/ConfirmModal';
 import MemberFormModal from '../components/members/MemberFormModal';
 import MembersStats from '../components/members/MembersStats';
 import MembersTable from '../components/members/MembersTable';
-import TransferAdminModal from '../components/members/TransferAdminModal';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import {
@@ -14,16 +12,18 @@ import {
   deleteMemberAccountRpc,
   fetchProfiles,
   rejectMemberRpc,
+  setMemberAdminStatusRpc,
   updateProfile,
 } from '../services/profilesService';
 import { getMemberStats } from '../utils/membersUtils';
 
 function Members() {
-  const { profile: currentUser, isAdmin, setCurrentUser, organization, transferAdmin } = useAuth();
+  const { profile: currentUser, isAdmin, setCurrentUser, organization, refreshOrganization } = useAuth();
   const [members, setMembers] = useState([]);
   const [editingMember, setEditingMember] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [adminChange, setAdminChange] = useState(null);
+  const [changingAdmin, setChangingAdmin] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -32,6 +32,10 @@ function Members() {
 
   const stats = useMemo(() => getMemberStats(members), [members]);
   const primaryAdminId = organization?.adminProfileId;
+  const activeAdminCount = useMemo(
+    () => members.filter((member) => member.accountType === 'admin' && member.status === 'Ativo').length,
+    [members],
+  );
 
   const loadRemoteMembers = async () => {
     try {
@@ -73,9 +77,11 @@ function Members() {
 
   const handleEditMember = async (values) => {
     try {
-      const protectedValues = editingMember.id === primaryAdminId
-        ? { ...values, accountType: 'admin', status: 'Ativo' }
-        : values;
+      const protectedValues = {
+        ...values,
+        accountType: editingMember.accountType,
+        ...(editingMember.id === primaryAdminId ? { status: 'Ativo' } : {}),
+      };
       const updated = await updateProfile(editingMember.id, protectedValues);
       setMembers((current) => current.map((member) => (member.id === updated.id ? updated : member)));
       if (updated.id === currentUser.id) setCurrentUser(updated);
@@ -123,7 +129,7 @@ function Members() {
       return;
     }
     if (memberId === primaryAdminId) {
-      setFeedback('O administrador principal nao pode ser desativado antes de transferir a administracao.');
+      setFeedback('Remova o acesso administrativo deste membro antes de desativar a conta.');
       return;
     }
 
@@ -156,14 +162,20 @@ function Members() {
     }
   };
 
-  const handleTransferAdmin = async (newAdminProfileId) => {
+  const handleConfirmAdminChange = async () => {
+    if (!adminChange) return;
+    setChangingAdmin(true);
     try {
-      await transferAdmin(newAdminProfileId);
-      setIsTransferOpen(false);
-      setFeedback('Administracao principal transferida com sucesso.');
-      loadRemoteMembers();
+      const updated = await setMemberAdminStatusRpc(adminChange.member.id, adminChange.makeAdmin);
+      setMembers((current) => current.map((member) => (member.id === updated.id ? updated : member)));
+      if (updated.id === currentUser?.id) setCurrentUser(updated);
+      await refreshOrganization();
+      setFeedback(adminChange.makeAdmin ? 'Membro definido como administrador.' : 'Acesso de administrador removido.');
+      setAdminChange(null);
     } catch (err) {
-      setFeedback(err.message ?? 'Nao foi possivel transferir a administracao.');
+      setError(err.message ?? 'Nao foi possivel alterar o acesso administrativo.');
+    } finally {
+      setChangingAdmin(false);
     }
   };
 
@@ -174,10 +186,6 @@ function Members() {
           <p className="eyebrow">Contas e permissoes</p>
           <h2>Gerenciamento de membros</h2>
         </div>
-        <button type="button" className="primary-button large" onClick={() => setIsTransferOpen(true)}>
-          <ShieldCheck size={16} aria-hidden="true" />
-          Transferir administracao
-        </button>
       </section>
 
       {feedback ? <div className="members-feedback">{feedback}</div> : null}
@@ -191,11 +199,16 @@ function Members() {
           members={members}
           currentUserId={currentUser?.id}
           primaryAdminId={primaryAdminId}
+          activeAdminCount={activeAdminCount}
           onEdit={(member) => {
             setEditingMember(member);
             setIsModalOpen(true);
           }}
           onRemove={handleRemoveMember}
+          onAdminChange={(member, makeAdmin) => {
+            setError('');
+            setAdminChange({ member, makeAdmin });
+          }}
           onDeactivate={handleDeactivateMember}
           onApprove={handleApprove}
           onReject={handleReject}
@@ -214,14 +227,20 @@ function Members() {
         />
       ) : null}
 
-      {isTransferOpen ? (
-        <TransferAdminModal
-          members={members}
-          primaryAdminId={primaryAdminId}
-          onClose={() => setIsTransferOpen(false)}
-          onTransfer={handleTransferAdmin}
-        />
-      ) : null}
+      <ConfirmModal
+        open={Boolean(adminChange)}
+        title={adminChange?.makeAdmin ? 'Tornar administrador' : 'Remover administrador'}
+        message={adminChange?.makeAdmin
+          ? `Deseja conceder acesso administrativo para ${adminChange?.member.name ?? 'este membro'}?`
+          : `Deseja remover o acesso administrativo de ${adminChange?.member.name ?? 'este membro'}?`}
+        cancelLabel="Cancelar"
+        confirmLabel={adminChange?.makeAdmin ? 'Sim, tornar administrador' : 'Sim, remover acesso'}
+        busy={changingAdmin}
+        onCancel={() => {
+          if (!changingAdmin) setAdminChange(null);
+        }}
+        onConfirm={handleConfirmAdminChange}
+      />
 
       <ConfirmModal
         open={Boolean(removingMember)}

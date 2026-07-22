@@ -9,7 +9,7 @@ export const memberSectors = [
 ];
 
 export const accountTypes = [
-  { id: 'admin', label: 'Administrador principal' },
+  { id: 'admin', label: 'Administrador' },
   { id: 'member', label: 'Membro' },
   { id: 'operacao', label: 'Obra (só solicita compras)' },
 ];

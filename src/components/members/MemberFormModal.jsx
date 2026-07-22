@@ -89,8 +89,8 @@ function MemberFormModal({ member, protectAdminAccess = false, onClose, onSubmit
               <span>Tipo de conta</span>
               <select
                 value={draft.accountType}
-                disabled={protectAdminAccess}
-                title={protectAdminAccess ? 'Transfira a administracao antes de alterar este acesso' : undefined}
+                disabled
+                title="Use o menu de acoes do membro para alterar o acesso administrativo"
                 onChange={(event) => updateDraft('accountType', event.target.value)}
               >
                 {accountTypes.map((type) => (

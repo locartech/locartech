@@ -1,4 +1,4 @@
-import { Ban, Check, Pencil, Trash2, XCircle } from 'lucide-react';
+import { Ban, Check, Pencil, ShieldCheck, ShieldMinus, Trash2, XCircle } from 'lucide-react';
 import RowActionsMenu from '../common/RowActionsMenu';
 import MemberStatusBadge from './MemberStatusBadge';
 import MemberTypeBadge from './MemberTypeBadge';
@@ -10,7 +10,18 @@ const formatDate = (value) =>
       )
     : 'Sem registro';
 
-function MembersTable({ members, currentUserId, primaryAdminId, onEdit, onRemove, onDeactivate, onApprove, onReject }) {
+function MembersTable({
+  members,
+  currentUserId,
+  primaryAdminId,
+  activeAdminCount,
+  onEdit,
+  onAdminChange,
+  onRemove,
+  onDeactivate,
+  onApprove,
+  onReject,
+}) {
   return (
     <div className="members-table-shell">
       <div className="members-table">
@@ -66,6 +77,23 @@ function MembersTable({ members, currentUserId, primaryAdminId, onEdit, onRemove
                       icon: <Pencil size={16} aria-hidden="true" />,
                       onClick: () => onEdit(member),
                     },
+                    member.accountType === 'admin'
+                      ? {
+                          label: 'Remover administrador',
+                          icon: <ShieldMinus size={16} aria-hidden="true" />,
+                          tone: 'danger',
+                          disabled: activeAdminCount <= 1,
+                          disabledReason: activeAdminCount <= 1 ? 'O site deve manter pelo menos um administrador' : undefined,
+                          onClick: () => onAdminChange(member, false),
+                        }
+                      : {
+                          label: 'Tornar administrador',
+                          icon: <ShieldCheck size={16} aria-hidden="true" />,
+                          tone: 'success',
+                          disabled: member.status !== 'Ativo',
+                          disabledReason: member.status !== 'Ativo' ? 'Apenas membros ativos podem ser administradores' : undefined,
+                          onClick: () => onAdminChange(member, true),
+                        },
                     {
                       label: 'Desativar membro',
                       icon: <Ban size={16} aria-hidden="true" />,

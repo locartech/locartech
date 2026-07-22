@@ -15,9 +15,3 @@ export async function fetchOrganization() {
   if (error) throw error;
   return mapOrganizationFromDb(data);
 }
-
-export async function transferAdmin(newAdminProfileId) {
-  const { data, error } = await supabase.rpc('transfer_admin', { p_new_admin_profile_id: newAdminProfileId });
-  if (error) throw error;
-  return mapOrganizationFromDb(data);
-}

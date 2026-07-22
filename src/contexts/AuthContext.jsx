@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
-import { fetchOrganization, transferAdmin as transferAdminRpc } from '../services/organizationService';
+import { fetchOrganization } from '../services/organizationService';
 import {
   createPendingProfile,
   fetchProfileByAuthUser,
@@ -202,8 +202,8 @@ export function AuthProvider({ children }) {
     return updated;
   };
 
-  const transferAdmin = async (newAdminProfileId) => {
-    const org = await transferAdminRpc(newAdminProfileId);
+  const refreshOrganization = async () => {
+    const org = await fetchOrganization();
     setOrganization(org);
     return org;
   };
@@ -233,7 +233,7 @@ export function AuthProvider({ children }) {
       updateProfile,
       uploadAvatar,
       removeAvatar,
-      transferAdmin,
+      refreshOrganization,
     }),
     [session, profile, organization, isPasswordRecovery, loading],
   );
