@@ -82,8 +82,10 @@ function Kanban() {
     try {
       await deleteRemoteKanbanTask(taskId);
       setStageTasks((current) => current.filter((task) => task.id !== taskId));
+      return true;
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel excluir a atividade.');
+      return false;
     }
   };
 
@@ -93,8 +95,10 @@ function Kanban() {
     try {
       const updated = await archiveKanbanTask(taskId, currentUser?.id, currentUser?.name);
       setStageTasks((current) => current.map((task) => (task.id === taskId ? updated : task)));
+      return true;
     } catch (err) {
       setError(err.message ?? 'Nao foi possivel arquivar a atividade.');
+      return false;
     }
   };
 

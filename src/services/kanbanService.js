@@ -86,8 +86,14 @@ export async function updateRemoteKanbanTask(taskId, sectorId, values, organizat
 }
 
 export async function deleteRemoteKanbanTask(taskId) {
-  const { error } = await supabase.from('kanban_tasks').delete().eq('id', taskId);
+  const { data, error } = await supabase
+    .from('kanban_tasks')
+    .delete()
+    .eq('id', taskId)
+    .select('id')
+    .maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error('A atividade nao foi excluida. Verifique sua permissao e tente novamente.');
 }
 
 export async function deleteArchivedKanbanHistory(taskIds) {

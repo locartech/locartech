@@ -65,7 +65,7 @@ function TaskRow({ task, onStatusChange, onDateChange, onView, onEdit, onDelete,
               label: 'Excluir atividade',
               icon: <Trash2 size={16} aria-hidden="true" />,
               tone: 'danger',
-              onClick: (event) => (canEdit ? onDelete(task.id) : onBlockedAction(event)),
+              onClick: (event) => (canEdit ? onDelete(task) : onBlockedAction(event)),
             },
           ]}
         />

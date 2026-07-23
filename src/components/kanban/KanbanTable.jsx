@@ -21,6 +21,8 @@ function KanbanTable({
   const [addingSectorId, setAddingSectorId] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [archivingTask, setArchivingTask] = useState(null);
+  const [deletingTask, setDeletingTask] = useState(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [viewingTask, setViewingTask] = useState(null);
 
   const sortedSectors = useMemo(() => getSortedSectors(kanbanSectors), []);
@@ -38,10 +40,17 @@ function KanbanTable({
     setAddingSectorId(null);
   };
 
-  const handleDeleteTask = (taskId) => {
-    const canDelete = window.confirm('Deseja excluir esta atividade? Essa acao remove a linha da gestao.');
-    if (canDelete) {
-      onDeleteTask(taskId);
+  const handleConfirmDelete = async () => {
+    if (!deletingTask || deleteBusy) return;
+
+    setDeleteBusy(true);
+    try {
+      const succeeded = deletingTask.sourceRequestId
+        ? await onArchiveTask(deletingTask.id)
+        : await onDeleteTask(deletingTask.id);
+      if (succeeded !== false) setDeletingTask(null);
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -73,7 +82,7 @@ function KanbanTable({
             onDateChange={(taskId, date) => onUpdateTask(taskId, { date })}
             onView={setViewingTask}
             onEdit={setEditingTask}
-            onDelete={handleDeleteTask}
+            onDelete={setDeletingTask}
             onArchive={setArchivingTask}
             canEdit={canManageSector(sector)}
             onBlockedAction={onBlockedAction}
@@ -92,6 +101,21 @@ function KanbanTable({
         confirmLabel="Sim, arquivar"
         onCancel={() => setArchivingTask(null)}
         onConfirm={handleConfirmArchive}
+      />
+
+      <ConfirmModal
+        open={Boolean(deletingTask)}
+        title={deletingTask?.sourceRequestId ? 'Remover atividade do quadro' : 'Excluir atividade'}
+        message={
+          deletingTask?.sourceRequestId
+            ? 'Esta atividade foi criada por uma solicitacao. Para preservar o historico, ela sera removida do quadro ativo e enviada para Atividades arquivadas.'
+            : 'Deseja excluir esta atividade permanentemente? Esta acao nao pode ser desfeita.'
+        }
+        cancelLabel="Cancelar"
+        confirmLabel={deletingTask?.sourceRequestId ? 'Sim, arquivar atividade' : 'Sim, excluir atividade'}
+        busy={deleteBusy}
+        onCancel={() => setDeletingTask(null)}
+        onConfirm={handleConfirmDelete}
       />
     </>
   );
