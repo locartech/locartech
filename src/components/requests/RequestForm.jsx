@@ -64,7 +64,7 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
       await onSubmit({
         ...draft,
         title: draft.stepName,
-        description: '',
+        description: draft.description.trim(),
         driveLink,
       });
     } finally {
@@ -105,6 +105,16 @@ function RequestForm({ currentUser, request, onClose, onSubmit }) {
               </select>
             </label>
           </div>
+
+          <label>
+            <span>Descricao</span>
+            <textarea
+              value={draft.description}
+              onChange={(event) => updateDraft('description', event.target.value)}
+              placeholder="Descreva o que deve ser feito nesta atividade"
+              rows={4}
+            />
+          </label>
 
           <div className="form-grid-two">
             <label>
