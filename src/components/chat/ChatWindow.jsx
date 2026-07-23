@@ -13,6 +13,7 @@ function ChatWindow({
   onOpenProfile,
   onArchiveConversation,
   onRestoreConversation,
+  onDeleteConversation,
 }) {
   if (!conversation) {
     return (
@@ -56,6 +57,7 @@ function ChatWindow({
         onOpenProfile={onOpenProfile}
         onArchiveConversation={onArchiveConversation}
         onRestoreConversation={onRestoreConversation}
+        onDeleteConversation={onDeleteConversation}
       />
 
       <div className="messages-list">

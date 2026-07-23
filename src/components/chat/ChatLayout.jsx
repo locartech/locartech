@@ -14,6 +14,7 @@ function ChatLayout({
   onEditGroup,
   onArchiveConversation,
   onRestoreConversation,
+  onDeleteConversation,
   onOpenProfile,
 }) {
   return (
@@ -35,6 +36,7 @@ function ChatLayout({
         onEditGroup={onEditGroup}
         onArchiveConversation={onArchiveConversation}
         onRestoreConversation={onRestoreConversation}
+        onDeleteConversation={onDeleteConversation}
         onOpenProfile={onOpenProfile}
       />
     </section>

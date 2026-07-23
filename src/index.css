@@ -6050,6 +6050,16 @@ body {
   gap: 8px;
 }
 
+.chat-header-actions .chat-delete-button {
+  color: #b42318;
+}
+
+.chat-header-actions .chat-delete-button:hover {
+  border-color: #fecaca;
+  color: #991b1b;
+  background: #fff1f2;
+}
+
 .chat-page .conversation-list {
   gap: 4px;
 }

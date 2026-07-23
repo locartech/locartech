@@ -58,10 +58,10 @@ export async function fetchConversations(currentUserId, profiles, selectedConver
     );
 }
 
-export async function fetchConversationMessages(conversationId, profiles) {
+export async function fetchConversationMessages(conversationId, profiles, currentUserId) {
   const { data: participantRows, error: participantsError } = await supabase
     .from('conversation_participants')
-    .select('profile_id, last_read_at')
+    .select('profile_id, last_read_at, cleared_at')
     .eq('conversation_id', conversationId);
   if (participantsError) throw participantsError;
 
@@ -73,7 +73,13 @@ export async function fetchConversationMessages(conversationId, profiles) {
   if (error) throw error;
 
   const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
-  return (data ?? []).map((message) => {
+  const clearedAt = (participantRows ?? []).find(
+    (participant) => participant.profile_id === currentUserId,
+  )?.cleared_at;
+
+  return (data ?? []).filter(
+    (message) => !clearedAt || new Date(message.created_at) > new Date(clearedAt),
+  ).map((message) => {
     const readBy = (participantRows ?? [])
       .filter((participant) =>
         participant.profile_id !== message.sender_id &&
@@ -83,6 +89,13 @@ export async function fetchConversationMessages(conversationId, profiles) {
       .map((participant) => participant.profile_id);
     return mapMessage({ ...message, readBy }, profilesById);
   });
+}
+
+export async function deleteConversationForUser(conversationId) {
+  const { error } = await supabase.rpc('delete_conversation_for_me', {
+    p_conversation_id: conversationId,
+  });
+  if (error) throw error;
 }
 
 export async function ensureDirectConversation(_currentUser, otherUser) {

@@ -3,11 +3,13 @@ import ChatLayout from '../components/chat/ChatLayout';
 import NewContactModal from '../components/chat/NewContactModal';
 import NewGroupModal from '../components/chat/NewGroupModal';
 import UserProfileModal from '../components/chat/UserProfileModal';
+import ConfirmModal from '../components/common/ConfirmModal';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import {
   archiveConversationForUser,
   createGroupConversation,
+  deleteConversationForUser,
   ensureDirectConversation,
   fetchConversationMessages,
   fetchConversations,
@@ -31,6 +33,9 @@ function Chat({ onChatUnreadChange }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deletingConversation, setDeletingConversation] = useState(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const sortedConversations = useMemo(() => sortConversationsByLastMessage(conversations), [conversations]);
   const activeConversation = useMemo(
@@ -56,7 +61,7 @@ function Chat({ onChatUnreadChange }) {
       if (selectedConversationId) {
         const selected = remoteConversations.find((conversation) => conversation.id === selectedConversationId);
         if (selected) {
-          const messages = await fetchConversationMessages(selectedConversationId, activeProfiles);
+          const messages = await fetchConversationMessages(selectedConversationId, activeProfiles, currentUser.id);
           remoteConversations = remoteConversations.map((conversation) =>
             conversation.id === selectedConversationId ? { ...conversation, messages } : conversation,
           );
@@ -184,6 +189,23 @@ function Chat({ onChatUnreadChange }) {
     }
   };
 
+  const handleDeleteConversation = async () => {
+    if (!deletingConversation) return;
+
+    setDeleteBusy(true);
+    setDeleteError('');
+    try {
+      await deleteConversationForUser(deletingConversation.id);
+      setActiveConversationId(null);
+      setDeletingConversation(null);
+      await loadChat(null);
+    } catch (err) {
+      setDeleteError(err.message ?? 'Nao foi possivel apagar a conversa.');
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
   return (
     <div className="page-stack chat-page">
       {error ? <div className="members-feedback error">{error}</div> : null}
@@ -202,6 +224,10 @@ function Chat({ onChatUnreadChange }) {
         onEditGroup={setEditingGroup}
         onArchiveConversation={handleArchiveConversation}
         onRestoreConversation={handleRestoreConversation}
+        onDeleteConversation={(conversation) => {
+          setDeleteError('');
+          setDeletingConversation(conversation);
+        }}
         onOpenProfile={() => setIsProfileOpen(true)}
       />
 
@@ -241,6 +267,22 @@ function Chat({ onChatUnreadChange }) {
           onClose={() => setIsProfileOpen(false)}
         />
       ) : null}
+
+      <ConfirmModal
+        open={Boolean(deletingConversation)}
+        title="Apagar conversa"
+        message={`Deseja apagar sua conversa com ${deletingConversation?.title ?? ''}? Ela sera removida somente da sua conta.`}
+        confirmLabel="Sim, apagar conversa"
+        tone="warning"
+        busy={deleteBusy}
+        error={deleteError}
+        onConfirm={handleDeleteConversation}
+        onCancel={() => {
+          if (deleteBusy) return;
+          setDeletingConversation(null);
+          setDeleteError('');
+        }}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore, Hash, Info, Pencil, UserRound } from 'lucide-react';
+import { Archive, ArchiveRestore, Hash, Info, Pencil, Trash2, UserRound } from 'lucide-react';
 
 function ChatHeader({
   conversation,
@@ -7,6 +7,7 @@ function ChatHeader({
   onOpenProfile,
   onArchiveConversation,
   onRestoreConversation,
+  onDeleteConversation,
 }) {
   if (!conversation) return null;
 
@@ -51,6 +52,14 @@ function ChatHeader({
             <Pencil size={18} aria-hidden="true" />
           </button>
         ) : null}
+        <button
+          type="button"
+          className="icon-button chat-delete-button"
+          onClick={() => onDeleteConversation(conversation)}
+          title="Apagar conversa"
+        >
+          <Trash2 size={18} aria-hidden="true" />
+        </button>
         <button type="button" className="icon-button" onClick={onOpenProfile} title="Ver detalhes">
           <Info size={18} aria-hidden="true" />
         </button>
