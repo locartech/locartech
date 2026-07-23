@@ -45,9 +45,7 @@ function KanbanTable({
 
     setDeleteBusy(true);
     try {
-      const succeeded = deletingTask.sourceRequestId
-        ? await onArchiveTask(deletingTask.id)
-        : await onDeleteTask(deletingTask.id);
+      const succeeded = await onDeleteTask(deletingTask.id);
       if (succeeded !== false) setDeletingTask(null);
     } finally {
       setDeleteBusy(false);
@@ -105,14 +103,10 @@ function KanbanTable({
 
       <ConfirmModal
         open={Boolean(deletingTask)}
-        title={deletingTask?.sourceRequestId ? 'Remover atividade do quadro' : 'Excluir atividade'}
-        message={
-          deletingTask?.sourceRequestId
-            ? 'Esta atividade foi criada por uma solicitacao. Para preservar o historico, ela sera removida do quadro ativo e enviada para Atividades arquivadas.'
-            : 'Deseja excluir esta atividade permanentemente? Esta acao nao pode ser desfeita.'
-        }
+        title="Excluir atividade"
+        message="Deseja excluir esta atividade permanentemente? Esta acao nao pode ser desfeita."
         cancelLabel="Cancelar"
-        confirmLabel={deletingTask?.sourceRequestId ? 'Sim, arquivar atividade' : 'Sim, excluir atividade'}
+        confirmLabel="Sim, excluir atividade"
         busy={deleteBusy}
         onCancel={() => setDeletingTask(null)}
         onConfirm={handleConfirmDelete}
